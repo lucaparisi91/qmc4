@@ -1,0 +1,223 @@
+{
+    "inverseTemperature": 1.0,
+    "nBeads": 10,
+    "nBlocks": 10000,
+    "stepsPerBlock": 100000,
+    "correlationSteps": 10,
+    "particles": [
+        12
+    ],
+    "maxParticles": [
+        2000
+    ],
+    "ensamble": "grandCanonical",
+    "chemicalPotential": [
+        0.4
+    ],
+    "lBox": [
+        3000
+    ],
+    "seed": 18,
+    "movesTable": [
+        {
+            "move": {
+                "kind": "levy",
+                "reconstructionMaxLength": 7
+            },
+            "weight": 0.1,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "kind": "advanceHead",
+                "reconstructionMaxLength": 3
+            },
+            "weight": 0.1,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "kind": "recedeHead",
+                "reconstructionMaxLength": 3
+            },
+            "weight": 0.1,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "kind": "moveTail",
+                "reconstructionMaxLength": 3
+            },
+            "weight": 0.1,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "kind": "moveHead",
+                "reconstructionMaxLength": 3
+            },
+            "weight": 0.1,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "kind": "swap",
+                "reconstructionMaxLength": 3
+            },
+            "weight": 0.1,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "kind": "open",
+                "reconstructionMaxLength": 3,
+                "C": 0.001
+            },
+            "weight": 0.2,
+            "sectors": [
+                "closed"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "kind": "createWorm",
+                "reconstructionMaxLength": 3,
+                "C": 0.001,
+                "alpha": 1
+            },
+            "weight": 0.1,
+            "sectors": [
+                "closed"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "kind": "levy",
+                "reconstructionMaxLength": 7
+            },
+            "weight": 0.6,
+            "sectors": [
+                "closed"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "kind": "translate",
+                "delta": 0.1
+            },
+            "weight": 0.1,
+            "sectors": [
+                "closed"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "kind": "translate",
+                "delta": 0.1
+            },
+            "weight": 0.1,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "kind": "close",
+                "reconstructionMaxLength": 3,
+                "C": 0.001
+            },
+            "weight": 0.2,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "kind": "deleteWorm",
+                "reconstructionMaxLength": 3,
+                "C": 0.001,
+                "alpha": 1
+            },
+            "weight": 0.1,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                0
+            ]
+        }
+    ],
+    "action": [
+        {
+            "kind": "oneBody",
+            "groupA": 0,
+            "potential": {
+                "kind": "isotropicHarmonic",
+                "omega": 1
+            }
+        }
+    ],
+    "observables": [
+        {
+            "kind": "thermalEnergy",
+            "label": "energy"
+        },
+        {
+            "kind": "virialEnergy",
+            "label": "eV"
+        },
+        {
+            "kind": "nParticles",
+            "label": "N",
+            "set": 0
+        }
+    ]
+}

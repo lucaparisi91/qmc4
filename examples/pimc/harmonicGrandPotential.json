@@ -1,0 +1,163 @@
+{
+    "inverseTemperature": 1.0,
+    "nBeads": 10,
+    "nBlocks": 10000,
+    "stepsPerBlock": 1000,
+    "correlationSteps": 10,
+    "particles": [
+        20 
+    ],
+    "maxParticles" : [100],
+    "ensamble" : "grandCanonical",
+    "chemicalPotential" : 1,
+    "lBox": [
+        3000,
+        3000,
+        3000
+    ],
+    "seed": 18,
+    "movesTable": [
+        {
+            "weight": 0.8,
+            "move": {
+                "kind": "levy",
+                "reconstructionMaxLength": 5
+            },
+            "sets" : [0],
+            "sectors": [
+                "open",
+                "closed"
+            ]
+        },
+        {
+            "weight": 0.1,
+            "move": {
+                "kind": "translate",
+                "delta": 0.1
+            },
+            "sets" : [0],
+            "sectors": [
+                "open",
+                "closed"
+            ]
+        },
+        {
+            "weight": 0.2,
+            "move": {
+                "kind": "open",
+                "C": 0.1,
+                "reconstructionMaxLength": 6
+            },
+            "sets" : [0],
+            "sectors": [
+                "closed"
+            ]
+        },
+        {
+            "weight": 0.2,
+            "move": {
+                "kind": "close",
+                "C": 0.1,
+                "reconstructionMaxLength": 6
+            },
+            "sets" : [0],
+            "sectors": [
+                "open"
+            ]
+        },
+        {
+            "weight": 0.4,
+            "move": {
+                "kind": "moveHead",
+                "reconstructionMaxLength": 6
+            },
+            "sets" : [0],
+            "sectors": [
+                "open"
+            ]
+        },
+        {
+            "weight": 0.4,
+            "move": {
+                "kind": "moveTail",
+                "reconstructionMaxLength": 6
+            },
+            "sets" : [0],
+            "sectors": [
+                "open"
+            ]
+        },
+        {
+            "weight": 0.8,
+            "move": {
+                "kind": "swap",
+                "reconstructionMaxLength": 6
+            },
+            "sets" : [0],
+            "sectors": [
+                "open"
+            ]
+        },
+        {
+            "weight" : 0.4,
+            "move" : 
+            {
+                "kind" : "advanceHead",
+                "reconstructionMaxLength" : 6
+            },
+            "sets" : [0],
+            "sectors" : ["open"]
+        },
+        {
+            "weight" : 0.4,
+            "move" : 
+            {
+                "kind" : "recedeHead",
+                "reconstructionMaxLength" : 6
+            },
+            "sets" : [0],
+            "sectors" : ["open"]
+        },
+        {
+            "weight" : 0.4,
+            "move" : 
+            {
+                "kind" : "createWorm",
+                "reconstructionMaxLength" : 6
+            },
+            "sets" : [0],
+            "sectors" : ["closed"]
+        },
+        {
+            "weight" : 0.4,
+            "move" : 
+            {
+                "kind" : "deleteWorm",
+                "reconstructionMaxLength" : 6
+            },
+            "sets" : [0],
+            "sectors" : ["open"]
+        }
+
+    ],
+    "action": [
+        {
+            "kind": "oneBody",
+            "groupA": 0,
+            "potential": {
+                "kind": "harmonic",
+                "omega": [1]
+            }
+        }
+    ],
+    "observables": [
+        {
+            "kind": "thermalEnergy",
+            "label": "energy"
+        },
+        {
+            "kind": "virialEnergy",
+            "label": "eV"
+        }
+    ]
+}

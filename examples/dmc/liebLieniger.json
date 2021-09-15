@@ -1,0 +1,58 @@
+{
+    "N" : [10],
+    "seed" : 231,
+    "lBox" : [100],
+    "initialConditionGenerator" : 
+    {
+	"lBox" : [100]
+    },
+    "method" : "svmc",
+    "configurations" : "configurations",
+    "correlationSteps": 0,
+    "timeStep" : 1e-3,
+    "stepsPerBlock" : 1000,
+    "walkers" : 1,
+    "nBlocks" : 10000,    
+    "wavefunctions" :
+    [
+	{
+	    "kind" : "jastrow2bUnDis",
+	    "sets" : [0,0],
+	    "jastrow" :
+	    {
+		"kind" : "delta_phonons",
+		"g": "inf",
+		"z": 9,
+		"cut_off": 10,
+		"beta": 1,
+		"k": 0.15707963267948968,
+		"delta": 0.0
+	    }
+	}
+	
+    ],
+    
+    "potentials" :
+    [
+	
+    ],
+    "measurements" :
+    [
+	{
+	    "kind" : "forceEnergy"
+	},
+	{
+	    "kind" : "pairCorrelation",
+	    "label" : "pairAA",
+	    "sets" : [0,0],
+	    "bins" : 1000,
+	    "minx" : 0,
+	    "maxx" : 50.0,
+	    "recordSteps" : 1000,
+	    "forwardWalkingHistogram" : [100]
+	}
+	
+	
+    ]
+    
+}

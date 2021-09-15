@@ -1,0 +1,47 @@
+{
+    "N" : [33],
+    "seed" : 342,
+    "lBox" : [404,404,404],    
+    "method" : "vmc", 
+    "timeStep" : 5e-1,
+    "stepsPerBlock" : 10000,
+    "walkers" : 1,
+    "nBlocks" : 1000,
+    "configurations" : "configurations",
+    "wavefunctions" :
+    [
+	{
+	    "kind" : "slaterComplex",
+	    "set" : 0,
+	    "orbitalSet" :
+	    {
+		"kind" : "planeWave",
+		"n" : 33,
+		"lBox" : 404.0,
+		"teta" : 0.0
+	    }
+	}
+
+    ],
+    
+    "potentials" :
+    [
+
+    ],
+    "measurements" :
+    [
+	{
+	    "kind" : "forceEnergy"
+	},
+	
+	{
+	    "kind" : "pairCorrelation",
+	    "label" : "pair",
+	    "sets" : [0,0],
+	    "bins" : 1000,
+	    "minx" : 0,
+	    "maxx" : 202.0
+	}
+    ]
+    
+}

@@ -1,0 +1,111 @@
+cmake_minimum_required(VERSION 3.10)
+# set the project name
+project(particleKernels VERSION 1.0)
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set (COMPILER_FLAGS "-mavx2 -mfma" )
+
+else()
+endif()
+
+
+if ( ${CMAKE_BUILD_TYPE} MATCHES Debug)
+  set(CMAKE_CXX_FLAGS_ADDITIONAL "-O0 -g -pg -Wfatal-errors ")
+  elseif (${CMAKE_BUILD_TYPE} MATCHES Release) 
+  set(CMAKE_CXX_FLAGS_ADDITIONAL "-O3 -pg  -Wfatal-errors ")
+  else()
+  message(FATAL_ERROR "Unrecognized build type: " ${CMAKE_BUILD_TYPE}  )
+
+endif()
+
+find_package(OpenMP)
+
+
+set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${CMAKE_CXX_FLAGS_ADDITIONAL} )
+set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} )
+
+
+add_subdirectory(${PROJECT_BINARY_DIR}/../external/googletest)
+
+
+set(SOURCES  src/randomKernel.cpp src/cellNeighbourList.cpp src/timers.cpp
+ src/lattice.cpp src/particleData.cpp src/utils.cpp src/twoBodyDistancesDirect.cpp)
+
+
+ 
+ add_library(main_lib STATIC ${SOURCES})
+
+ if(OpenMP_CXX_FOUND)
+    target_link_libraries(main_lib PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
+set_target_properties(main_lib PROPERTIES RULE_MESSAGES OFF)
+set_target_properties( main_lib PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_ADDITIONAL} )
+set_target_properties( main_lib PROPERTIES LINK_FLAGS "-pg" )
+
+
+target_include_directories(main_lib PUBLIC
+                           "${PROJECT_BINARY_DIR}/../src"
+			   )
+
+     	 
+target_link_libraries (main_lib  )
+
+
+add_executable(main src/main.cpp)
+
+if(OpenMP_CXX_FOUND)
+target_link_libraries(main PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
+
+target_link_libraries(main PUBLIC main_lib)
+target_link_libraries(main )
+set_target_properties( main PROPERTIES LINK_FLAGS "-pg" )
+set_target_properties( main PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_ADDITIONAL} )
+
+
+add_executable(tst tst/main.cpp tst/verlet-test.cpp tst/linkedCell.cpp tst/twoBodyTest.cpp tst/testUtils.cpp)
+if(OpenMP_CXX_FOUND)
+target_link_libraries(tst PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
+set_target_properties( tst PROPERTIES LINK_FLAGS "-pg" )
+set_target_properties( tst PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_ADDITIONAL} )
+target_link_libraries(tst PRIVATE gtest)
+target_link_libraries(tst PUBLIC main_lib)
+
+
+
+add_executable(timers timers/main.cpp)
+
+if(OpenMP_CXX_FOUND)
+target_link_libraries(timers PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
+
+set_target_properties( timers PROPERTIES LINK_FLAGS "-pg" )
+set_target_properties( timers PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_ADDITIONAL} )
+target_link_libraries(timers PRIVATE gtest main_lib )		
+target_link_libraries(timers PUBLIC main_lib )		
+
+
+#set(TEST_SOURCES  )
+#add_executable(tst tst/main.cpp ${TEST_SOURCES})
+#target_include_directories(tst PUBLIC
+#                           "${PROJECT_BINARY_DIR}/../src"
+#                           )
+#target_link_libraries(tst PUBLIC ${PROJECT_BINARY_DIR}/../external gtest main_lib ${MPI_LIBRARIES})			 
+#set_target_properties( tst PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_ADDITIONAL} )
+#set_target_properties( tst PROPERTIES LINK_FLAGS "-pg" )
+
+message("Compile Flags: " ${CMAKE_CXX_COMPILE_FLAGS} )

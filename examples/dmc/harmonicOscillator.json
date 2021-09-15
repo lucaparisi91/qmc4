@@ -1,0 +1,90 @@
+{
+    "N" : [1],
+    "seed" : 231,
+    "lBox" : [10000.0,10000.0,10000.0],
+    "method" : "dmc",
+    "configurations" : "configurations",
+    "timeStep" : 1e-2,
+    "stepsPerBlock" : 1000,
+    "walkers" : 1000,
+    "nBlocks" : 1000070,    
+    "wavefunctions" :
+    [
+	{
+	    "kind" : "jastrow1b",
+	    "set" : 0,
+	    "jastrow" :
+	    {
+		"kind" : "gaussian",
+		"alpha" : 1.0
+	    }
+	}
+    ],
+    
+    "potentials" :
+    [
+	{
+	    "kind" : "harmonic1b",
+	    "omega" : 1.0,
+	    "set" : 0
+	}
+	
+    ],
+    
+    "measurements" :
+    [
+	{
+	    "kind" : "centerOfMassSquared",
+	    "label" : "cm2",
+	    "set" : 0,
+	    "recordSteps" : 1000
+	},
+	{
+	    "kind" : "forwardWalking",
+	    "label" : "cm2_fw0",
+	    "targetLabel" : "cm2",
+	    "forwardWalkingSteps" : 0
+	},
+	
+	{
+	    "kind" : "forwardWalking",
+	    "label" : "cm2_fw1",
+	    "targetLabel" : "cm2",
+	    "forwardWalkingSteps" : 100
+	},
+	
+	{
+	    "kind" : "forwardWalking",
+	    "label" : "cm2_fw2",
+	    "targetLabel" : "cm2",
+	    "forwardWalkingSteps" : 300
+	},
+
+	{
+	    "kind" : "forwardWalking",
+	    "label" : "cm2_fw3",
+	    "targetLabel" : "cm2",
+	    "forwardWalkingSteps" : 500
+	},
+
+	{
+	    "kind" : "forwardWalking",
+	    "label" : "cm2_fw4",
+	    "targetLabel" : "cm2",
+	    "forwardWalkingSteps" : 800
+	},
+
+	{
+	    "kind" : "forwardWalking",
+	    "label" : "cm2_fw5",
+	    "targetLabel" : "cm2",
+	    "forwardWalkingSteps" : 1000
+	}
+
+
+	
+
+	
+    ]
+    
+}

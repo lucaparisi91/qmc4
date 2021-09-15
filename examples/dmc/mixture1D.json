@@ -1,0 +1,94 @@
+{
+    "N" : [10,100],
+    "seed" : 231,
+    "lBox" : [100],
+    "initialConditionGenerator" : 
+    {
+	"lBox" : [100]
+    },
+    "method" : "vmc",
+    "configurations" : "configurations",
+    "correlationSteps": 0,
+    "timeStep" : 1e-3,
+    "stepsPerBlock" : 1000,
+    "walkers" : 500,
+    "nBlocks" : 10000,    
+    "wavefunctions" :
+    [
+	{
+	    "kind" : "jastrow2bUnDis",
+	    "sets" : [0,0],
+	    "jastrow" :
+	    {
+		"kind" : "delta_phonons",
+		"g": "inf",
+		"z": 49.9,
+		"cut_off": 50.0,
+		"beta": 1,
+		"k": 0.03141592653589794,
+		"delta": 0.0
+	    }
+	},
+	{
+	    "kind" : "jastrow2bUnDis",
+	    "sets" : [1,1],
+	    "jastrow" :
+	    {
+		"kind" : "delta_phonons",
+		"g": "inf",
+		"z": 49.9,
+		"cut_off": 50.0,
+		"beta": 1,
+		"k": 0.03141592653589794,
+		"delta": 0.0
+	    }
+	},
+	{
+	    "kind" : "jastrow2bDis",
+	    "sets" : [0,1],
+	    "jastrow" :
+	    {
+		"kind" : "delta_phonons",
+		"g": "inf",
+		"z": 49.9,
+		"cut_off": 50.0,
+		"beta":   0.002023040843786736,
+		"k": 0.0014130361330990295,
+		"delta":   1.5001445203718156
+	    }
+	}
+
+
+    ],
+    
+    "potentials" :
+    [
+	
+    ],
+    "measurements" :
+    [
+	{
+	    "kind" : "forceEnergy"
+	},
+
+	{
+	    "kind" : "pairCorrelation",
+	    "label" : "pairAA",
+	    "sets" : [0,0],
+	    "bins" : 1000,
+	    "minx" : 0,
+	    "maxx" : 50.0
+	},
+	{
+	    "kind" : "pairCorrelation",
+	    "label" : "pairAB",
+	    "sets" : [0,1],
+	    "bins" : 1000,
+	    "minx" : 0,
+	    "maxx" : 50.0
+	}
+
+	
+    ]
+    
+}

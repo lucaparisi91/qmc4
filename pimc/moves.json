@@ -1,0 +1,58 @@
+,
+{
+    "weight" : 0.2,
+    "move" : 
+    {
+        "kind" : "translate",
+        "delta" : 0.1 
+    },
+    "sectors" : ["open","closed"]
+},
+{
+    "weight" : 0.2,
+    "move" : 
+    {
+        "kind" : "open",
+        "C" : 1e-1,
+        "reconstructionMaxLength" : 3 
+    },
+    "sectors" : ["closed"]
+},
+{
+    "weight" : 0.2,
+    "move" : 
+    {
+        "kind" : "close",
+        "C" : 1e-1,
+        "reconstructionMaxLength" : 3 
+    },
+    "sectors" : ["open"]
+},
+
+{
+    "weight" : 0.4,
+    "move" : 
+    {
+        "kind" : "moveHead",
+        "reconstructionMaxLength" : 3
+    },
+    "sectors" : ["open"]
+ },
+ {
+    "weight" : 0.4,
+    "move" : 
+    {
+        "kind" : "moveTail",
+        "reconstructionMaxLength" : 3
+    },
+    "sectors" : ["open"]
+ },
+ {
+    "weight" : 1.9,
+    "move" : 
+    {
+        "kind" : "swap",
+        "reconstructionMaxLength" : 3
+    },
+    "sectors" : ["open"]
+ }

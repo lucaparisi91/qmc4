@@ -1,0 +1,138 @@
+{
+    "N" : [10,100],
+    "seed" : 231,
+    "lBox" : [100],
+    "initialConditionGenerator" : 
+    {
+	"lBox" : [100]
+    },
+    "method" : "vmc",
+    "configurations" : "configurations",
+    "correlationSteps": 10,
+    "timeStep" : 1e-1,
+    "stepsPerBlock" : 100,
+    "walkers" : 500,
+    "nBlocks" : 10000,    
+    "wavefunctions" :
+    [
+	{
+	    "kind" : "jastrow2bUnDis",
+	    "sets" : [0,0],
+	    "jastrow" :
+	    {
+		"kind" : "dipolar_rep",
+		"D" : 10.0,
+		"cut_off" : 50,
+		"matching_point" : 40,
+		"alpha" : 3.305710742747185,
+		"C" : 0.2225342490559172
+	    }
+	},
+	{
+	    "kind" : "jastrow2bUnDis",
+	    "sets" : [1,1],
+	    "jastrow" :
+	    {
+		"kind" : "delta_phonons",
+		"g": 1.0,
+		"z": 4.9,
+		"cut_off": 50,
+		"beta": 0.824275835658201,
+		"k": 0.03641329313512264,
+		"delta": 0.036397212125902176
+	    }
+	},
+	{
+	    "kind" : "jastrow2bDis",
+	    "sets" : [0,1],
+	    "jastrow" :
+	    {
+		"kind" : "delta_bound_state_phonons",
+		"cut_off": 50.0,
+		"g": 1.0,
+		"beta": -0.1,
+		"A": 0.544989647875519,
+		"xI": 0.19999736816783312,
+		"k": 0.5
+	    }
+	}
+	
+
+	
+    ],
+    
+    "potentials" :
+    [
+	{
+	    "kind" : "dipolar2b",
+	    "D" : 10.0,
+	    "sets" : [0,0]
+	}
+    ],
+    "measurements" :
+    [
+	{
+	    "kind" : "forceEnergy"
+	},
+
+	{
+	    "kind" : "pairCorrelation",
+	    "label" : "pairAA",
+	    "sets" : [0,0],
+	    "bins" : 1000,
+	    "minx" : 0,
+	    "maxx" : 50.0
+	},
+	{
+	    "kind" : "pairCorrelation",
+	    "label" : "pairBB",
+	    "sets" : [1,1],
+	    "bins" : 1000,
+	    "minx" : 0,
+	    "maxx" : 50.0
+	},
+	{
+	    "kind" : "pairCorrelation",
+	    "label" : "pairAB",
+	    "sets" : [0,1],
+	    "bins" : 1000,
+	    "minx" : 0,
+	    "maxx" : 50.0
+	},
+
+	{
+	    "kind" : "structureFactor",
+	    "label" : "sFAA",
+	    "sets" : [0,0],
+	    "bins" : 1000,
+	    "maxq" : 60,
+	    "lBox" : 100,
+	    "channel" : 1
+	},
+	{
+	    "kind" : "structureFactor",
+	    "label" : "sFBB",
+	    "sets" : [1,1],
+	    "bins" : 1000,
+	    "maxq" : 60,
+	    "lBox" : 100,
+	    "channel" : 1
+	},
+	{
+	    "kind" : "structureFactor",
+	    "label" : "sFAB",
+	    "sets" : [0,1],
+	    "bins" : 1000,
+	    "maxq" : 60,
+	    "lBox" : 100,
+	    "channel" : 1
+	}
+	
+
+	
+
+	
+	
+    ]
+    
+}

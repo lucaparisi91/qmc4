@@ -1,0 +1,21 @@
+{
+    "centerOfMassDisaplacement"  :
+    {
+        "weight": "0.1"
+    },
+    "levyReconstruction" :
+    {
+        "nBeads" : 10,
+        "weight" : "0.9"
+    },
+    "open/close" : 
+    {
+        "openSectorWeight" : 0.1,
+        "nBeads" : 10
+    },
+    "swap" : 
+    {
+        "weight" : 0.3
+    }
+
+}

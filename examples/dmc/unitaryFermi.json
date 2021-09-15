@@ -1,0 +1,84 @@
+{
+    "N": [
+        33,
+        33
+    ],
+    "seed": 342,
+    "lBox": [
+        404,
+        404,
+        404
+    ],
+    "method": "vmc",
+    "timeStep": 0.05,
+    "stepsPerBlock": 1000,
+    "walkers": 1000,
+    "nBlocks": 1000,
+    "configurations": "configurations",
+    "wavefunctions": [
+        {
+            "kind": "slater",
+            "set": 0,
+            "orbitalSet": {
+                "kind": "sinCos",
+                "n": 33,
+                "lBox": 404.0
+            }
+        },
+        {
+            "kind": "slater",
+            "set": 1,
+            "orbitalSet": {
+                "kind": "sinCos",
+                "n": 33,
+                "lBox": 404.0
+            }
+        },
+        {
+            "kind": "jastrow2bDis",
+            "sets": [
+                0,
+                1
+            ],
+            "jastrow": {
+                "kind": "squareWell",
+                "V0": 2.4674011002723395,
+                "R0": 1.0,
+                "alpha": 0.5,
+                "cut_off": 404.0,
+                "Rm": 114.0,
+                "aInverse": 0.0,
+                "lBox": 808.0
+            }
+        }
+    ],
+    "potentials": [
+        {
+            "kind": "squareWell2b",
+            "V0": 2.4674011002723395,
+            "R0": 1.0,
+            "sets": [
+                0,
+                1
+            ]
+        }
+    ],
+    
+    "measurements" :
+    [
+	{
+	    "kind" : "forceEnergy"
+	},
+	
+	{
+	    "kind" : "pairCorrelation",
+	    "label" : "pair",
+	    "sets" : [0,0],
+	    "bins" : 1000,
+	    "minx" : 0,
+	    "maxx" : 202.0
+	}
+    ]
+
+    
+}

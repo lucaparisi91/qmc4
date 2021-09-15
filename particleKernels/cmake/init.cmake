@@ -1,0 +1,39 @@
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set (COMPILER_FLAGS "-mavx2 -mfma" )
+else()
+endif()
+
+
+set(CMAKE_CXX_LINK_FLAGS_ADDITIONAL "-pg")
+
+if ( ${CMAKE_BUILD_TYPE} MATCHES Debug)
+  set(CMAKE_CXX_FLAGS_ADDITIONAL " -g -pg -Wfatal-errors ")
+  elseif (${CMAKE_BUILD_TYPE} MATCHES Release) 
+  set(CMAKE_CXX_FLAGS_ADDITIONAL " -pg  -Wfatal-errors ")
+  else()
+  message(FATAL_ERROR "Unrecognized build type: " ${CMAKE_BUILD_TYPE}  )
+
+endif()
+
+find_package(OpenMP)
+set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${CMAKE_CXX_FLAGS_ADDITIONAL} )
+set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS_ADDITIONAL} ${CMAKE_CXX_LINK_FLAGS} )
+
+
+find_package(MPI )
+
+if (MPI_FOUND)
+
+message(STATUS "Run: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} ${MPIEXEC_PREFLAGS} EXECUTABLE ${MPIEXEC_POSTFLAGS} ARGS")
+
+endif()

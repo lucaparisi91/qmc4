@@ -1,0 +1,122 @@
+{
+    "inverseTemperature": 1.0,
+    "nBeads": 20,
+    "nBlocks": 10000,
+    "stepsPerBlock": 1000,
+    "correlationSteps": 10,
+    "particles": [
+        40
+    ],
+    "lBox": [
+        0.8735804647362989,
+        0.8735804647362989,
+        0.8735804647362989
+    ],
+    "seed": 18,
+    "checkPointFile": "chk.h5",
+    "movesTable": [
+        {
+            "weight": 0.8,
+            "move": {
+                "kind": "levy",
+                "reconstructionMaxLength": 10
+            },
+            "sets" : [0],
+            "sectors": [
+                "open",
+                "closed"
+            ]
+        },
+        {
+            "weight": 0.1,
+            "move": {
+                "kind": "translate",
+                "delta": 0.1
+            },
+            "sets" : [0],
+            "sectors": [
+                "open",
+                "closed"
+            ]
+        },
+        {
+            "weight": 0.2,
+            "move": {
+                "kind": "open",
+                "C": 0.1,
+                "reconstructionMaxLength": 4
+            },
+            "sets" : [0],
+            "sectors": [
+                "closed"
+            ]
+        },
+        {
+            "weight": 0.2,
+            "move": {
+                "kind": "close",
+                "C": 0.1,
+                "reconstructionMaxLength": 4
+            },
+            "sets" : [0],
+            "sectors": [
+                "open"
+            ]
+        },
+        {
+            "weight": 0.4,
+            "move": {
+                "kind": "moveHead",
+                "reconstructionMaxLength": 4
+            },
+            "sets" : [0],
+            "sectors": [
+                "open"
+            ]
+        },
+        {
+            "weight": 0.4,
+            "move": {
+                "kind": "moveTail",
+                "reconstructionMaxLength": 4
+            },
+            "sets" : [0],
+            "sectors": [
+                "open"
+            ]
+        },
+        {
+            "weight": 0.8,
+            "move": {
+                "kind": "swap",
+                "reconstructionMaxLength": 4
+            },
+            "sets" : [0],
+            "sectors": [
+                "open"
+            ]
+        }
+    ],
+    "action": [
+        {
+            "kind": "twoBody",
+            "groupA": 0,
+            "groupB": 0,
+            "potential": {
+                "kind": "gaussian",
+                "V0": 77.03490735958916,
+                "alpha": 482.74469230281466
+            }
+        }
+    ],
+    "observables": [
+        {
+            "kind": "thermalEnergy",
+            "label": "energy"
+        },
+        {
+            "kind": "virialEnergy",
+            "label": "eV"
+        }
+    ]
+}

@@ -1,0 +1,61 @@
+{
+    "N" : [10],
+    "seed" : 231,
+    "lBox" : [10000.0],
+    "initialConditionGenerator" : 
+    {
+	"lBox" : [1]
+    },
+    "method" : "vmc",
+    "configurations" : "configurations",
+    "correlationSteps": 0,
+    "timeStep" : 1e-3,
+    "stepsPerBlock" : 1000,
+    "walkers" : 500,
+    "nBlocks" : 1000070,    
+    "wavefunctions" :
+    [
+	{
+	    "kind" : "jastrow1b",
+	    "set" : 0,
+	    "jastrow" :
+	    {
+		"kind" : "gaussian",
+		"alpha" : 0.5
+	    }
+	},
+	{
+	    "kind" : "jastrow2bUnDis",
+	    "sets" : [0,0],
+	    "jastrow" :
+	    {
+		"kind" : "delta_in_trap",
+		"a" : 0
+	    }
+	}
+    ],
+    
+    "potentials" :
+    [
+	{
+	    "kind" : "harmonic1b",
+	    "omega" : 1.0,
+	    "set" : 0
+	}
+	
+    ],
+    
+    "measurements" :
+    [
+	{
+	    "kind" : "centerOfMassSquared",
+	    "label" : "cm2",
+	    "set" : 0
+	},
+	{
+	    "kind" : "forceEnergy"
+	}
+	
+    ]
+    
+}
