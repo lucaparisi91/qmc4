@@ -2798,9 +2798,7 @@ TEST_F(configurationsTest,closedChain_twoBody)
     Real l2Short=0;
     Real lWorm=0;
 
-
     Real nEstimator=0;
-
     Real r=0;
 
     for (int i=0;i<nBlocks;i++)
@@ -2856,15 +2854,14 @@ TEST_F(configurationsTest,closedChain_twoBody)
 
         }
 
-
        if ( nShort == nTrials  )
        {
-            l2ShortOut << i << " " << l2Short/nShort << std::endl ;
-            lWormOut << i << " " << lWorm/nShort << std::endl ;
+            l2ShortOut << i << " " << l2Short/nShort << std::endl << std::flush ;
+            lWormOut << i << " " << lWorm/nShort << std::endl << std::flush;
             
             for (int iN=0;iN<nBeadsWormMax;iN++)
            {
-               wormDistributionOut << i << " " << iN << " " <<  wormDistribution[iN] * 1./nTrials << " " << std::endl ;
+               wormDistributionOut << i << " " << iN << " " <<  wormDistribution[iN] * 1./nTrials << " " << std::endl << std::flush ;
            }
 
 
@@ -2877,12 +2874,12 @@ TEST_F(configurationsTest,closedChain_twoBody)
 
        if (nLong == nTrials)
        {
-           l2LongOut << i << " " << l2Long/nTrials << std::endl ;
-           NOut << i << " " << nEstimator * 1./nTrials << std::endl ;
+           l2LongOut << i << " " << l2Long/nTrials << std::endl << std::flush;
+           NOut << i << " " << nEstimator * 1./nTrials << std::endl << std::flush ;
 
            for (int iN=0;iN<nMax;iN++)
            {
-               particleDistributionOut << i << " " << iN << " " <<  particleDistribution[iN] * 1./nTrials << " " << std::endl ;
+               particleDistributionOut << i << " " << iN << " " <<  particleDistribution[iN] * 1./nTrials << " " << std::endl << std::flush ;
            }
 
 
@@ -2895,7 +2892,7 @@ TEST_F(configurationsTest,closedChain_twoBody)
 
         if (n == nTrials)
         {
-            ratioOut << i << " " << r/(n) << std::endl ;
+            ratioOut << i << " " << r/(n) << std::endl << std::flush ;
             r=0;
             n=0;
         }
