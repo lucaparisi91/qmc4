@@ -2927,6 +2927,7 @@ TEST_F(configurationsTest,swap_twoBody)
     SetRandom();
 
 
+
    /*  auto V2 = pimc::makeIsotropicPotentialFunctor(
          [=](Real r) {return 0.*(r*r);} ,
          [=](Real r) {return 0*r  ;}
@@ -2939,9 +2940,8 @@ TEST_F(configurationsTest,swap_twoBody)
 
     //S=pimc::firstOrderAction(sT,  sV2B); */
 
-    int t0=7;
     int l = int( 0.8* 10);
-    int lShort=int( 0.3* 10);
+    int lShort=int( 0.4* 10);
     int lOpen=3;
 
     pimc::translateMove translate(0.1, 2000*M , 0 );
@@ -2996,7 +2996,7 @@ TEST_F(configurationsTest,swap_twoBody)
     tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
 
 
-    int iHead = 4;
+    int iHead = 7;
     //int lWormShort=10 + t0 - 3 ;
 
     //configurations.join(1,0);    
