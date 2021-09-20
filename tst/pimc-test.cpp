@@ -2906,6 +2906,214 @@ TEST_F(configurationsTest,closedChain_twoBody)
 
 }
 
+TEST_F(configurationsTest,swap_twoBody)
+{
+    Real C=1e-3;
+    int nBeads=10;
+    int N=2;
+    Real beta=0.1* nBeads;
+
+    SetUp(N,nBeads,beta, { 300000} );
+
+    //SetUpFreeParticleAction();    
+    //SetUpNonInteractingHarmonicAction();
+
+    //SetUpTwoBodyInteractionHarmonic();
+    SetUpTwoBodyInteractionHarmonicInTrap();
+    
+    SetGrandCanonicalEnsamble(0 );
+
+    SetSeed( time(NULL) );
+    SetRandom();
+
+
+   /*  auto V2 = pimc::makeIsotropicPotentialFunctor(
+         [=](Real r) {return 0.*(r*r);} ,
+         [=](Real r) {return 0*r  ;}
+          );
+    
+
+    std::shared_ptr<pimc::action> sT= std::make_shared<pimc::kineticAction>(timeStep, configurations.nChains() , M  , geo);
+
+    auto sV2B=std::make_shared<pimc::potentialActionTwoBody<decltype(V2)>  >(timeStep,configurations.nChains(),configurations.nBeads(),V2 ,geo,0,0);
+
+    //S=pimc::firstOrderAction(sT,  sV2B); */
+
+    int t0=7;
+    int l = int( 0.8* 10);
+    int lShort=int( 0.3* 10);
+    int lOpen=3;
+
+    pimc::translateMove translate(0.1, 2000*M , 0 );
+
+    pimc::levyMove levy(l,0);
+    
+    pimc::moveHead moveHeadMove(lShort,0);
+    pimc::moveTail moveTailMove(lShort,0);
+
+    pimc::openMove open(C, 0, lOpen );
+    pimc::closeMove close(C, 0, lOpen );
+    
+    pimc::createWorm createWorm(C, 0, lShort , 1 );
+    pimc::deleteWorm removeWorm(C, 0, lShort , 1);
+
+    //open.setStartingBead(t0);
+    //open.setStartingChain(0);
+
+    //close.setStartingBead(t0);
+    //close.setStartingChain(0);
+
+    //open.setLengthCut(lOpen);
+    //close.setLengthCut(lOpen);
+
+    pimc::advanceHead advanceHead(lOpen,0);
+    pimc::recedeHead recedeHead(lOpen,0);
+
+    //advanceHead.setFixedLength();
+    //recedeHead.setFixedLength();
+
+
+
+    pimc::advanceTail advanceTail(lShort,0);
+    pimc::recedeTail recedeTail(lShort,0);
+
+    pimc::swapMove swap( lShort , 200 , 0);
+    swap.setFixedLength();
+
+
+
+    tab.push_back(&levy,0.6,pimc::sector_t::diagonal,"levy");
+    tab.push_back(&translate,0.3,pimc::sector_t::diagonal,"translate");
+    tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
+    //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");
+
+    tab.push_back(&levy,0.6,pimc::sector_t::offDiagonal,"levy");
+    tab.push_back(&translate,0.1,pimc::sector_t::offDiagonal,"translate");
+    //tab.push_back(&close,0.1,pimc::sector_t::offDiagonal,"close");
+    tab.push_back(&moveHeadMove,0.1,pimc::sector_t::offDiagonal,"moveHead");
+    tab.push_back(&moveTailMove,0.1,pimc::sector_t::offDiagonal,"moveTail");
+    
+    tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
+
+
+    int iHead = 4;
+    //int lWormShort=10 + t0 - 3 ;
+
+    //configurations.join(1,0);    
+    //configurations.setHead(1,0);
+
+    configurations.setHeadTail(0,iHead,-1);
+
+    //configurations.join(0,1);
+
+    //configurations.join(1,2);
+    
+    configurations.fillHeads();
+    
+
+    resetCounters();
+
+    int nTrials=100000;
+    int nBlocks=100000;
+    std::ofstream l2ShortOut,l2LongOut,ratioOut;
+
+    l2ShortOut.open("l2Short.dat");
+    l2LongOut.open("l2Long.dat");
+    
+    
+
+    ratioOut.open("ratio.dat");
+
+    std::vector<int > particleDistribution;
+    int nMax=40;
+    particleDistribution.resize(nMax,0);
+
+    std::vector<int > wormDistribution;
+    int nBeadsWormMax=400;
+    wormDistribution.resize(nBeadsWormMax,0);
+
+
+    //pimc::advanceHeadTest advance(l);
+    //pimc::recedeHeadTest recede(l);
+
+
+    Real nShort=0;
+    Real nLong=0;
+    Real n=0;
+
+    Real l2Long=0;
+    Real l2Short=0;
+
+    Real r=0;
+
+    for (int i=0;i<nBlocks;i++)
+    {
+
+        while (nShort<nTrials and nLong<nTrials and n<nTrials)
+        {
+            
+            tab.attemptMove(configurations,S,randG);
+    
+            if ( configurations.getGroups()[0].heads[0] == 0 )
+            {
+                
+                l2Short+=accumulateAverageLengthSquare(0,configurations);
+                nShort+=1;
+                r+=1;
+
+                
+                
+            }
+            else if ( configurations.getGroups()[0].heads[1] == 0 )
+            {
+                
+                l2Long+=accumulateAverageLengthSquare( 0,configurations );
+                nLong+=1;     
+
+            } 
+
+            n+=1;
+
+        }
+
+       if ( nShort == nTrials  )
+       {
+            l2ShortOut << i << " " << l2Short/nShort << std::endl << std::flush ;
+            
+
+
+           
+            l2Short=0;
+            nShort=0;
+           
+       }
+
+       if (nLong == nTrials)
+       {
+           l2LongOut << i << " " << l2Long/nTrials << std::endl << std::flush;
+
+
+           
+           l2Long=0;
+           nLong=0;
+                  }
+
+        if (n == nTrials)
+        {
+            ratioOut << i << " " << r/(n) << std::endl << std::flush ;
+            r=0;
+            n=0;
+        }
+        
+        tab >> std::cout;
+
+        
+        tab.resetCounters();
+
+    }
+
+}
+
 TEST_F(configurationsTest,driver)
 {
     Real C=1e-3;
