@@ -2,9 +2,8 @@ include(../cmake/init.cmake)
 
 set ( SOURCES geometryPMC.cpp
   action.cpp  moves.cpp  pimcConfigurations.cpp  pimcObservables.cpp pimcObservablesFactory.cpp toolsPimc.cpp  pimcDriver.cpp  pimcPotentials.cpp  hdf5IO.cpp toolsPimcTest.cpp
-  forces.cpp propagators.cpp levyReconstructor.cpp  
-  )
- 
+  forces.cpp propagators.cpp levyReconstructor.cpp  actionTwoBody.cpp
+  ) 
 
  # -------  Set up the static dmc library
 add_library(pimc_lib STATIC ${SOURCES})
@@ -21,6 +20,8 @@ target_include_directories(pimc PUBLIC
                            "${PROJECT_SOURCE_DIR}/dmc"
                            )
 target_link_libraries(pimc PUBLIC stdc++fs  pimc_lib dmc_lib)
+
+
 
 set_target_properties( pimc PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} )
 target_link_libraries(pimc PRIVATE gtest )

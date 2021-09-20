@@ -87,10 +87,8 @@ TEST( kernels, primitiveApproximationTwoBodyKernel )
     int t0=4;
     int l=3;
 
+    
     pairKernel.evaluateTriangular( data , {t0,t0+l} , { N/2 , N - 1} , {N/2, N - 1}  );
-
-
-
 
 }
 
