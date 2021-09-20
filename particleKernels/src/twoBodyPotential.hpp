@@ -59,10 +59,6 @@ void addTwoBodyIsotropicForcesRectangular(
         }
 }
 
-
-
-
-
 template<int dims,class V_t>
 void addTwoBodyIsotropicForcesTriangular(
     const V_t & V,
@@ -182,9 +178,8 @@ Real evaluateTwoBodyRectangular(
      )
 {
     Real sum2b=0;
-    
-    std::array<Real,dims> lBoxInverse;
 
+    std::array<Real,dims> lBoxInverse;
     for(int d=0;d<dims;d++)
     {
         lBoxInverse[d]=1./lBox[d];
@@ -210,7 +205,8 @@ Real evaluateTwoBodyRectangular(
 
                          ) ;
                 
-                 ij_mask = ((t == t0) or (t==t1)) ? std::min(ij_mask,0.5) : ij_mask ;
+                ij_mask = ((t == t0) or (t==t1)) ? std::min(ij_mask,0.5) : ij_mask ;
+
 
 
                 sum2b+=V(std::sqrt(r2))*ij_mask;                
