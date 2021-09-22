@@ -4,8 +4,6 @@
 namespace pimc
 {
 
-
-
 template<class greenFunction_t>
 class pairProductKernel : public kernel2B
 {
@@ -69,7 +67,7 @@ class pairProductKernel : public kernel2B
 
 
 
-    void addForceRectangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces) const
+    virtual void addForceRectangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces) const
     {
         Real value=0;
         std::array<Real,DIMENSIONS> deltaX;
@@ -89,7 +87,7 @@ class pairProductKernel : public kernel2B
                     for(int d=0;d<getDimensions();d++)
                     {
                         Real tmp= 
-                        greenFunction->logGradientLeft(deltaX,deltaXNext) + greenFunction->logGradientRight(deltaX,deltaXNext) ;
+                        greenFunction->logGradientLeft(deltaX,deltaXNext,d) + greenFunction->logGradientRight(deltaX,deltaXNext,d) ;
 
                         forces(i,d,t)+= tmp;
                         forces(j,d,t)+= -tmp;
@@ -100,7 +98,7 @@ class pairProductKernel : public kernel2B
 
     }
 
-    void addForceTriangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces) const
+    virtual void addForceTriangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces) const
     {
         Real value=0;
 
@@ -121,7 +119,7 @@ class pairProductKernel : public kernel2B
                     for(int d=0;d<getDimensions();d++)
                     {
                         Real tmp= 
-                        greenFunction->logGradientLeft(deltaX,deltaXNext) + greenFunction->logGradientRight(deltaX,deltaXNext) ;
+                        greenFunction->logGradientLeft(deltaX,deltaXNext,d) + greenFunction->logGradientRight(deltaX,deltaXNext,d) ;
 
                         forces(i,d,t)+= tmp;
                         forces(j,d,t)+= -tmp;

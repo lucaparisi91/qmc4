@@ -2,56 +2,138 @@
 namespace pimc
 {
 
+using range_t = std::array<int,2>;
 
-Real actionTwoBody::evaluate(const configurations_t & configurations,const std::array<int,2> & timeRange, int iParticle)
+
+
+auto intersectRanges(const range_t & rangeA,const range_t & rangeB )
+{
+    range_t intersection{std::max(rangeA[0],rangeB[0]),std::min(rangeA[1],rangeB[1]) };
+
+    if (intersection[1] < intersection[0])
     {
-        auto const & groupA = configurations.getGroups()[setA];
-        auto const & groupB = configurations.getGroups()[setB];
-
-        // if modified particle is not involved in the evaluate of the action
-        bool isInA = groupA.contains(iParticle);
-        bool isInB = groupB.contains(iParticle);
-
-        if (not (isInA or isInB) ) {return 0;} 
-        if (setA == setB)
-        {
-            return _kernel->evaluateTriangular(configurations.dataTensor() , timeRange,{iParticle,iParticle} , {groupA.iStart,groupA.iEnd} );
-        }
-        else
-        {
-            std::array<int,2> rangeB;
-
-            if (isInA)
-            {
-                rangeB = std::array<int,2>{groupB.iStart,groupB.iEnd };
-            }
-            else
-            {
-                rangeB = std::array<int,2>{groupA.iStart,groupA.iEnd };
-            }
-
-            return _kernel->evaluateRectangular(configurations.dataTensor(), timeRange , {iParticle,iParticle} , rangeB ) ;
-        }
+        return range_t{0,-1};
     }
-
-
-Real actionTwoBody::evaluate(const configurations_t & configurations,const std::array<int,2> & timeRange)
+    else
     {
-        auto const & groupA = configurations.getGroups()[setA];
-        auto const & groupB = configurations.getGroups()[setB];
+        return intersection;
+    }
+}
 
-        auto rangeA = std::array<int,2>{groupB.iStart,groupB.iEnd };
+Real actionTwoBody::evaluate(const configurations_t & configurations,const std::array<int,2> & timeRange_, const range_t & particleRange )
+    {
+        const auto & groupA = configurations.getGroups()[setA];
+        const auto & groupB = configurations.getGroups()[setB];
+
+        if (timeRange_[1] < timeRange_[0] )
+        {
+            return 0;
+        }
+        
+        range_t timeRange {timeRange_[0],timeRange_[1]+1};
+
+        Real sum=0;
 
         if (setA == setB)
         {
-            return _kernel->evaluateTriangular(configurations.dataTensor() , timeRange,{groupA.iStart,groupA.iEnd} , {groupA.iStart,groupA.iEnd} );
+             auto range=intersectRanges(particleRange, groupA.range());
+
+            sum+=_kernel->evaluateTriangular(configurations , timeRange, particleRange , groupA.range() );
+            sum+=_kernel->evaluateRectangular(configurations , timeRange, {particleRange[1]+1,groupA.range()[1]} , range );
+
         }
         else
         {
-            auto rangeB = std::array<int,2>{groupB.iStart,groupB.iEnd };
+            auto rangeA = intersectRanges(  groupA.range(),particleRange );
+            auto rangeB = intersectRanges(  groupB.range(),particleRange );
 
-            return _kernel->evaluateRectangular(configurations.dataTensor(), timeRange , rangeA , rangeB ) ;
+            sum+=_kernel->evaluateRectangular(configurations , timeRange, rangeA , groupB.range() );
+            sum+=_kernel->evaluateRectangular(configurations , timeRange, {groupA.range()[0], rangeA[0] - 1} , rangeB );
+            sum+=_kernel->evaluateRectangular(configurations , timeRange, { rangeA[1] + 1,groupA.range()[1]} , rangeB );
+
         }
+
+        return sum;
     }
+
+
+Real actionTwoBody::evaluateTimeDerivative(const configurations_t & configurations,const std::array<int,2> & timeRange_, const range_t & particleRange )
+    {
+        const auto & groupA = configurations.getGroups()[setA];
+        const auto & groupB = configurations.getGroups()[setB];
+
+        if (timeRange_[1] < timeRange_[0] )
+        {
+            return 0;
+        }
+        
+        range_t timeRange {timeRange_[0],timeRange_[1]+1};
+
+        Real sum=0;
+
+        if (setA == setB)
+        {
+             auto range=intersectRanges(particleRange, groupA.range());
+
+            sum+=_kernel->evaluateTimeDerivativeTriangular(configurations , timeRange, particleRange , groupA.range() );
+            sum+=_kernel->evaluateTimeDerivativeRectangular(configurations , timeRange, {particleRange[1]+1,groupA.range()[1]} , range );
+
+        }
+        else
+        {
+            auto rangeA = intersectRanges(  groupA.range(),particleRange );
+            auto rangeB = intersectRanges(  groupB.range(),particleRange );
+
+            sum+=_kernel->evaluateTimeDerivativeRectangular(configurations , timeRange, rangeA , groupB.range() );
+            sum+=_kernel->evaluateTimeDerivativeRectangular(configurations , timeRange, {groupA.range()[0], rangeA[0] - 1} , rangeB );
+            sum+=_kernel->evaluateTimeDerivativeRectangular(configurations , timeRange, { rangeA[1] + 1,groupA.range()[1]} , rangeB );
+            
+        }
+
+        return sum;
+    }
+
+
+
+
+void actionTwoBody::addGradient(const configurations_t & configurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange,  Eigen::Tensor<Real,3> & gradientBuffer)
+{
+    assert( ! configurations.isOpen()  );
+
+    auto const & groupA = configurations.getGroups()[setA];
+    auto const & groupB = configurations.getGroups()[setB];
+
+    
+    if (setA == setB)
+    {
+        auto range=intersectRanges(particleRange, groupA.range());
+
+        _kernel->addForceTriangular( configurations.dataTensor(), timeRange, range ,  groupA.range(), gradientBuffer);
+        //_kernel->addForceRectangular( configurations.dataTensor(), timeRange, {range[1]+1,groupA.range()[1]} ,  range, gradientBuffer);
+
+    }
+    else
+    {
+        auto rangeA = intersectRanges(  groupA.range(),particleRange );
+        auto rangeB = intersectRanges(  groupB.range(),particleRange );
+
+        _kernel->addForceRectangular(configurations.dataTensor(), timeRange , rangeA, groupB.range(),  gradientBuffer);
+
+
+        _kernel->addForceRectangular(
+            configurations.dataTensor()    , timeRange ,
+             {groupA.range()[0], rangeA[0] - 1}    
+            , rangeB,  gradientBuffer);
+        
+        _kernel->addForceRectangular(
+            configurations.dataTensor()    , timeRange ,
+            {rangeA[1]+1, groupA.range()[1] }    
+            , rangeB,  gradientBuffer);
+
+    }
+
 
 }
+    
+}
+

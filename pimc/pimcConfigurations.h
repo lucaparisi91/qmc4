@@ -20,7 +20,6 @@ public:
     maskTensor(){}
     maskTensor( int nChains, int nBeads) : _mask(nChains,nBeads+2) {_mask.setConstant(0);}
 
-
     void setConstant(Real value){_mask.setConstant(value);}
 
     const auto & dataTensor() const {return _mask;}
@@ -49,6 +48,9 @@ struct particleGroup
     iStart(iStart_),iEnd(iEnd_),iEndExtended(iEndExtended_),mass(mass_) {
     }
     bool contains(int iParticle) const {return (iParticle>= iStart) and (iParticle<=iEnd);}
+
+    bool contains(const std::array<int,2> & particleRange) const {return contains(particleRange[0]) and contains(particleRange[1]) ;}
+
 
     bool isOpen() const {return (heads.size()) > 0 or (tails.size() > 0); }
 
@@ -83,8 +85,10 @@ struct particleGroup
     std::swap(*it,*(_heads.end() - 1) );
     _heads.resize(_heads.size() - 1);
 
+
     }
 
+    auto range() const {return std::array<int,2> {iStart,iEnd};}
 
     void removeTail(int iChain)
     {
@@ -223,7 +227,7 @@ public:
 
         bool isOpen(int iGroup) const { return particleGroups[iGroup].isOpen()  ;}
 
-        bool isOpen()
+        bool isOpen() const
         {
             bool open=false;
             for(int i=0;i<particleGroups.size();i++)
@@ -291,6 +295,9 @@ public:
             }
              throw invalidInput("Chain " + std::to_string(iChain) + " is not contained in any group");
         }
+
+
+
 
 
         const auto & getTags() const  {return _tags;}

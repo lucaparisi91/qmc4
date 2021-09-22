@@ -181,7 +181,7 @@ using pimcConfigurations_t = pimcConfigurations;
 class action
 {
     public:
-
+    using geometry_t = geometryPBC_PIMC; 
     action(){}
 
     action(Real timeStep, const geometryPBC_PIMC & geo_) : _geo(geo_), _timeStep(timeStep) {}
@@ -200,8 +200,11 @@ class action
 
     auto getTimeStep() const {return _timeStep;}
 
+    void setTimeStep(Real timeStep) {_timeStep=timeStep;}
+    void setGeometry(const geometry_t & geo) {_geo=geo ;}
+
     private:
-    geometryPBC_PIMC _geo;
+    geometry_t _geo;
     Real _timeStep;
 
 };
