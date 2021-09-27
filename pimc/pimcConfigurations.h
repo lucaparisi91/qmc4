@@ -407,6 +407,7 @@ class configurationsSampler
 
 };
 
+int nParticlesOnClose(const pimcConfigurations & configurations, int set);
 
 };
 

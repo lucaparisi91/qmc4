@@ -2638,26 +2638,27 @@ TEST_F(configurationsTest, advanceRecedeSemiGrandCanonical)
     }
 }
 
+    #include "../pimc/nConnectedChains.h"
+
+
 TEST_F(configurationsTest,closedChain_twoBody)
 {
     Real C=1e-3;
     int nBeads=10;
-    int N=1;
+    int N=2;
     Real beta=0.1* nBeads;
 
     SetUp(N,nBeads,beta, { 300000} );
 
     //SetUpFreeParticleAction();    
-    //SetUpNonInteractingHarmonicAction();
+    SetUpNonInteractingHarmonicAction();
 
     //SetUpTwoBodyInteractionHarmonic();
-    SetUpTwoBodyInteractionHarmonicInTrap();
-    
-    SetGrandCanonicalEnsamble(0.1 );
+    //SetUpTwoBodyInteractionHarmonicInTrap();
 
+    SetGrandCanonicalEnsamble(0 );
     SetSeed( time(NULL) );
     SetRandom();
-
 
    /*  auto V2 = pimc::makeIsotropicPotentialFunctor(
          [=](Real r) {return 0.*(r*r);} ,
@@ -2673,8 +2674,8 @@ TEST_F(configurationsTest,closedChain_twoBody)
 
     int t0=7;
     int l = int( 0.8* 10);
-    int lShort=int( 0.3* 10);
-    int lOpen=3;
+    int lShort=int( 0.6* 10);
+    int lOpen=lShort;
 
     pimc::translateMove translate(0.1, 2000*M , 0 );
 
@@ -2688,6 +2689,10 @@ TEST_F(configurationsTest,closedChain_twoBody)
     
     pimc::createWorm createWorm(C, 0, lShort , 1 );
     pimc::deleteWorm removeWorm(C, 0, lShort , 1);
+
+
+
+
 
     //open.setStartingBead(t0);
     //open.setStartingChain(0);
@@ -2711,22 +2716,25 @@ TEST_F(configurationsTest,closedChain_twoBody)
 
     pimc::swapMove swap( lShort , 200 , 0);
 
+    advanceHead.setMaximumParticleNumber(2);
+    recedeHead.setMinParticleNumber(2);
+
+    pimc::nConnectedChains nConnectedChains;
+
 
     tab.push_back(&levy,0.6,pimc::sector_t::diagonal,"levy");
     tab.push_back(&translate,0.3,pimc::sector_t::diagonal,"translate");
     tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
     //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");
 
-    tab.push_back(&levy,0.5,pimc::sector_t::offDiagonal,"levy");
+    tab.push_back(&levy,0.4,pimc::sector_t::offDiagonal,"levy");
     tab.push_back(&translate,0.1,pimc::sector_t::offDiagonal,"translate");
     tab.push_back(&close,0.1,pimc::sector_t::offDiagonal,"close");
     tab.push_back(&moveHeadMove,0.1,pimc::sector_t::offDiagonal,"moveHead");
     tab.push_back(&moveTailMove,0.1,pimc::sector_t::offDiagonal,"moveTail");
     tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
     tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal,"recedeHead");
-
-
-    //tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
+    tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
 
 /*
     tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
@@ -2741,7 +2749,11 @@ TEST_F(configurationsTest,closedChain_twoBody)
     //int iHead = 7;
     //int lWormShort=10 + t0 - 3 ;
 
-    
+    //configurations.join(0,1);
+    //configurations.join(1,0);
+
+    //configurations.join(2,2);
+
     
 
     //configurations.join(1,0);    
@@ -2752,14 +2764,19 @@ TEST_F(configurationsTest,closedChain_twoBody)
 
     //configurations.join(1,2);
     
+    //configurations.join(0,1);
+    //configurations.join(1,0);
+
+
     configurations.fillHeads();
-    
 
     resetCounters();
 
     int nTrials=100000;
     int nBlocks=100000;
-    std::ofstream NOut,l2ShortOut,l2LongOut, ratioOut,particleDistributionOut,wormDistributionOut,lWormOut;
+    
+    std::ofstream NOut,l2ShortOut,l2LongOut, ratioOut,particleDistributionOut,wormDistributionOut,lWormOut,nConnectedChainsOut,nRingsOut;
+
 
     NOut.open("N.dat");
     l2ShortOut.open("l2Short.dat");
@@ -2767,6 +2784,8 @@ TEST_F(configurationsTest,closedChain_twoBody)
     particleDistributionOut.open("particleDistribution.dat");
     wormDistributionOut.open("wormDistribution.dat");
     lWormOut.open("lWorm.dat");
+    nConnectedChainsOut.open("nConnected.dat");
+    nRingsOut.open("nRings.dat");
 
 
     ratioOut.open("ratio.dat");
@@ -2783,12 +2802,7 @@ TEST_F(configurationsTest,closedChain_twoBody)
     //pimc::advanceHeadTest advance(l);
     //pimc::recedeHeadTest recede(l);
 
-
- 
-
-
-    
-     NOut << std::setprecision(12);
+    NOut << std::setprecision(12);
 
     Real nShort=0;
     Real nLong=0;
@@ -2801,14 +2815,17 @@ TEST_F(configurationsTest,closedChain_twoBody)
     Real nEstimator=0;
     Real r=0;
 
+    Real nConnectedRingsEstimator=0;
+    Real nConnectedChainsEstimator=0;
+
     for (int i=0;i<nBlocks;i++)
     {
 
         while (nShort<nTrials and nLong<nTrials and n<nTrials)
         {
-            
+
             tab.attemptMove(configurations,S,randG);
-           
+
             /*   if (getWormLength(configurations,0) == lWormShort )
             {
                 bool accept = advanceHead.attemptMove(configurations,S,randG);
@@ -2819,7 +2836,8 @@ TEST_F(configurationsTest,closedChain_twoBody)
                 bool accept = recedeHead.attemptMove(configurations,S,randG);
                 
             }  
- */
+            */
+           
             if ( configurations.isOpen() )
             //if (getWormLength(configurations,0) == lWormShort )
             {
@@ -2834,12 +2852,14 @@ TEST_F(configurationsTest,closedChain_twoBody)
                 {
                     wormDistribution[l]+=1;
                 }
-                
+
+                nConnectedChainsEstimator+=nConnectedChains.count(configurations,0);
+
             }
             else 
             {
-                
-                l2Long+=accumulateAverageLengthSquare( 0,configurations );
+                //l2Long+=accumulateAverageLengthSquare( 0,configurations );
+                l2Long+=accumulateLengthSquare( configurations , {0,N-1} , {0,nBeads-1} , geo );
                 nLong+=1;
                 int currentN=configurations.nParticles();
                 nEstimator+=currentN;
@@ -2848,7 +2868,8 @@ TEST_F(configurationsTest,closedChain_twoBody)
                     particleDistribution[ currentN ] +=1 ;
                 }
 
-            } 
+                nConnectedRingsEstimator+=nConnectedChains.count(configurations,0); 
+            }
 
             n+=1;
 
@@ -2867,9 +2888,13 @@ TEST_F(configurationsTest,closedChain_twoBody)
 
            std::fill(wormDistribution.begin(), wormDistribution.end(), 0);
 
+            nConnectedChainsOut << i << " " << nConnectedChainsEstimator/nTrials << std::endl << std::flush ;
+
             l2Short=0;
             nShort=0;
             lWorm=0;
+            nConnectedChainsEstimator=0;
+
        }
 
        if (nLong == nTrials)
@@ -2882,12 +2907,17 @@ TEST_F(configurationsTest,closedChain_twoBody)
                particleDistributionOut << i << " " << iN << " " <<  particleDistribution[iN] * 1./nTrials << " " << std::endl << std::flush ;
            }
 
+           nRingsOut << i << " " << nConnectedRingsEstimator/nTrials << std::endl << std::flush ;
+
+
 
            std::fill(particleDistribution.begin(), particleDistribution.end(), 0);
 
            l2Long=0;
            nLong=0;
            nEstimator=0;
+           nConnectedRingsEstimator=0;
+            
        }
 
         if (n == nTrials)

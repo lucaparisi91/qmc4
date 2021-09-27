@@ -2434,7 +2434,8 @@ bool closeMove::attemptSemiGrandCanonicalMove(configurations_t & confs , firstOr
 
 
 advanceHead::advanceHead(int maxAdvanceLength_,int set) :
-_maxReconstructedLength(maxAdvanceLength_+2) , _levy((maxAdvanceLength_+2)*2),gauss(0,1),uniformRealNumber(0,1),singleSetMove(set)
+_maxReconstructedLength(maxAdvanceLength_+2) , _levy((maxAdvanceLength_+2)*2),gauss(0,1),uniformRealNumber(0,1),singleSetMove(set) ,
+enforceMaxParticleNumber(false),_nMax(1e+9)
 {
     setRandomLength();
 }
@@ -2595,13 +2596,24 @@ bool advanceHead::attemptMove(configurations_t & confs , firstOrderAction & S,ra
 
 
     bool accept = sampler.acceptLog(propRatio,randG);
-
-    if ( accept)
-    {
-        if (tHead + l > M)
+    
+    if (tHead + l > M)
         {
             confs.join(iChain,iChainNew);
         }
+    
+    if ( enforceMaxParticleNumber)
+    {   
+        int nParticlesAfterClose=nParticlesOnClose(confs,getSet());
+        if ( nParticlesAfterClose > _nMax )
+        {
+            accept=false;
+        }
+    }
+
+    if ( accept)
+    {
+        
     }
     else
     {
@@ -2843,7 +2855,8 @@ bool advanceHeadTest::attemptMove(configurations_t & confs , firstOrderAction & 
 }
 
 recedeHead::recedeHead(int maxAdvanceLength_,int set) :
-_maxReconstructedLength(maxAdvanceLength_+2) , _levy((maxAdvanceLength_+2)*2),gauss(0,1),uniformRealNumber(0,1),singleSetMove(set)
+_maxReconstructedLength(maxAdvanceLength_+2) , _levy((maxAdvanceLength_+2)*2),gauss(0,1),uniformRealNumber(0,1),singleSetMove(set),
+_nMin(0),enforceMinParticleNumber(false)
 {
     setRandomLength();   
 }
@@ -2854,7 +2867,6 @@ _maxReconstructedLength(maxAdvanceLength_+2) , _levy((maxAdvanceLength_+2)*2),ga
 {
     setRandomLength();
 }
-
 
 bool recedeHead::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG)
 {
@@ -2933,10 +2945,34 @@ bool recedeHead::attemptMove(configurations_t & confs , firstOrderAction & S,ran
 
     bool accept = sampler.acceptLog(propRatio,randG);
 
+
+     if ( accept)
+    {
+        if (tHead - l < 0 )
+        {
+            confs.join(iChain,iChain);
+        }
+    }
+
+     if ( enforceMinParticleNumber)
+    {   
+        int nParticlesAfterClose=nParticlesOnClose(confs,getSet());
+        if (tHead - l < 0 )
+        {
+            nParticlesAfterClose--;
+        }
+
+        if ( nParticlesAfterClose < _nMin )
+        {
+            accept=false;
+        }
+    }
+
     if ( accept)
     {
         if (tHead - l < 0 )
         {
+            confs.setHead(iChain,M-1);
             confs.removeChain(iChain);
         }
     }

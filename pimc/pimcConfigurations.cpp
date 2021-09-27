@@ -1130,6 +1130,39 @@ pimcConfigurations pimcConfigurations::loadHDF5(const std::string & filename)
 }
 
 
+int nParticlesOnClose(const pimcConfigurations & configurations, int set)
+{
+    int nParticles=configurations.nParticles();
+
+    if ( configurations.getGroups()[set].isOpen() )
+    {
+        const auto & group = configurations.getGroups()[set];
+        int iChainHead=group.heads[0];
+        int iChainTail=group.tails[0];
+        int tHead = configurations.getChain(iChainHead).head;
+        int tTail = configurations.getChain(iChainTail).tail;
+
+        if (iChainTail == iChainHead)
+        {
+            return nParticles + 1;
+        }
+        else
+        {
+            if (tHead >= (tTail + 1) )
+            {
+                return nParticles + 2;
+            }
+            else
+            {
+                return nParticles + 1;
+            }
+        }
+    }
+    else
+    {
+        return nParticles;
+    }
+}
 
 
 

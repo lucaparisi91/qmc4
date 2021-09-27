@@ -166,8 +166,28 @@ void configurationsTest::SetUpTwoBodyInteractionGaussian( Real V0 , Real alpha )
     S= pimc::firstOrderAction(sT,  sV);
 
     }
-    
 
 
 
+Real accumulateLengthSquare(const pimc::configurations_t & configurations, const std::array<int,2> & particleRange, std::array<int,2> timeRange,const geometryPBC & geo)
+    {
+        const auto & data = configurations.dataTensor();
+        Real l2=0;
+
+        for(int i=particleRange[0]; i<=particleRange[1];i++)
+        {
+            const auto & chain = configurations.getChain(i);
+
+            for (int t=std::max(chain.tail + 1, timeRange[0]);t<=std::min(chain.head , timeRange[1] ) ;t++)
+            {
+                for(int d=0;d<DIMENSIONS;d++)
+                {
+                    Real diffd=geo.difference( data( i ,d, t+1) - data(i,d,t) ,d );
+                    l2+=diffd*diffd;
+                }
+            }
+        }
+
+        return l2;
+    }
 

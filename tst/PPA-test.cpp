@@ -39,9 +39,8 @@ TEST( greenFunction , caoBerne )
     testValue=G.logGradientRight(x1,x2,0);
 
     ASSERT_NEAR(testValue,9.241786667146941e-06, 1e-9);
-
+    
 }
-
 
 TEST( kernels, pairProductKernel )
 {   
@@ -127,7 +126,6 @@ TEST( kernels, primitiveApproximationTwoBodyKernel )
 
     ASSERT_NEAR(sumCheck*timeStep , sumKernel, TOL);
 
-
 }
 
 
@@ -138,7 +136,6 @@ TEST_F( configurationsTest , primitiveApproximation )
     int nBeads= 10;
     //int seed = time(NULL);
     int seed = 14;
-
 
     SetUp({N/2,N/2},nBeads,1.0);
     SetSeed(seed);

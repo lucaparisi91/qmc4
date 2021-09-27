@@ -165,3 +165,6 @@ protected:
     Real nMoves=0;
 
 };
+
+
+Real accumulateLengthSquare(const pimc::configurations_t & configurations, const std::array<int,2> & particleRange, std::array<int,2> timeRange,const geometryPBC & geo);

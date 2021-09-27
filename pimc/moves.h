@@ -660,9 +660,10 @@ class advanceHead : public singleSetMove
 
     void setRandomLength() {_setRandomLength=true;}
 
+    void setMaximumParticleNumber(int nMax) {_nMax=nMax;enforceMaxParticleNumber=true;}
+
 
     private:
-
 
     int sampleLength(randomGenerator_t & randG);
 
@@ -677,6 +678,10 @@ class advanceHead : public singleSetMove
     levyReconstructor _levy;
     metropolis sampler;
     bool _setRandomLength;
+
+    int _nMax;
+    bool enforceMaxParticleNumber;
+
 };
 
 class recedeTail : public singleSetMove
@@ -786,7 +791,6 @@ class recedeHeadTest : public singleSetMove
     metropolis sampler;
 };
 
-
 class recedeHead : public singleSetMove
 {
     public:
@@ -801,6 +805,8 @@ class recedeHead : public singleSetMove
 
     bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG);
 
+    void setMinParticleNumber( const int & new_nMin_) { _nMin=new_nMin_ ;enforceMinParticleNumber=true;};  
+    
 
     private:
     int sampleLength(randomGenerator_t & randG);
@@ -814,9 +820,10 @@ class recedeHead : public singleSetMove
     std::uniform_real_distribution<float> uniformRealNumber;
     levyReconstructor _levy;
     metropolis sampler;
-        bool _setRandomLength;
+    bool _setRandomLength;
+    int _nMin;
+    bool enforceMinParticleNumber;
 
-    
 };
 
 
