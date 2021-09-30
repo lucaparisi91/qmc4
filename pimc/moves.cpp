@@ -2010,7 +2010,6 @@ bool closeMove::attemptGrandCanonicalMove(configurations_t & confs , firstOrderA
     std::cout << std::endl; */
 
 
-
      if (! confs.isOpen(getSet()) )
     {
         throw invalidState("The configuration is already closed.");
@@ -2517,14 +2516,14 @@ int advanceTail::sampleLength(randomGenerator_t & randG)
 bool advanceHead::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG)
 {
     Real timeStep = S.getTimeStep();
-
+    
     const auto & heads = confs.getGroups()[getSet()].heads;
-
 
     int iChain=heads[std::floor(uniformRealNumber(randG) * heads.size() )];
     
 
     int tHead=confs.getChain(iChain).head;
+
 
 
     int M = confs.nBeads();
@@ -2597,7 +2596,7 @@ bool advanceHead::attemptMove(configurations_t & confs , firstOrderAction & S,ra
 
     bool accept = sampler.acceptLog(propRatio,randG);
     
-    if (tHead + l > M)
+    if (( tHead + l > M) and accept)
         {
             confs.join(iChain,iChainNew);
         }
@@ -2795,8 +2794,6 @@ bool advanceHeadTest::attemptMove(configurations_t & confs , firstOrderAction & 
 
     
     Real deltaS=0;
-
-    
     
 
     auto & data = confs.dataTensor();

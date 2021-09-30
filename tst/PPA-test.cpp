@@ -438,8 +438,66 @@ TEST_F( configurationsTest , primitiveApproximation )
             }
         }
     }
+}
 
-    ASSERT_NEAR(sum,sumCheck*timeStep,1e-9);
+#if DIMENSIONS == 3
+
+TEST_F( configurationsTest , pairProduct )
+{   
+    int N=4;
+    Real beta = 1;
+    int nBeads= 10;
+    //int seed = time(NULL);
+    int seed = 14;
+
+    SetUp({N/2,N/2},nBeads,1.0);
+    SetSeed(seed);
+
+    SetRandom();
+
+
+    auto V = pimc::makeIsotropicPotentialFunctor(
+        [](Real r) {return 0.5*(r*r) ;} ,
+        [](Real r) {return r ;} 
+        );    
+    
+    Real radius=0.1;
+    using propagator_t = pimc::caoBernePropagator;
+
+    auto kernel =std::make_shared<propagator_t>(timeStep,radius);
+
+    auto pairKernel = std::make_shared<pimc::pairProductKernel<propagator_t> >(kernel);
+
+    
+    auto S = std::make_shared<pimc::actionTwoBody>();
+    S->setTimeStep(timeStep);
+    S->setGeometry(geo);
+    S->setKernel(pairKernel);
+    pairKernel->setGeometry(geo);
+    pairKernel->setTimeStep(timeStep);
+
+    S->setSets({0,0});
+    S->setMinimumDistance(radius);
+
+    while (not S->checkConstraints(configurations,{0,nBeads-1},{0,N-1}) )
+    {
+        SetRandom();
+    } ;
+
+    auto & data = configurations.dataTensor();
+    
+    {
+        int i=3, j=5, d= 0,t=3;
+        data(i,d,t)=0.5678 ;
+        data(j,d,t)=0.5678 + radius*0.03 ;
+
+        ASSERT_FALSE( 
+            S->checkConstraints(configurations,{0,nBeads-1},{0,N-1})
+        );
+
+    }
 
 
 }
+
+#endif

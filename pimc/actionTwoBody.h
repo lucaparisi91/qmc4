@@ -7,7 +7,6 @@ namespace pimc
 //using configurations_t = pimcConfigurations;
 
 
-
 class actionTwoBody : public action
 {
     using range_t = std::array<int,2>;
@@ -60,12 +59,24 @@ class actionTwoBody : public action
 
     virtual void addGradient(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange,  Eigen::Tensor<Real,3> & gradientBuffer);
 
+    virtual bool checkConstraints(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange);
+
+
+    void setMinimumDistance(Real rMin_) {
+        _distanceMinimumConstraint=true;
+        rMin=rMin_;
+    };
 
     private:
 
     std::shared_ptr<kernel2B> _kernel;
     int setA;
     int setB;
+
+    bool _distanceMinimumConstraint;
+
+    Real rMin;
+
 
 
 

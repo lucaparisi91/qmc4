@@ -14,6 +14,7 @@
 
 namespace fs = std::filesystem;
 
+
 TEST(distances,updateSingleParticleDistances)
 {
     pimc::geometryPBC_PIMC geo(10,10,10);
@@ -2638,8 +2639,8 @@ TEST_F(configurationsTest, advanceRecedeSemiGrandCanonical)
     }
 }
 
-    #include "../pimc/nConnectedChains.h"
 
+#include "../pimc/nConnectedChains.h"
 
 TEST_F(configurationsTest,closedChain_twoBody)
 {
@@ -2694,17 +2695,17 @@ TEST_F(configurationsTest,closedChain_twoBody)
 
 
 
-    //open.setStartingBead(t0);
+    //open.setStartingBead(3);
     //open.setStartingChain(0);
 
-    //close.setStartingBead(t0);
+    //close.setStartingBead(3);
     //close.setStartingChain(0);
 
     //open.setLengthCut(lOpen);
     //close.setLengthCut(lOpen);
 
-    pimc::advanceHead advanceHead(lOpen,0);
-    pimc::recedeHead recedeHead(lOpen,0);
+    pimc::advanceHead advanceHead(lShort,0);
+    pimc::recedeHead recedeHead(lShort,0);
 
     //advanceHead.setFixedLength();
     //recedeHead.setFixedLength();
@@ -2716,25 +2717,26 @@ TEST_F(configurationsTest,closedChain_twoBody)
 
     pimc::swapMove swap( lShort , 200 , 0);
 
-    advanceHead.setMaximumParticleNumber(2);
-    recedeHead.setMinParticleNumber(2);
+    //advanceHead.setMaximumParticleNumber(1);
+    //recedeHead.setMinParticleNumber(1);
+
 
     pimc::nConnectedChains nConnectedChains;
-
 
     tab.push_back(&levy,0.6,pimc::sector_t::diagonal,"levy");
     tab.push_back(&translate,0.3,pimc::sector_t::diagonal,"translate");
     tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
     //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");
 
-    tab.push_back(&levy,0.4,pimc::sector_t::offDiagonal,"levy");
+    tab.push_back(&levy,0.7,pimc::sector_t::offDiagonal,"levy");
     tab.push_back(&translate,0.1,pimc::sector_t::offDiagonal,"translate");
-    tab.push_back(&close,0.1,pimc::sector_t::offDiagonal,"close");
+    //tab.push_back(&close,0.1,pimc::sector_t::offDiagonal,"close");
     tab.push_back(&moveHeadMove,0.1,pimc::sector_t::offDiagonal,"moveHead");
     tab.push_back(&moveTailMove,0.1,pimc::sector_t::offDiagonal,"moveTail");
     tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
     tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal,"recedeHead");
-    tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
+    //tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
+
 
 /*
     tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
@@ -2759,8 +2761,13 @@ TEST_F(configurationsTest,closedChain_twoBody)
     //configurations.join(1,0);    
     //configurations.setHead(1,0);
 
-    //configurations.setHeadTail(0,M-1,-1);
-    //configurations.join(0,1);
+    configurations.setHeadTail(1,4,-1);
+    configurations.setHeadTail(0,M,4-1);
+    configurations.join(0,1);
+    //configurations.join(2,0);
+
+
+    //configurations.join(1,1);
 
     //configurations.join(1,2);
     
@@ -2777,7 +2784,6 @@ TEST_F(configurationsTest,closedChain_twoBody)
     
     std::ofstream NOut,l2ShortOut,l2LongOut, ratioOut,particleDistributionOut,wormDistributionOut,lWormOut,nConnectedChainsOut,nRingsOut;
 
-
     NOut.open("N.dat");
     l2ShortOut.open("l2Short.dat");
     l2LongOut.open("l2Long.dat");
@@ -2786,9 +2792,9 @@ TEST_F(configurationsTest,closedChain_twoBody)
     lWormOut.open("lWorm.dat");
     nConnectedChainsOut.open("nConnected.dat");
     nRingsOut.open("nRings.dat");
-
-
     ratioOut.open("ratio.dat");
+
+    
 
     std::vector<int > particleDistribution;
     int nMax=40;
@@ -2841,6 +2847,8 @@ TEST_F(configurationsTest,closedChain_twoBody)
             if ( configurations.isOpen() )
             //if (getWormLength(configurations,0) == lWormShort )
             {
+               
+
                 int l=getWormLength( configurations, 0);
 
                 lWorm+=l;
@@ -2946,10 +2954,10 @@ TEST_F(configurationsTest,swap_twoBody)
     SetUp(N,nBeads,beta, { 300000} );
 
     //SetUpFreeParticleAction();    
-    //SetUpNonInteractingHarmonicAction();
+    SetUpNonInteractingHarmonicAction();
 
     //SetUpTwoBodyInteractionHarmonic();
-    SetUpTwoBodyInteractionHarmonicInTrap();
+    //SetUpTwoBodyInteractionHarmonicInTrap();
     
     SetGrandCanonicalEnsamble(0 );
 
@@ -3026,7 +3034,7 @@ TEST_F(configurationsTest,swap_twoBody)
     tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
 
 
-    int iHead = 7;
+    int iHead = 10;
     //int lWormShort=10 + t0 - 3 ;
 
     //configurations.join(1,0);    

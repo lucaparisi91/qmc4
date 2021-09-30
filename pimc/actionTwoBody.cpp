@@ -134,6 +134,38 @@ void actionTwoBody::addGradient(const configurations_t & configurations,const st
 
 
 }
+
+
+bool actionTwoBody::checkConstraints(const configurations_t & configurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange)
+{
+    if (_distanceMinimumConstraint)    
+    {
+        auto const & groupA = configurations.getGroups()[setA];
+        auto const & groupB = configurations.getGroups()[setB];
     
+        if (setA == setB)
+        {
+            auto rangeA = intersectRanges(  groupA.range(),particleRange );
+            
+            return _kernel->checkMinimumDistanceConstraintTriangular( configurations.dataTensor(),timeRange,particleRange , groupA.range(), _distanceMinimumConstraint );
+
+        }
+        else
+        {
+            auto rangeA = intersectRanges(  groupA.range(),particleRange );
+            auto rangeB = intersectRanges(  groupB.range(),particleRange );
+
+
+            bool pass= _kernel->checkMinimumDistanceConstraintRectangular( configurations.dataTensor(),timeRange,rangeA,groupB.range(), _distanceMinimumConstraint );
+
+            pass = pass and _kernel->checkMinimumDistanceConstraintRectangular( configurations.dataTensor(),timeRange,rangeB,groupA.range(), _distanceMinimumConstraint );
+            return pass;   
+        }
+    }
+    else {
+        return false;
+    }
 }
+
+};
 

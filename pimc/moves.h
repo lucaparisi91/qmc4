@@ -820,13 +820,12 @@ class recedeHead : public singleSetMove
     std::uniform_real_distribution<float> uniformRealNumber;
     levyReconstructor _levy;
     metropolis sampler;
+
     bool _setRandomLength;
     int _nMin;
     bool enforceMinParticleNumber;
 
 };
-
-
 
 class moveTail : public singleSetMove
 {
@@ -836,7 +835,7 @@ class moveTail : public singleSetMove
     moveTail(const json_t & j) : moveTail(j["reconstructionMaxLength"].get<int>() , j["set"].get<int>() ) {}
 
     bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG);
-
+    
     private:
 
 
@@ -913,7 +912,6 @@ class translateMove : public singleSetMove
     configurationsSampler confSampler;
     metropolis sampler;
     std::vector<int> currentPolimerList;
-
 };
 
 class swapMove : public singleSetMove

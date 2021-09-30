@@ -159,9 +159,16 @@ class kernel2B
 
      virtual void addForceTriangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces) const = 0;
 
+     
 
-    private:
+    virtual bool checkMinimumDistanceConstraintRectangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Real minDistance);    
+
+    virtual bool checkMinimumDistanceConstraintTriangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Real minDistance);  
+
    
+    
+    private:
+    
     geometryPBC_PIMC _geometry;
     Real _timeStep;
 };

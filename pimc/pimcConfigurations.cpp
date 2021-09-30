@@ -994,7 +994,6 @@ int configurationsSampler::sampleGroup(const configurations_t & confs,randomGene
 void pimcConfigurations::saveHDF5(const std::string & filename)
 {
     int rank = 1;
-
     const auto & data = dataTensor();
 
     size_t dims[rank];
@@ -1045,17 +1044,12 @@ void pimcConfigurations::saveHDF5(const std::string & filename)
         chainData[chainChunkSize*i + 3]=_chains[i].tail;
     }
 
-
-
-
     hdf5IO ioInterface(filename, std::ios::out  );
 
     ioInterface.write(data.data(),"configurations",& dims[0],rank);
     ioInterface.write(groupData,"groupings");
     ioInterface.write(chainData,"chains");
 
-
-    
     ioInterface.write(masses,"mass");
     ioInterface.annotate("nBeads",M,"configurations");
     ioInterface.close();
@@ -1064,13 +1058,11 @@ void pimcConfigurations::saveHDF5(const std::string & filename)
 
 pimcConfigurations pimcConfigurations::loadHDF5(const std::string & filename)
 {
+    hdf5IO ioInterface2(filename,std::ios::in | std::ios::out );
 
-     hdf5IO ioInterface2(filename,std::ios::in | std::ios::out );
-    
     auto groupData2=ioInterface2.get<std::vector<int> >("groupings");
     auto masses2=ioInterface2.get<std::vector<double> >("mass");
     int M2[1];
-
     ioInterface2.readNote("nBeads",M2,"configurations");
 
     std::cout << "Open file " << filename << std::endl;
@@ -1108,7 +1100,6 @@ pimcConfigurations pimcConfigurations::loadHDF5(const std::string & filename)
     pimc::pimcConfigurations configurations2(M2[0] , getDimensions() , groups2); 
     //pimc::pimcConfigurations configurations2(50 , getDimensions() , {{0,999,999,1}});
 
-
     ioInterface2.read(configurations2.data(), "configurations"  );
 
 
@@ -1122,18 +1113,15 @@ pimcConfigurations pimcConfigurations::loadHDF5(const std::string & filename)
         configurations2._chains[i].head=chainData[i*chainChunkSize+2];
         configurations2._chains[i].tail=chainData[i*chainChunkSize+3];
     }
-    
+
     ioInterface2.close(); 
-
     return configurations2;
-    
 }
-
 
 int nParticlesOnClose(const pimcConfigurations & configurations, int set)
 {
     int nParticles=configurations.nParticles();
-
+    int M = configurations.nBeads();
     if ( configurations.getGroups()[set].isOpen() )
     {
         const auto & group = configurations.getGroups()[set];
@@ -1141,27 +1129,32 @@ int nParticlesOnClose(const pimcConfigurations & configurations, int set)
         int iChainTail=group.tails[0];
         int tHead = configurations.getChain(iChainHead).head;
         int tTail = configurations.getChain(iChainTail).tail;
-
+        
         if (iChainTail == iChainHead)
         {
-            return nParticles + 1;
+            nParticles+=1;
+            if (tHead - (tTail + 1 ) >=M)
+            {
+                nParticles+=1;
+            }
         }
         else
         {
             if (tHead >= (tTail + 1) )
             {
-                return nParticles + 2;
+                nParticles+=2;
             }
             else
             {
-                return nParticles + 1;
+                nParticles+=1;
             }
         }
+
     }
-    else
-    {
-        return nParticles;
-    }
+
+    
+    return nParticles;
+    
 }
 
 
