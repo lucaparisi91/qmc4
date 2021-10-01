@@ -769,17 +769,9 @@ TEST(configurations, worms)
         }
 
         ASSERT_EQ(configurations3.getGroups()[0].heads[0],1);
-        ASSERT_EQ(configurations3.getGroups()[0].tails[0],1);
-        
+        ASSERT_EQ(configurations3.getGroups()[0].tails[0],1); 
 
       }
-   
-
-
-
-
-
-
 
 }
 
@@ -2761,11 +2753,11 @@ TEST_F(configurationsTest,closedChain_twoBody)
     //configurations.join(1,0);    
     //configurations.setHead(1,0);
 
+
     configurations.setHeadTail(1,4,-1);
     configurations.setHeadTail(0,M,4-1);
     configurations.join(0,1);
     //configurations.join(2,0);
-
 
     //configurations.join(1,1);
 

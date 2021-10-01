@@ -2,7 +2,6 @@ include(../cmake/init.cmake)
 
 #add_googletest()
 
-
 set(SOURCES_DMC   parameters-test.cpp jastrow-test.cpp wavefunction-test.cpp dmc-test.cpp ptools-test.cpp
  )
 
@@ -20,8 +19,7 @@ include_qmc_external_directories(tst_dmc)
 
 
 
-set(SOURCES_PIMC PPA-test.cpp  pimc-test.cpp action-test.cpp testConfigurations.cpp)
-
+set(SOURCES_PIMC PPA-test.cpp  pimc-test.cpp action-test.cpp testConfigurations.cpp )
 
 add_executable(tst_pimc main.cpp ${SOURCES_PIMC})
 target_include_directories(tst_pimc PUBLIC

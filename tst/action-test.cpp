@@ -10,9 +10,157 @@
 #include "../pimc/toolsPimcTest.h"
 #include <filesystem>
 #include "../pimc/forces.h"
+#include "testConfigurations.h"
 
 
-TEST(action,twoBody_grandCanonical)
+class testAction : public configurationsTest
+{
+    public:
+    Real evaluateHarmonicOnChain( const Eigen::Tensor<Real,3> & data ,  const pimc::geometryPBC_PIMC & geo, const  std::array<int,2> & timeRange, int iChain )
+    {
+        Real sum=0;
+        for(int t=timeRange[0];t<=timeRange[1];t++)
+        {
+            Real prefactor = ( ( t == timeRange[0]) or (t == timeRange[1]) ) ? 0.5 : 1;
+
+            Real r2=0;
+            for(int d=0;d<getDimensions();d++)
+            {
+                r2+=data(iChain,d,t) * data(iChain,d,t);
+            }
+            sum+=prefactor*r2*0.5;
+        }
+        return sum;
+}
+
+};
+
+TEST_F(testAction,oneBodyGrandCanonical )
+{
+    int N=100;
+    int M=50;
+    
+    SetUp(N,M,1.0);
+
+    configurations.setEnsamble(pimc::ensamble_t::grandCanonical);
+    configurations.dataTensor().setRandom();
+
+    int iOpen=N-1;
+    int newHead=M/2;
+
+    int iChainHead=configurations.pushChain(0);
+    ASSERT_EQ(iChainHead,N);
+
+    configurations.setHead(iOpen,M);
+    configurations.setHead(iChainHead,newHead);
+    configurations.setTail(iChainHead,-1);
+    configurations.join(iOpen,iChainHead); 
+    configurations.fillHeads();
+
+    TESTCHAIN(configurations,iChainHead,newHead,-1);
+    
+    pimc::geometryPBC_PIMC geo(300,300,300);
+
+     auto V = pimc::makeIsotropicPotentialFunctor(
+         [=](Real r) { return 0.5*r*r ;} ,
+         [](Real r) {return r  ;}
+         );
+
+
+    const auto & mask = configurations.getTags();
+
+    const auto & data = configurations.dataTensor();
+    
+    
+
+    
+     Real sum=0;
+    for(int t=0;t<=M;t++)
+    {
+        Real prefactor = ((t ==0) or (t == M)) ? 0.5 : 1;
+        for(int i=0;i<N;i++)
+        {
+            sum+=prefactor*V( TRUNCATE_D(data(i,0,t), data(i,1,t),data(i,2,t) ) );
+        }
+    }
+
+
+
+     for(int t=0;t<=newHead;t++)
+    {
+        Real prefactor = (t ==0 or t == newHead) ? 0.5 : 1;
+        int i=N;
+        sum+=prefactor*V( TRUNCATE_D(data(i,0,t), data(i,1,t),data(i,2,t) ) );
+    }
+
+
+    auto sOneBody=std::make_shared<pimc::potentialActionOneBody<decltype(V)> >(timeStep,V ,geo);
+
+    auto sumAction=sOneBody->evaluate(configurations);
+
+    ASSERT_NEAR(sumAction,sum*timeStep,1e-5);
+}   
+
+
+TEST_F(testAction,oneBodyGrandCanonicalTail )
+{
+    int N=2;
+    int M=10;
+    SetUp(N,M,1.0);
+    SetSeed(10);
+    SetRandom();
+    SetUpNonInteractingHarmonicAction();
+    SetGrandCanonicalEnsamble(0 );
+
+    int tTail=-1;
+    int tHead=4;
+
+    configurations.setHeadTail(0,M,tTail);
+    configurations.setHeadTail(1,tHead,-1);
+    configurations.join(0,1);
+
+    configurations.fillHeads();
+
+    auto & sPot = S.getPotentialAction();
+
+    Real sum = sPot.evaluate(configurations,{tTail+1,M-1},0);
+
+    auto sumCheck = evaluateHarmonicOnChain(configurations.dataTensor(),geo,{tTail+1,M},0);
+    ASSERT_NEAR(sum,sumCheck*timeStep,TOL);
+
+    sumCheck=evaluateHarmonicOnChain(configurations.dataTensor(),geo,{0,tHead},0);
+    sum = sPot.evaluate(configurations,{0,tHead-1},0);
+
+    ASSERT_NEAR(sum,sumCheck*timeStep,TOL);
+
+    sumCheck=evaluateHarmonicOnChain( configurations.dataTensor(),geo,{tTail+1,M-2},0);
+
+    sum = sPot.evaluate(configurations,{0,M-3},0);
+
+    ASSERT_NEAR( sum, sumCheck*timeStep, TOL);
+    
+    sum = sPot.evaluate(configurations);
+
+    sumCheck=evaluateHarmonicOnChain(configurations.dataTensor(),geo,{0,tHead},1);
+    sumCheck+=evaluateHarmonicOnChain( configurations.dataTensor(),geo,{tTail+1,M},0);
+
+    ASSERT_NEAR(sum,sumCheck*timeStep,TOL);
+
+    sum = sPot.evaluate(configurations,{3,2},0);
+
+    ASSERT_NEAR(sum,0,TOL);
+    
+
+
+}
+
+
+
+
+
+
+
+TEST_F(testAction,twoBody_grandCanonical)
 {
     int N1=10;
     int N2=20;
@@ -166,12 +314,9 @@ TEST(action,twoBody_grandCanonical)
 
     ASSERT_NEAR(sum*timeStep,sum2,1e-7);
 
-
-
 }
 
-
-TEST(action,twoBody)
+TEST_F(testAction,twoBody)
 {
     int N=100;
     int M=10;
@@ -242,6 +387,8 @@ TEST(action,twoBody)
     ASSERT_NEAR(currentAction,count*V0*timeStep,1e-5);
 
 
+
+
     count=0;
     for(int t=0;t<=M;t++)
     {
@@ -264,7 +411,6 @@ TEST(action,twoBody)
 
                 if (dis<=Rc*Rc)
                 {
-                    
                     count+=prefactor;
                 }
             }
@@ -397,7 +543,5 @@ TEST(action,twoBody)
 
     ASSERT_NEAR(sumSquares(0),sumSquaresTest(0),1e-5);
 
-    std::cout << sumSquares(0) << std::endl;
-    std::cout << sumSquaresTest(0) << std::endl;
-
+    
 }

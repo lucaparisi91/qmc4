@@ -1,7 +1,6 @@
 #ifndef ACTION_H
 #define ACTION_H
 
-
 #include "unsupported/Eigen/CXX11/Tensor"
 #include "geometryPMC.h"
 #include "pimcConfigurations.h"
@@ -11,10 +10,9 @@
 #include <memory>
 #include "../particleKernels/src/twoBodyPotential.h"
 
-
 namespace pimc
 {
-    
+
 /*
     template<class functor_t>
     Real reduceOnPositions(const functor_t & V,const Eigen::Tensor<Real,3> & tn, std::array<int ,2 > timeRange, std::array<int, 2>  particleRange)
@@ -185,7 +183,6 @@ class action
     action(){}
 
     action(Real timeStep, const geometryPBC_PIMC & geo_) : _geo(geo_), _timeStep(timeStep) {}
-
 
     virtual Real evaluate(configurations_t & configurations, std::array<int,2> timeRange, int iParticle)=0;
 

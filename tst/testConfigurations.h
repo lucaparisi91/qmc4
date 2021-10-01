@@ -7,6 +7,8 @@
 #include "../pimc/moves.h"
 #include "../pimc/action.h"
 
+#define TOL 1e-7
+
 
 class configurationsTest : public ::testing::Test {
 protected:
@@ -15,7 +17,7 @@ protected:
         close=NULL;
     }
 
-     void SetRandom();
+    void SetRandom();
 
     void SetUp( int N_ , int M_ , Real Beta_,std::array<Real,getDimensions()> lBox={ DLIST(3000,3000,3000)}) ;
 
@@ -168,3 +170,6 @@ protected:
 
 
 Real accumulateLengthSquare(const pimc::configurations_t & configurations, const std::array<int,2> & particleRange, std::array<int,2> timeRange,const geometryPBC & geo);
+
+
+
