@@ -38,8 +38,8 @@ Real actionTwoBody::evaluate(const configurations_t & configurations,const std::
         {
              auto range=intersectRanges(particleRange, groupA.range());
 
-            sum+=_kernel->evaluateTriangular(configurations , timeRange, particleRange , groupA.range() );
-            sum+=_kernel->evaluateRectangular(configurations , timeRange, {particleRange[1]+1,groupA.range()[1]} , range );
+            sum+=_kernel->evaluateTriangular(configurations , timeRange, range , groupA.range() );
+            sum+=_kernel->evaluateRectangular(configurations , timeRange, {range[1]+1,groupA.range()[1]} , range );
 
         }
         else
@@ -75,8 +75,8 @@ Real actionTwoBody::evaluateTimeDerivative(const configurations_t & configuratio
         {
              auto range=intersectRanges(particleRange, groupA.range());
 
-            sum+=_kernel->evaluateTimeDerivativeTriangular(configurations , timeRange, particleRange , groupA.range() );
-            sum+=_kernel->evaluateTimeDerivativeRectangular(configurations , timeRange, {particleRange[1]+1,groupA.range()[1]} , range );
+            sum+=_kernel->evaluateTimeDerivativeTriangular(configurations , timeRange, range , groupA.range() );
+            sum+=_kernel->evaluateTimeDerivativeRectangular(configurations , timeRange, {range[1]+1,groupA.range()[1]} , range );
 
         }
         else

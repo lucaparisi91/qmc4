@@ -192,7 +192,7 @@ class primitiveApproximationTwoBodyKernel : public kernel2B
                     
                     for(int d=0;d<DIMENSIONS;d++)
                     {
-                        Real tmp=dVdr*diff[d]*rInverse;
+                        Real tmp=dVdr*diff[d]*rInverse*timeStep();
                         forces(i,d,t)+=tmp;
                         forces(j,d,t)-=tmp;
                     }
@@ -200,7 +200,6 @@ class primitiveApproximationTwoBodyKernel : public kernel2B
             
             }
     }
-
 
      virtual void addForceTriangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces) const
      {
@@ -225,7 +224,7 @@ class primitiveApproximationTwoBodyKernel : public kernel2B
                     
                     for(int d=0;d<DIMENSIONS;d++)
                     {
-                        Real tmp=dVdr*diff[d]*rInverse;
+                        Real tmp=dVdr*diff[d]*rInverse*timeStep();
                         forces(i,d,t)+=tmp;
                         forces(j,d,t)-=tmp;
                     }

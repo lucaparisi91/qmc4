@@ -11,11 +11,14 @@
 #include <filesystem>
 #include "../pimc/forces.h"
 #include "testConfigurations.h"
-
+#include "../pimc/actionTwoBody.h"
+#include "../pimc/potentialKernel.h"
 
 class testAction : public configurationsTest
 {
     public:
+
+
     Real evaluateHarmonicOnChain( const Eigen::Tensor<Real,3> & data ,  const pimc::geometryPBC_PIMC & geo, const  std::array<int,2> & timeRange, int iChain )
     {
         Real sum=0;
@@ -31,7 +34,9 @@ class testAction : public configurationsTest
             sum+=prefactor*r2*0.5;
         }
         return sum;
-}
+    }
+
+
 
 };
 
@@ -99,8 +104,8 @@ TEST_F(testAction,oneBodyGrandCanonical )
     auto sumAction=sOneBody->evaluate(configurations);
 
     ASSERT_NEAR(sumAction,sum*timeStep,1e-5);
-}   
 
+}   
 
 TEST_F(testAction,oneBodyGrandCanonicalTail )
 {
@@ -111,7 +116,7 @@ TEST_F(testAction,oneBodyGrandCanonicalTail )
     SetRandom();
     SetUpNonInteractingHarmonicAction();
     SetGrandCanonicalEnsamble(0 );
-
+    
     int tTail=-1;
     int tHead=4;
 
@@ -165,20 +170,9 @@ TEST_F(testAction,oneBodyGrandCanonicalTail )
     ASSERT_NEAR(sum,sumCheck*timeStep,TOL);
     sum = sPot.evaluate(configurations,{0,0},0);
     ASSERT_NEAR(sum,0,TOL);
-    
-
-    
-
-
-
 
 
 }
-
-
-
-
-
 
 
 TEST_F(testAction,twoBody_grandCanonical)
@@ -196,16 +190,9 @@ TEST_F(testAction,twoBody_grandCanonical)
     Real timeStep=Beta/M;
     srand(11);
 
-    pimc::geometryPBC_PIMC geo(300,300,300);
+    SetUp({N1,N2},M,Beta);
 
-    pimc::particleGroup groupA{ 0 , N1-1, N1 - 1 + buffer , 1.0};
-    pimc::particleGroup groupB{ N1 + buffer , N1 + buffer + N2 - 1, N1 + 2* buffer + N2 -1  , 1.0};
-
-    pimc::pimcConfigurations configurations(M , getDimensions() , {groupA,groupB});
-
-
-
-    configurations.setChemicalPotential({0.,0});
+    SetGrandCanonicalEnsamble(0);
 
     configurations.dataTensor().setRandom();
     configurations.fillHeads();
@@ -222,19 +209,33 @@ TEST_F(testAction,twoBody_grandCanonical)
     
 
    
-    auto sV=pimc::potentialActionTwoBody<decltype(V)>(timeStep,nChains,M,V ,geo,0,0);
+    //auto sV=pimc::potentialActionTwoBody<decltype(V)>(timeStep,nChains,M,V ,geo,0,0);
+
+    auto kernel = std::make_shared<                         pimc::primitiveApproximationTwoBodyKernel<decltype(V) >  >(std::make_shared<decltype(V)>(V));
+
+    kernel->setTimeStep(timeStep);
+    kernel->setGeometry(geo);
+
+    pimc::actionTwoBody sV;
+    sV.setSets({0,0});
+    sV.setKernel(kernel);
+
 
     Real r2=0;
     Real sum=0;
 
-    
+
+    const auto & groupA=configurations.getGroups()[0];
+    const auto & groupB=configurations.getGroups()[1];
+
+
 
     for(int t=0;t<=M;t++)
     {
         Real prefactor= ( (t ==0) or (t==M) ) ? 0.5 : 1;
 
         for(int i=groupA.iStart;i<=groupA.iEnd;i++)
-            for(int j=0;j<i;j++)
+            for(int j=groupA.iStart;j<i;j++)
             {
                 Real r2=0;
                 for(int d=0;d<getDimensions();d++)
@@ -247,7 +248,6 @@ TEST_F(testAction,twoBody_grandCanonical)
 
 
     auto sum2=sV.evaluate(configurations,{0,M-1},{groupA.iStart,groupB.iEnd});
-
 
     ASSERT_NEAR(sum*timeStep,sum2,1e-7);
 
@@ -301,7 +301,17 @@ TEST_F(testAction,twoBody_grandCanonical)
 
     ASSERT_NEAR(sum*timeStep, sum2,1e-6);
 
-    auto sVAB=pimc::potentialActionTwoBody<decltype(V)>(timeStep,nChains,M,V ,geo,0,1);
+    //auto sVAB=pimc::potentialActionTwoBody<decltype(V)>(timeStep,nChains,M,V ,geo,0,1);
+
+
+    auto kernelAB = std::make_shared<                         pimc::primitiveApproximationTwoBodyKernel<decltype(V) >  >(std::make_shared<decltype(V)>(V));
+
+    kernelAB->setTimeStep(timeStep);
+    kernelAB->setGeometry(geo);
+
+    pimc::actionTwoBody sVAB;
+    sVAB.setSets({0,1});
+    sVAB.setKernel(kernelAB);
 
     pimc::pimcConfigurations configurations2(M , getDimensions() , {groupA,groupB});
 
@@ -332,10 +342,10 @@ TEST_F(testAction,twoBody_grandCanonical)
 
     sum2= sVAB.evaluate(configurations2,{0,M-1},{0,N1-1});
 
-
     ASSERT_NEAR(sum*timeStep,sum2,1e-7);
-    
+
 }
+
 
 TEST_F(testAction,twoBody)
 {
@@ -357,7 +367,6 @@ TEST_F(testAction,twoBody)
 
     auto & data = configurations.dataTensor();
 
-
     // Test on a rectangular interaction potential
 
 
@@ -370,8 +379,20 @@ TEST_F(testAction,twoBody)
          );
 
 
-    auto sV=pimc::potentialActionTwoBody<decltype(V)>(timeStep,N,M,V ,geo,0,0);
-    
+
+    //auto sV=pimc::potentialActionTwoBody<decltype(V)>(timeStep,N,M,V ,geo,0,0);
+
+
+    auto kernel = std::make_shared<                         pimc::primitiveApproximationTwoBodyKernel<decltype(V) >  >(std::make_shared<decltype(V)>(V));
+
+    kernel->setTimeStep(timeStep);
+    kernel->setGeometry(geo);
+
+    pimc::actionTwoBody sV;
+    sV.setSets({0,0});
+    sV.setKernel(kernel);
+
+
 
     int t0=0;
     int t1=M-1;
@@ -470,7 +491,16 @@ TEST_F(testAction,twoBody)
     
 
    
-    auto sV2=pimc::potentialActionTwoBody<decltype(V2)>(timeStep,N,M,V2 ,geo,0,0);
+    //auto sV2=pimc::potentialActionTwoBody<decltype(V2)>(timeStep,N,M,V2 ,geo,0,0);
+
+    auto kernel2 = std::make_shared<                         pimc::primitiveApproximationTwoBodyKernel<decltype(V2) >  >(std::make_shared<decltype(V2)>(V2));
+
+    kernel2->setTimeStep(timeStep);
+    kernel2->setGeometry(geo);
+
+    pimc::actionTwoBody sV2;
+    sV2.setSets({0,0});
+    sV2.setKernel(kernel2);
 
 
 
