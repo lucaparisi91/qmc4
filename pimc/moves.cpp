@@ -3,7 +3,6 @@
 #include "qmcExceptions.h"
 #include "toolsPimcTest.h"
 
-
 namespace pimc
 {      
     std::array<int,2> timeSliceGenerator::operator()(randomGenerator_t & randG, int nBeads , int maxBeadLength)
@@ -15,10 +14,8 @@ namespace pimc
 
         return {t0,t1};
     }
-
     
 levyMove::levyMove(int maxBeadLength_,int set) : _levy(maxBeadLength_) , uniformRealNumber(0,1),maxBeadLength(maxBeadLength_) , buffer(( maxBeadLength_+1)*2,getDimensions() ) ,singleSetMove::singleSetMove(set){}
-
 
 bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,randomGenerator_t & randG)
 {
@@ -31,7 +28,7 @@ bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,rand
 
     int iChain=confsSampler.sampleChain(confs,getSet(),randG);
 
-     if (iChain < 0)
+    if (iChain < 0)
     {
         return false;
     }
@@ -1022,7 +1019,7 @@ bool createWorm::attemptMove(configurations_t & confs , firstOrderAction & S,ran
     int tHead=t0+l;
     confs.setHeadTail(iChainTail,std::min(t0 + l,M),tTail);
 
-    if (t0 + l  > M)
+    if (t0 + l  >= M )
     {
         iChainHead=confs.pushChain(getSet() );
         tHead=t0 + l - M; 
@@ -1064,7 +1061,7 @@ bool createWorm::attemptMove(configurations_t & confs , firstOrderAction & S,ran
 
     _levy.apply(confs,{t0,t0 + l},iChainTail,S,randG);
 
-    if (t0 + l > M)
+    if (t0 + l >= M)
     {
         confs.copyData( { M , t0 + l } , iChainTail, 0,iChainHead ); 
     }
@@ -1082,13 +1079,12 @@ bool createWorm::attemptMove(configurations_t & confs , firstOrderAction & S,ran
     if ( accept)
     {
         
-        if (t0+l > M)
+        if (t0+l >= M)
         {
             confs.join(iChainTail,iChainHead);
             #ifndef NDEBUG
             assert(confs.getGroups()[getSet() ].size() == oldSize + 2);
             #endif
-
 
         }
         else
@@ -1108,7 +1104,7 @@ bool createWorm::attemptMove(configurations_t & confs , firstOrderAction & S,ran
     else
     {
         
-        if (t0+l > M)
+        if (t0+l >= M)
         {
             confs.setTail(iChainHead,-1);
 
@@ -2423,15 +2419,6 @@ bool closeMove::attemptSemiGrandCanonicalMove(configurations_t & confs , firstOr
 };
 
 
-
-
-
-
-
-
-
-
-
 advanceHead::advanceHead(int maxAdvanceLength_,int set) :
 _maxReconstructedLength(maxAdvanceLength_+2) , _levy((maxAdvanceLength_+2)*2),gauss(0,1),uniformRealNumber(0,1),singleSetMove(set) ,
 enforceMaxParticleNumber(false),_nMax(1e+9)
@@ -2580,14 +2567,14 @@ bool advanceHead::attemptMove(configurations_t & confs , firstOrderAction & S,ra
 
     int iChainNew=-1100;
 
-    if (tHead + l > M)
+    if (tHead + l >= M)
     {
         // creates a new chain
         iChainNew=confs.pushChain(getSet());
         confs.setHeadTail(iChainNew,timeRange2[1] + 1,-1);
         confs.copyData( { M , tHead + l } , iChain, 0,iChainNew ); 
         deltaS+=sPot.evaluate(confs,timeRange2,iChainNew);
-
+        confs.join(iChain,iChainNew);
     }
 
 
@@ -2595,11 +2582,9 @@ bool advanceHead::attemptMove(configurations_t & confs , firstOrderAction & S,ra
 
 
     bool accept = sampler.acceptLog(propRatio,randG);
+
+   
     
-    if (( tHead + l > M) and accept)
-        {
-            confs.join(iChain,iChainNew);
-        }
     
     if ( enforceMaxParticleNumber)
     {   
@@ -2617,7 +2602,7 @@ bool advanceHead::attemptMove(configurations_t & confs , firstOrderAction & S,ra
     else
     {
         confs.setHead(iChain,tHead);
-        if (tHead + l > M)
+        if (tHead + l >= M)
         {
             confs.removeChain(iChainNew);
         }
@@ -2626,9 +2611,6 @@ bool advanceHead::attemptMove(configurations_t & confs , firstOrderAction & S,ra
     return accept;
 }
 
-
-
-
 bool recedeTail::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG)
 {
     Real timeStep = S.getTimeStep();
@@ -2636,7 +2618,6 @@ bool recedeTail::attemptMove(configurations_t & confs , firstOrderAction & S,ran
     const auto & tails = confs.getGroups()[getSet()].tails;
 
     int iChain=tails[std::floor(uniformRealNumber(randG) * tails.size() )];
-
 
     int tTail=confs.getChain(iChain).tail;
 
@@ -2941,6 +2922,12 @@ bool recedeHead::attemptMove(configurations_t & confs , firstOrderAction & S,ran
 
 
     bool accept = sampler.acceptLog(propRatio,randG);
+/* 
+    if ( (iChain<=0) and (tHead<=9) )
+    {
+        accept=false;
+    } */
+
 
 
      if ( accept)
@@ -2950,8 +2937,8 @@ bool recedeHead::attemptMove(configurations_t & confs , firstOrderAction & S,ran
             confs.join(iChain,iChain);
         }
     }
-
-     if ( enforceMinParticleNumber)
+    
+    if ( enforceMinParticleNumber)
     {   
         int nParticlesAfterClose=nParticlesOnClose(confs,getSet());
         if (tHead - l < 0 )
@@ -2969,13 +2956,13 @@ bool recedeHead::attemptMove(configurations_t & confs , firstOrderAction & S,ran
     {
         if (tHead - l < 0 )
         {
-            confs.setHead(iChain,M-1);
+            confs.setHeadTail(iChain,M-1,-1);
             confs.removeChain(iChain);
         }
     }
     else
     {
-        confs.setHead(iChain,tHead);
+       
         if (tHead - l >= 0)
         {
             confs.setHead(iChain,tHead);

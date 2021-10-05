@@ -423,6 +423,11 @@ class createWorm : public singleSetMove
         sigma2=sigma*sigma;
     }
 
+    void setUniformSampling() {uniformDistributionFirstParticle=true;}
+
+    void setGaussianSampling() {uniformDistributionFirstParticle=false;}
+
+
 
     private:
     Real C;
@@ -549,6 +554,10 @@ class deleteWorm : public singleSetMove
     {
         sigma2=sigma*sigma;
     }
+
+      void setUniformSampling() {uniformDistributionFirstParticle=true;}
+
+    void setGaussianSampling() {uniformDistributionFirstParticle=false;}
 
 
     private:

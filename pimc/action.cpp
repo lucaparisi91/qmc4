@@ -7,7 +7,7 @@ Real kineticAction::evaluate( pimcConfigurations_t & configurations , std::array
 {
     const auto & data = configurations.dataTensor();
     auto & geo=getGeometry();
-
+    
     Real sum=0;
 
     assert(timeRange[0]>=0);
