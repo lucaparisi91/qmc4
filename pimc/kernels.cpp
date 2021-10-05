@@ -7,7 +7,6 @@ namespace pimc
     {
         Real minDistanceSquared=minDistance*minDistance;
 
-
         for (int t=timeRange[0];t<=timeRange[1];t++)
         {
             for (int i=rangeA[0]; i <= rangeA[1] ; i++)
@@ -20,7 +19,7 @@ namespace pimc
                         r2+=tmp*tmp;
                     }
 
-                    if (r2 >= minDistanceSquared)
+                    if (r2 <= minDistanceSquared)
                     {
                         return false;
                     }
@@ -38,7 +37,7 @@ namespace pimc
         for (int t=timeRange[0];t<=timeRange[1];t++)
         {
             for (int i=rangeA[0]; i <= rangeA[1] ; i++)
-                for ( int j=rangeB[0];j<=i;j++)
+                for ( int j=rangeB[0];j<i;j++)
                 {
                     Real r2=0;
                     for(int d=0;d<getDimensions();d++)
@@ -47,7 +46,7 @@ namespace pimc
                         r2+=tmp*tmp;
                     }
 
-                    if (r2 >= minDistanceSquared)
+                    if (r2 <= minDistanceSquared)
                     {
                         return false;
                     }
@@ -56,7 +55,6 @@ namespace pimc
         }
         return true;
     } 
-
 
 }
 

@@ -147,7 +147,7 @@ bool actionTwoBody::checkConstraints(const configurations_t & configurations,con
         {
             auto rangeA = intersectRanges(  groupA.range(),particleRange );
             
-            return _kernel->checkMinimumDistanceConstraintTriangular( configurations.dataTensor(),timeRange,particleRange , groupA.range(), _distanceMinimumConstraint );
+            return _kernel->checkMinimumDistanceConstraintTriangular( configurations.dataTensor(),timeRange,particleRange , groupA.range(), rMin );
 
         }
         else

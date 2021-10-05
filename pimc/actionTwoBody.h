@@ -21,6 +21,8 @@ class actionTwoBody : public action
         setGeometry(_kernel->geometry() );
     }
 
+    auto & kernel(){return _kernel;}
+    const auto & kernel()const {return _kernel;}
 
     void setSets(const std::array<int,2> & sets)
     {
@@ -46,6 +48,7 @@ class actionTwoBody : public action
                         configurations.getGroups()[setA].range()
                         );
     }
+    
 
     virtual Real evaluateTimeDerivative( configurations_t & configurations)
     {

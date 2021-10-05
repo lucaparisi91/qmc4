@@ -238,10 +238,6 @@ TEST(pTools,walkerSend)
   std::uniform_int_distribution<int> disWalker(80,110);
   
   walkers.resize( disWalker(randGen) );
-
-  
-  
-  
   
   for(int i=0;i<walkers.size();i++)
     {
@@ -299,10 +295,6 @@ TEST(pTools,walkerSend)
      }
     }
 }
-
-
-
-
 
 
 TEST(pTools,iWalkerSendReceive)

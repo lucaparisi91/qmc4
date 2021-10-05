@@ -14,7 +14,7 @@ namespace pimc
             Real r1 = std::sqrt(x1[0]*x1[0] + x1[1]*x1[1] + x1[2]*x1[2]);
             Real r2 = std::sqrt(x2[0]*x2[0] + x2[1]*x2[1] + x2[2]*x2[2]);
             Real r1Dotr2=x1[0]*x2[0] + x1[1]*x2[1] + x1[2]*x2[2];
-
+            
             return log( 
                         1 - (a*(r1 + r2) - a*a)/(r1*r2) *
                         exp(- 

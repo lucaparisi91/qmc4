@@ -776,13 +776,7 @@ TEST(configurations, worms)
    
 
 
-
-
-
-
-
 }
-
 
 TEST(action,oneBodyGrandCanonical)
 {
@@ -837,9 +831,7 @@ TEST(action,oneBodyGrandCanonical)
         }
     }
 
-
-
-     for(int t=0;t<=newHead;t++)
+    for(int t=0;t<=newHead;t++)
     {
         Real prefactor = (t ==0 or t == newHead) ? 0.5 : 1;
         int i=N;
