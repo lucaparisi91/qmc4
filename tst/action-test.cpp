@@ -334,7 +334,7 @@ TEST_F(testAction,twoBody_grandCanonical)
 
 
     ASSERT_NEAR(sum*timeStep,sum2,1e-7);
-
+    
 }
 
 TEST_F(testAction,twoBody)
@@ -372,6 +372,7 @@ TEST_F(testAction,twoBody)
 
     auto sV=pimc::potentialActionTwoBody<decltype(V)>(timeStep,N,M,V ,geo,0,0);
     
+
     int t0=0;
     int t1=M-1;
     int iChain=0;
