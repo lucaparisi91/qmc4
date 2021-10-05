@@ -22,7 +22,6 @@ Real getTimeStep(json_t & j)
     return beta/nBeads;
 }
 
-
 pimcDriver::pimcDriver(const json_t & j_) : j(j_),
 chemicalPotential({}),
 currentEnsamble(ensamble_t::canonical)

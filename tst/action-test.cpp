@@ -149,7 +149,28 @@ TEST_F(testAction,oneBodyGrandCanonicalTail )
     sum = sPot.evaluate(configurations,{3,2},0);
 
     ASSERT_NEAR(sum,0,TOL);
+
+    tTail=4;
+    tHead=0;
+    configurations.setHeadTail(0,M,tTail);
+    configurations.setHeadTail(1,tHead,-1);
+    configurations.join(0,1);
     
+    SetRandom();
+    configurations.fillHeads();
+
+    sum = sPot.evaluate(configurations,{M-1,M-1},0);
+    sumCheck=evaluateHarmonicOnChain(configurations.dataTensor(),geo,{M-1,M},0);
+
+    ASSERT_NEAR(sum,sumCheck*timeStep,TOL);
+    sum = sPot.evaluate(configurations,{0,0},0);
+    ASSERT_NEAR(sum,0,TOL);
+    
+
+    
+
+
+
 
 
 }
