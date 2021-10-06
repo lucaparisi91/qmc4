@@ -1478,7 +1478,7 @@ bool openMove::attemptSemiGrandCanonicalMove(configurations_t & confs , firstOrd
     {
         return false;
     }
-
+    
 
     int l = lengthCut;
 

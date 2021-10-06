@@ -2461,7 +2461,6 @@ TEST_F(configurationsTest, harmonicOscillatorMixture)
 
 }
 
-
 TEST_F(configurationsTest, advanceRecedeSemiGrandCanonical)
 {
     Real C=1e-3;
@@ -2624,14 +2623,14 @@ TEST_F(configurationsTest, advanceRecedeSemiGrandCanonical)
         }
 
         tab >> std::cout;
-        
+
         tab.resetCounters();
 
     }
 }
 
-
 #include "../pimc/nConnectedChains.h"
+
 
 TEST_F(configurationsTest,closedChain_twoBody)
 {
@@ -2711,15 +2710,19 @@ TEST_F(configurationsTest,closedChain_twoBody)
     advanceHead.setMaximumParticleNumber(3);
     //recedeHead.setMinParticleNumber(1);
 
-
     pimc::nConnectedChains nConnectedChains;
 
     tab.push_back(&levy,0.6,pimc::sector_t::diagonal,"levy");
     tab.push_back(&translate,0.3,pimc::sector_t::diagonal,"translate");
     tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
     //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");
+<<<<<<< HEAD
 
     tab.push_back(&levy,0.6,pimc::sector_t::offDiagonal,"levy");
+=======
+    
+    tab.push_back(&levy,0.4,pimc::sector_t::offDiagonal,"levy");
+>>>>>>> master
     tab.push_back(&translate,0.1,pimc::sector_t::offDiagonal,"translate");
     tab.push_back(&close,0.1,pimc::sector_t::offDiagonal,"close");
     tab.push_back(&moveHeadMove,0.1,pimc::sector_t::offDiagonal,"moveHead");
@@ -2727,6 +2730,7 @@ TEST_F(configurationsTest,closedChain_twoBody)
     //tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
     //tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal,"recedeHead");
     //tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
+
 
 /*
     tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
@@ -2916,16 +2920,13 @@ TEST_F(configurationsTest,closedChain_twoBody)
             r=0;
             n=0;
         }
-        
-        tab >> std::cout;
 
-        
+        tab >> std::cout;
         tab.resetCounters();
 
     }
 
 }
-
 
 TEST_F(configurationsTest,createRemoveWorm)
 {
@@ -2974,15 +2975,15 @@ TEST_F(configurationsTest,createRemoveWorm)
     pimc::openMove open(C, 0, lOpen );
     pimc::closeMove close(C, 0, lOpen );
     
-    pimc::createWorm createWorm(C, 0, 2 , 1 );
-    pimc::deleteWorm removeWorm(C, 0, 2 , 1);
+    pimc::createWorm createWorm(C, 0, 5 , 1 );
+    pimc::deleteWorm removeWorm(C, 0, 5 , 1);
 
-    createWorm.setStartingBead(0);
+    createWorm.setStartingBead(5);
     createWorm.setFixedLength();
     createWorm.setGaussianSampling();
 
     removeWorm.setFixedLength();
-    removeWorm.setStartingBead(0);
+    removeWorm.setStartingBead(5);
     removeWorm.setGaussianSampling();
 
     //open.setStartingBead(3);
