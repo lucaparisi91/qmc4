@@ -1,6 +1,6 @@
 #include "testConfigurations.h"
 
-void configurationsTest::SetRandom()
+void configurationsTest::SetRandom(const std::array<Real,DIMENSIONS> & lBox )
     {
         std::uniform_real_distribution<double> uniformDistribution(0.0,1.0);
 
@@ -9,7 +9,7 @@ void configurationsTest::SetRandom()
         for (int i=0;i<data.dimensions()[0];i++)
             for  (int d=0;d<getDimensions();d++)
             {
-                data(i,d,t)=uniformDistribution(randG);
+                data(i,d,t)=(uniformDistribution(randG)-0.5 )*lBox[d];
             }
         configurations.fillHeads();
     

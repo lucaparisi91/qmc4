@@ -5,7 +5,6 @@ namespace pimc
 using range_t = std::array<int,2>;
 
 
-
 auto intersectRanges(const range_t & rangeA,const range_t & rangeB )
 {
     range_t intersection{std::max(rangeA[0],rangeB[0]),std::min(rangeA[1],rangeB[1]) };

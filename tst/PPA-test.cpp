@@ -28,7 +28,7 @@ void assertEqualForces(const Eigen::Tensor<Real,3> & forces, const Eigen::Tensor
             }
     }
 
-
+#if DIMENSIONS==3
 
 class pairProductTest : public configurationsTest
 {
@@ -267,6 +267,8 @@ template<class greenFunction_t>
 
      
 };
+
+#endif
 
 TEST( greenFunction , caoBerne )
 {   

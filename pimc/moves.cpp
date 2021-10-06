@@ -2583,8 +2583,6 @@ bool advanceHead::attemptMove(configurations_t & confs , firstOrderAction & S,ra
 
     bool accept = sampler.acceptLog(propRatio,randG);
 
-   
-    
     
     if ( enforceMaxParticleNumber)
     {   

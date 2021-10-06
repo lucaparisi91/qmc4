@@ -9,7 +9,6 @@
 
 #define TOL 1e-7
 
-
 class configurationsTest : public ::testing::Test {
 protected:
     configurationsTest() {
@@ -17,12 +16,12 @@ protected:
         close=NULL;
     }
 
-    void SetRandom();
+    void SetRandom(const std::array<Real,DIMENSIONS> & lBox={ TRUNCATE_D(1,1,1) });
 
-    void SetUp( int N_ , int M_ , Real Beta_,std::array<Real,getDimensions()> lBox={ DLIST(3000,3000,3000)}) ;
+    void SetUp( int N_ , int M_ , Real Beta_,std::array<Real,getDimensions()> lBox={ TRUNCATE_D(3000,3000,3000)}) ;
 
-    void SetUp( std::vector<int> Ns , int M_ , Real Beta_,std::array<Real,getDimensions()> lBox={ DLIST(3000,3000,3000)});
-
+    void SetUp( std::vector<int> Ns , int M_ , Real Beta_,std::array<Real,getDimensions()> lBox={ TRUNCATE_D(3000,3000,3000)});
+    
 
     void SetSeed(int seed)
     {

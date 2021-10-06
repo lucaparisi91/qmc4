@@ -2635,22 +2635,24 @@ TEST_F(configurationsTest, advanceRecedeSemiGrandCanonical)
 
 TEST_F(configurationsTest,closedChain_twoBody)
 {
-    Real C=1e-3;
+    Real C=1e-1;
     int nBeads=10;
-    int N=2;
+    int N=1;
     Real beta=0.1* nBeads;
 
-    SetUp(N,nBeads,beta, { 300000} );
+    SetUp(N,nBeads,beta );
 
     //SetUpFreeParticleAction();    
-    //SetUpNonInteractingHarmonicAction();
-    
-    //SetUpTwoBodyInteractionHarmonic();
-    SetUpTwoBodyInteractionHarmonicInTrap();
+    SetUpNonInteractingHarmonicAction();
 
-    SetGrandCanonicalEnsamble(0.1 );
+    //SetUpTwoBodyInteractionHarmonic();
+    //SetUpTwoBodyInteractionHarmonicInTrap();
+
+
+    SetGrandCanonicalEnsamble( 0);
     SetSeed( time(NULL) );
-    SetRandom();
+    SetRandom({TRUNCATE_D(0.4,0.4,0.4)});
+
 
 
    /*  auto V2 = pimc::makeIsotropicPotentialFunctor(
@@ -2668,7 +2670,7 @@ TEST_F(configurationsTest,closedChain_twoBody)
     int t0=7;
     int l = int( 0.8* 10);
     int lShort=int( 0.6* 10);
-    int lOpen=lShort;
+    int lOpen=3;
 
     pimc::translateMove translate(0.1, 2000*M , 0 );
 
@@ -2684,20 +2686,17 @@ TEST_F(configurationsTest,closedChain_twoBody)
     pimc::deleteWorm removeWorm(C, 0, lShort , 1);
 
 
+    open.setStartingBead(8);
+    open.setStartingChain(0);
 
+    close.setStartingBead(8);
+    close.setStartingChain(0);
 
+    open.setLengthCut(lOpen);
+    close.setLengthCut(lOpen);
 
-    //open.setStartingBead(3);
-    //open.setStartingChain(0);
-
-    //close.setStartingBead(3);
-    //close.setStartingChain(0);
-
-    //open.setLengthCut(lOpen);
-    //close.setLengthCut(lOpen);
-
-    pimc::advanceHead advanceHead(1,0);
-    pimc::recedeHead recedeHead(1,0);
+    pimc::advanceHead advanceHead(lShort,0);
+    pimc::recedeHead recedeHead(lShort,0);
     
     //advanceHead.setFixedLength();
     //recedeHead.setFixedLength();
@@ -2720,14 +2719,14 @@ TEST_F(configurationsTest,closedChain_twoBody)
     tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
     //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");
 
-    tab.push_back(&levy,0.4,pimc::sector_t::offDiagonal,"levy");
+    tab.push_back(&levy,0.6,pimc::sector_t::offDiagonal,"levy");
     tab.push_back(&translate,0.1,pimc::sector_t::offDiagonal,"translate");
     tab.push_back(&close,0.1,pimc::sector_t::offDiagonal,"close");
     tab.push_back(&moveHeadMove,0.1,pimc::sector_t::offDiagonal,"moveHead");
     tab.push_back(&moveTailMove,0.1,pimc::sector_t::offDiagonal,"moveTail");
-    tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
-    tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal,"recedeHead");
-    tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
+    //tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
+    //tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal,"recedeHead");
+    //tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
 
 /*
     tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
@@ -2752,7 +2751,7 @@ TEST_F(configurationsTest,closedChain_twoBody)
     //configurations.join(1,0);    
     //configurations.setHead(1,0);
 
-    configurations.setHeadTail(0,9,4);
+    //configurations.setHeadTail(0,9,4);
 
 
     //configurations.setHeadTail(0,M,4-1);
@@ -2850,6 +2849,7 @@ TEST_F(configurationsTest,closedChain_twoBody)
             {
                 //l2Long+=accumulateAverageLengthSquare( 0,configurations );
                 l2Long+=accumulateLengthSquare( configurations , {0,N-1} , {0,nBeads-1} , geo );
+
                 nLong+=1;
                 int currentN=configurations.nParticles();
                 nEstimator+=currentN;

@@ -580,7 +580,9 @@ class potentialActionTwoBody : public action
     bufferDistances(nChains_,getDimensions(),nBeads_+1),
     iParticleGroupA(iParticleGroupA_),iParticleGroupB(iParticleGroupB_),
     action::action(tau_,geo_),pot2b({0,1},{0,1},{TRUNCATE_D(geo_.getLBox(0),geo_.getLBox(1),geo_.getLBox(2)) },{nChains_,DIMENSIONS,nBeads})
-     {}
+     {
+         
+     }
 
     virtual Real evaluate(configurations_t & configurations, std::array<int,2> timeRange, int iChain)
      {
@@ -800,6 +802,7 @@ class potentialActionTwoBody : public action
         auto D=(int)configurations.dataTensor().dimensions()[1];
         auto T=(int)configurations.dataTensor().dimensions()[2];
         pot2b.setDimensions({N,D,T});
+        
 
     }
 
