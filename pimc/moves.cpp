@@ -517,7 +517,7 @@ bool swapMove::attemptGrandCanonicalMove(configurations_t & confs, firstOrderAct
     std::array<Real,getDimensions()> delta;
 
     // performs levy reconstruction between the head and the bead
-
+    
     for (int d=0;d<getDimensions();d++)
     {
         difference[d]=
@@ -1300,7 +1300,6 @@ bool openMove::attemptGrandCanonicalMove(configurations_t & confs , firstOrderAc
         iChain = confsSampler.sampleChain(confs,getSet(),randG);
     }
 
-
     if (iChain < 0)
     {
         return false;
@@ -1371,18 +1370,22 @@ bool openMove::attemptGrandCanonicalMove(configurations_t & confs , firstOrderAc
     std::array<Real,getDimensions()> difference; 
     for (int d=0;d<getDimensions();d++)
     {
+        // difference along the ring (no pbc)
         difference[d]=
-               geo.difference( 
-                data(iChainTail,d,tTail+1)-data(iChain,d,tHead),d
-            );
-        
+                data(iChainTail,d,tTail+1)-data(iChain,d,tHead);
+         
+        if ( tHead + l >= M)
+        {
+            difference[d]+= data(iChain,d,M)-data(iChainTail,d,0);
+        }
+
            if (    
-            std::abs(data(iChain,d,tTail + 1)-data(iChain,d,tHead) ) > geo.getLBox(d)*0.5 )
+            std::abs(difference[d] ) >= geo.getLBox(d)*0.5 )
             {
-                //std::cout <<  "Warning: l too long for open/close"<<std::endl;
 
                 return false;
             } 
+
     }
 
 
@@ -2004,7 +2007,6 @@ bool closeMove::attemptGrandCanonicalMove(configurations_t & confs , firstOrderA
   /*   std::cout << "Before close" << std::endl;
     confs >> std::cout;
     std::cout << std::endl; */
-
 
      if (! confs.isOpen(getSet()) )
     {

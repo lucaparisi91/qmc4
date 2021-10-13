@@ -1,3 +1,6 @@
+#ifndef NCONNECTEDCHAINS_H
+#define NCONNECTEDCHAINS_H
+
 #include "pimcConfigurations.h"
 
 namespace pimc
@@ -16,3 +19,5 @@ namespace pimc
 
 
 };
+
+#endif

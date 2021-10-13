@@ -27,12 +27,8 @@ class timeSliceGenerator
 
     private:
     std::uniform_real_distribution<float> uniformRealNumber;
-};
+}; 
 
-
-
-   
-    
 class move 
 {
     public:

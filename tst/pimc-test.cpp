@@ -1025,258 +1025,11 @@ TEST(run,free_harmonic_oscillator)
 }
 
 
-void accumulateBeadPosition(int i,std::array<Real,getDimensions()> & x, std::array<Real,getDimensions()> & x2, const pimc::configurations_t & configurations, const pimc::firstOrderAction & S)
-    {
-        const auto & data = configurations.dataTensor();
-        for(int d=0;d<getDimensions();d++)
-            {
-                    x[d]+=data( 0 ,d, i) ;
-                    x2[d]+=std::pow(data(0,d,i),2);
 
-                }
-    }
 
 
-Real accumulateX2( const pimc::configurations_t & configurations, const pimc::firstOrderAction & S)
-{
-    Real x2=0;
-    const auto & data = configurations.dataTensor();
-    const auto & group = configurations.getGroups()[0];    
 
-    for (int t=0;t<configurations.nBeads();t++)
-        for (int i=group.iStart;i<=group.iEnd;i++)
-            {
-                for(int d=0;d<getDimensions();d++)
-                {
-                    x2+=data( i ,d, t)*data(i,d,t);
-                }
 
-            }
-    
-
-    return x2/configurations.nBeads();
-            
-}
-
-Real accumulateX2SingleDirection(int iChain, const pimc::configurations_t & configurations, int direction, bool &  isCyclic, int t0 , int t1)
-    {
-        const auto & data = configurations.dataTensor();
-        Real l2=0;
-
-        int iCurrentChain=iChain;
-
-        if (iCurrentChain < 0)
-        {
-            return 0;
-        }
-        do 
-        {
-            const auto & chain = configurations.getChain(iCurrentChain);
-
-            for (int t=std::max(chain.tail + 1,t0);t<=std::min(chain.head , t1 );t++)
-            {
-                Real prefactor = ( (t == chain.tail+1) or (t == chain.head) ) ? 0.5 : 1;
-                for(int d=0;d<getDimensions();d++)
-                {
-                        l2+=prefactor*data( iCurrentChain ,d, t)*data( iCurrentChain ,d, t);
-                }
-            }
-
-            if (direction == 1)
-            {
-                iCurrentChain=chain.next;
-            }
-            else if (direction == -1)
-            {
-                iCurrentChain=chain.prev;
-            }
-
-        }
-        while ( (iCurrentChain!= -1) and (iCurrentChain != iChain) );
-
-
-        isCyclic= iCurrentChain == - 1 ? false : true;
-        
-        return l2;
-
-    }
-
-Real accumulateAverageLengthSquareSingleDirection(int iChain, const pimc::configurations_t & configurations, int direction, bool &  isCyclic, int t0 , int t1)
-    {
-        const auto & data = configurations.dataTensor();
-        Real l2=0;
-
-        int iCurrentChain=iChain;
-
-        if (iCurrentChain < 0)
-        {
-            return 0;
-        }
-        do 
-        {
-            const auto & chain = configurations.getChain(iCurrentChain);
-
-            for (int t=std::max(chain.tail + 1,t0);t<=std::min(chain.head - 1, t1 );t++)
-            {
-                for(int d=0;d<getDimensions();d++)
-                {
-                        l2+=std::pow(data( iCurrentChain ,d, t+1) - data(iCurrentChain,d,t),2);
-                }
-            }
-
-            if (direction == 1)
-            {
-                iCurrentChain=chain.next;
-            }
-            else if (direction == -1)
-            {
-                iCurrentChain=chain.prev;
-            }
-
-        }
-        while ( (iCurrentChain!= -1) and (iCurrentChain != iChain) );
-
-
-        isCyclic= iCurrentChain == - 1 ? false : true;
-        
-        return l2;
-
-    }
-
-
-Real accumulateAverageLengthSquare(int iChain, const pimc::configurations_t & configurations, int t0, int t1)
-{
-    bool isCyclic;
-
-    Real l2=accumulateAverageLengthSquareSingleDirection(iChain, configurations,+1,isCyclic,t0,t1);
-
-    if (not isCyclic)
-    {
-        
-        l2+=accumulateAverageLengthSquareSingleDirection(configurations.getChain(iChain).prev, configurations,-1,isCyclic,t0,t1);
-
-        assert(isCyclic == false);
-
-    }
-
-    return l2;
-}
-
-int getWormLength(const pimc::configurations_t & configurations, int iGroup)
-{
-    if (not configurations.isOpen(iGroup) )
-    {
-        throw std::runtime_error("getWormLength requires an open sector");
-    }
-
-    int l=0;
-    int iChainHead=configurations.getGroups()[iGroup].heads[0];
-
-    int iChain=iChainHead;
-    while ( iChain != -1  ) 
-    {
-        l+=  configurations.getChain(iChain).head - configurations.getChain(iChain).tail - 1;
-
-        iChain=configurations.getChain(iChain).prev;
-    }
-
-
-    return l;
-}
-
-
-
-Real accumulateX2(int iChain, const pimc::configurations_t & configurations, int t0, int t1)
-{
-    bool isCyclic;
-
-    Real l2=accumulateX2SingleDirection(iChain, configurations,+1,isCyclic,t0,t1);
-
-    if (not isCyclic)
-    {
-        
-        l2+=accumulateX2SingleDirection(configurations.getChain(iChain).prev, configurations,-1,isCyclic,t0,t1);
-
-        assert(isCyclic == false);
-
-    }
-
-    return l2;
-}
-
-
-
-
-Real accumulateAverageLengthSquare(int iChain, const pimc::configurations_t & configurations)
-{
-    int t0=0;
-    int t1=configurations.nBeads()-1;
-
-
-
-    return accumulateAverageLengthSquare( iChain, configurations,0,t1);
-}
-
-
-
-
-
-auto meanBeadFixedLengths(int iChainBegin , int iChainEnd,  int t0, int t1, int i, Real timeStep, const pimc::configurations_t & configurations)
-{
-    const auto & data = configurations.dataTensor();
-
-
-
-    std::array<Real,getDimensions()> meanExpected;
-    
-    Real D = 0.5;
-    Real mass = 1;
-    int M= configurations.nBeads();
-
-    std::array<Real,3> difference;
-    for (int d=0;d<getDimensions();d++)
-    {
-        int l1 = (i - t0) > 0 ? i - t0 : i - t0 + M;
-        int l2 = (t1 - i ) > 0 ? t1 - i  : t1 - i  + M;
-
-
-        meanExpected[d]=(data(iChainBegin,d,t0)/ l1 + 
-        data(iChainEnd,d,t1)/l2 )/(1./l1 + 1./l2 );
-
-    }
-
-    return meanExpected;
-}
-
-auto varianceBeadFixedLengths(int iChain , int t0, int t1, int i, Real timeStep, const pimc::configurations_t & configurations)
-{
-
-    std::array<Real,getDimensions()> varianceExpected;
-    const auto & data = configurations.dataTensor();
-
-    Real D = 0.5;
-    Real mass = 1;
-
-    int M= configurations.nBeads();
-
-    std::array<Real,3> difference;
-    for (int d=0;d<getDimensions();d++)
-    {
-        difference[d]= data(iChain,d,t0) - data(iChain,d,t1);
-
-        int l1 = (i - t0) > 0 ? i - t0 : i - t0 + M;
-        int l2 = (t1 - i ) > 0 ? t1 - i  : t1 - i  + M;
-
-
-       varianceExpected[d]=1./(1./l1 + 1./l2 )* 2 * D * timeStep / mass;
-
-
-
-
-    }
-
-    return varianceExpected;
-}
 
 TEST_F(configurationsTest,openCloseGrandCanonical_distributionReconstructedChain)
 {
@@ -2251,7 +2004,6 @@ TEST_F(configurationsTest, openCloseSemiGrandCanonical)
 
 }
 
-
 TEST_F(configurationsTest, harmonicOscillatorMixture)
 {
     Real C=1e-5;
@@ -2452,7 +2204,6 @@ TEST_F(configurationsTest, harmonicOscillatorMixture)
             nRatioOpen=0;
         }
 
-
         tab >> std::cout;
         
         tab.resetCounters();
@@ -2552,7 +2303,6 @@ TEST_F(configurationsTest, advanceRecedeSemiGrandCanonical)
     advanceHead.setFixedLength() ;
     recedeHead.setFixedLength() ;
 
-
     for (int iBlock=0;iBlock<nBlocks;iBlock++)
     {
         
@@ -2596,7 +2346,6 @@ TEST_F(configurationsTest, advanceRecedeSemiGrandCanonical)
 
               nRatioShort+=1;
 
-
         }
 
 
@@ -2631,10 +2380,9 @@ TEST_F(configurationsTest, advanceRecedeSemiGrandCanonical)
 
 #include "../pimc/nConnectedChains.h"
 
-
 TEST_F(configurationsTest,closedChain_twoBody)
 {
-    Real C=1e-1;
+    Real C=1e-3;
     int nBeads=10;
     int N=1;
     Real beta=0.1* nBeads;
@@ -2642,17 +2390,14 @@ TEST_F(configurationsTest,closedChain_twoBody)
     SetUp(N,nBeads,beta );
 
     //SetUpFreeParticleAction();    
-    SetUpNonInteractingHarmonicAction();
+    //SetUpNonInteractingHarmonicAction();
 
     //SetUpTwoBodyInteractionHarmonic();
-    //SetUpTwoBodyInteractionHarmonicInTrap();
+    SetUpTwoBodyInteractionHarmonicInTrap();
 
-
-    SetGrandCanonicalEnsamble( 0);
+    SetGrandCanonicalEnsamble( 2);
     SetSeed( time(NULL) );
     SetRandom({TRUNCATE_D(0.4,0.4,0.4)});
-
-
 
    /*  auto V2 = pimc::makeIsotropicPotentialFunctor(
          [=](Real r) {return 0.*(r*r);} ,
@@ -2665,7 +2410,7 @@ TEST_F(configurationsTest,closedChain_twoBody)
     auto sV2B=std::make_shared<pimc::potentialActionTwoBody<decltype(V2)>  >(timeStep,configurations.nChains(),configurations.nBeads(),V2 ,geo,0,0);
 
     //S=pimc::firstOrderAction(sT,  sV2B); */
-
+    
     int t0=7;
     int l = int( 0.8* 10);
     int lShort=int( 0.6* 10);
@@ -2674,7 +2419,7 @@ TEST_F(configurationsTest,closedChain_twoBody)
     pimc::translateMove translate(0.1, 2000*M , 0 );
 
     pimc::levyMove levy(l,0);
-    
+
     pimc::moveHead moveHeadMove(lShort,0);
     pimc::moveTail moveTailMove(lShort,0);
 
@@ -2683,16 +2428,16 @@ TEST_F(configurationsTest,closedChain_twoBody)
     
     pimc::createWorm createWorm(C, 0, lShort , 1 );
     pimc::deleteWorm removeWorm(C, 0, lShort , 1);
+    
 
+    //open.setStartingBead(7);
+    //open.setStartingChain(0);
 
-    open.setStartingBead(8);
-    open.setStartingChain(0);
+    //close.setStartingBead(7);
+    //close.setStartingChain(0);
 
-    close.setStartingBead(8);
-    close.setStartingChain(0);
-
-    open.setLengthCut(lOpen);
-    close.setLengthCut(lOpen);
+    //open.setLengthCut(lOpen);
+    //close.setLengthCut(lOpen);
 
     pimc::advanceHead advanceHead(lShort,0);
     pimc::recedeHead recedeHead(lShort,0);
@@ -2716,20 +2461,15 @@ TEST_F(configurationsTest,closedChain_twoBody)
     tab.push_back(&translate,0.3,pimc::sector_t::diagonal,"translate");
     tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
     //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");
-<<<<<<< HEAD
 
-    tab.push_back(&levy,0.6,pimc::sector_t::offDiagonal,"levy");
-=======
-    
     tab.push_back(&levy,0.4,pimc::sector_t::offDiagonal,"levy");
->>>>>>> master
     tab.push_back(&translate,0.1,pimc::sector_t::offDiagonal,"translate");
     tab.push_back(&close,0.1,pimc::sector_t::offDiagonal,"close");
     tab.push_back(&moveHeadMove,0.1,pimc::sector_t::offDiagonal,"moveHead");
     tab.push_back(&moveTailMove,0.1,pimc::sector_t::offDiagonal,"moveTail");
-    //tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
-    //tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal,"recedeHead");
-    //tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
+    tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
+    tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal,"recedeHead");
+    tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
 
 
 /*
@@ -2789,8 +2529,6 @@ TEST_F(configurationsTest,closedChain_twoBody)
     nRingsOut.open("nRings.dat");
     ratioOut.open("ratio.dat");
 
-    
-
     std::vector<int > particleDistribution;
     int nMax=40;
     particleDistribution.resize(nMax,0);
@@ -2798,7 +2536,6 @@ TEST_F(configurationsTest,closedChain_twoBody)
     std::vector<int > wormDistribution;
     int nBeadsWormMax=400;
     wormDistribution.resize(nBeadsWormMax,0);
-
 
     //pimc::advanceHeadTest advance(l);
     //pimc::recedeHeadTest recede(l);
@@ -2827,8 +2564,6 @@ TEST_F(configurationsTest,closedChain_twoBody)
 
             tab.attemptMove(configurations,S,randG);
 
-           
-           
             if ( configurations.isOpen() )
             //if (getWormLength(configurations,0) == lWormShort )
             {
@@ -2891,6 +2626,7 @@ TEST_F(configurationsTest,closedChain_twoBody)
 
        }
 
+
        if (nLong == nTrials)
        {
            l2LongOut << i << " " << l2Long/nTrials << std::endl << std::flush;
@@ -2938,10 +2674,11 @@ TEST_F(configurationsTest,createRemoveWorm)
     SetUp(N,nBeads,beta, { 300000} );
 
     //SetUpFreeParticleAction();    
-    SetUpNonInteractingHarmonicAction();
+    //SetUpNonInteractingHarmonicAction();
     
+
     //SetUpTwoBodyInteractionHarmonic();
-    //SetUpTwoBodyInteractionHarmonicInTrap();
+    SetUpTwoBodyInteractionHarmonicInTrap();
 
     SetGrandCanonicalEnsamble(0 );
     SetSeed( time(NULL) );
@@ -3224,10 +2961,10 @@ TEST_F(configurationsTest,swap_twoBody)
     SetUp(N,nBeads,beta, { 300000} );
 
     //SetUpFreeParticleAction();    
-    SetUpNonInteractingHarmonicAction();
+    //SetUpNonInteractingHarmonicAction();
 
     //SetUpTwoBodyInteractionHarmonic();
-    //SetUpTwoBodyInteractionHarmonicInTrap();
+    SetUpTwoBodyInteractionHarmonicInTrap();
     
     SetGrandCanonicalEnsamble(0 );
 

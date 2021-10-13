@@ -1,3 +1,7 @@
+#ifndef TESTCONFIGURATIONS_H
+#define TESTCONFIGURATIONS_H
+
+
 #include "gtest/gtest.h"
 #include "geometryPMC.h"
 #include "traits.h"
@@ -170,5 +174,24 @@ protected:
 
 Real accumulateLengthSquare(const pimc::configurations_t & configurations, const std::array<int,2> & particleRange, std::array<int,2> timeRange,const geometryPBC & geo);
 
+int getWormLength(const pimc::configurations_t & configurations, int iGroup);
+
+Real accumulateAverageLengthSquare(int iChain, const pimc::configurations_t & configurations, int t0, int t1);
 
 
+Real accumulateAverageLengthSquare(int iChain, const pimc::configurations_t & configurations);
+
+
+void accumulateBeadPosition(int i,std::array<Real,getDimensions()> & x, std::array<Real,getDimensions()> & x2, const pimc::configurations_t & configurations, const pimc::firstOrderAction & S);
+
+
+std::array<Real,getDimensions()> meanBeadFixedLengths(int iChainBegin , int iChainEnd,  int t0, int t1, int i, Real timeStep, const pimc::configurations_t & configurations);
+
+
+std::array<Real,getDimensions()> varianceBeadFixedLengths(int iChain , int t0, int t1, int i, Real timeStep, const pimc::configurations_t & configurations);
+
+Real accumulateX2( const pimc::configurations_t & configurations, const pimc::firstOrderAction & S);
+
+Real accumulateX2(int iChain, const pimc::configurations_t & configurations, int t0, int t1);
+
+#endif

@@ -1,3 +1,7 @@
+#ifndef HDF5IO
+#define HDF5IO
+
+
 #include <string>
 #include "hdf5.h"
 #include <iostream>
@@ -105,3 +109,5 @@ public:
 
 
 };
+
+#endif
