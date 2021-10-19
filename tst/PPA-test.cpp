@@ -33,7 +33,7 @@ void assertEqualForces(const Eigen::Tensor<Real,3> & forces, const Eigen::Tensor
 class pairProductTest : public configurationsTest
 {
     public:
-
+    
     auto buildCaoBernePropagator(Real radius,const range_t & set)
     {
         using propagator_t = pimc::caoBernePropagator;
@@ -746,17 +746,24 @@ TEST_F( configurationsTest , pairProduct )
     auto pairKernel = std::make_shared<pimc::pairProductKernel<propagator_t> >(kernel);
 
     
-    auto S = std::make_shared<pimc::actionTwoBody>();
-    S->setTimeStep(timeStep);
-    S->setGeometry(geo);
-    S->setKernel(pairKernel);
+    auto S2B = std::make_shared<pimc::actionTwoBody>();
+    
+
+    
+    S2B->setTimeStep(timeStep);
+    S2B->setGeometry(geo);
+    S2B->setKernel(pairKernel);
     pairKernel->setGeometry(geo);
     pairKernel->setTimeStep(timeStep);
+    S2B->setMinimumDistance(radius);
+    S2B->setSets({0,0});
 
-    S->setSets({0,0});
-
-    S->setMinimumDistance(radius);
     SetRandom();
+
+    std::vector<std::shared_ptr<pimc::action> > actions {S2B};
+
+
+    auto S = std::make_shared<pimc::sumAction>(actions);
 
     while (not S->checkConstraints(configurations,{0,nBeads-1},configurations.getGroups()[0].range() ) )
     {
@@ -904,6 +911,8 @@ TEST_F( pairProductTest , evaluationSingleComponentGrandCanonical )
     ASSERT_NEAR(sum,sumCheck,TOL);
 
 }
+
+
 
 TEST_F( pairProductTest , evaluationTwoComponentGrandCanonical )
 {   

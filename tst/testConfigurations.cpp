@@ -6,11 +6,11 @@ void configurationsTest::SetRandom(const std::array<Real,DIMENSIONS> & lBox )
 
         auto & data=configurations.dataTensor();
         for (int t=0;t<data.dimensions()[2];t++)
-        for (int i=0;i<data.dimensions()[0];i++)
-            for  (int d=0;d<getDimensions();d++)
-            {
-                data(i,d,t)=(uniformDistribution(randG)-0.5 )*lBox[d];
-            }
+            for (int i=0;i<data.dimensions()[0];i++)
+                for  (int d=0;d<DIMENSIONS;d++)
+                {
+                    data(i,d,t)=(uniformDistribution(randG)-0.5 )*lBox[d];
+                }
         configurations.fillHeads();
     
     }
@@ -74,14 +74,11 @@ void configurationsTest::SetUp( std::vector<int> Ns , int M_ , Real Beta_,std::a
     }
 
 
-
 void configurationsTest::SetUpFreeParticleAction()
     {
          std::shared_ptr<pimc::action> sT= std::make_shared<pimc::kineticAction>(timeStep, configurations.nChains() , M  , geo);
 
     std::shared_ptr<pimc::action> sV= std::make_shared<pimc::nullPotentialAction>(timeStep  , geo);
-
-
     
     S= pimc::firstOrderAction(sT,  sV);
 

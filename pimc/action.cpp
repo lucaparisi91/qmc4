@@ -72,4 +72,21 @@ Real kineticAction::evaluate( pimcConfigurations_t & configurations )
 };
 
 
+ bool action::checkConstraints(const configurations_t & configurations)
+ {
+    bool satisfied=true;
+
+    for (const auto & group : configurations.getGroups() )
+    {
+        satisfied=satisfied and checkConstraints(configurations, {0,configurations.nBeads()-1}, group.range() );
+        
+        if (not satisfied) return false;
+    }
+    return satisfied;
+}   
+
+
+
+
+
 }

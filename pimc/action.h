@@ -200,10 +200,15 @@ class action
     void setTimeStep(Real timeStep) {_timeStep=timeStep;}
     void setGeometry(const geometry_t & geo) {_geo=geo ;}
 
+    virtual bool checkConstraints(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange) { return true; }
+    
+    virtual bool checkConstraints(const configurations_t & pimcConfigurations);
+
+
+
     private:
     geometry_t _geo;
     Real _timeStep;
-
 };
 
 
@@ -857,6 +862,36 @@ class sumAction : public action
         }
         return sum;
     }
+
+    virtual bool checkConstraints(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange)
+    {
+        for(auto S : _actions)
+        {
+            bool satisfied=S->checkConstraints(pimcConfigurations,timeRange,particleRange);
+
+            if (not satisfied)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+    virtual bool checkConstraints(const configurations_t & pimcConfigurations)
+    {
+        for(auto S : _actions)
+        {
+            bool satisfied=S->checkConstraints(pimcConfigurations);
+
+            if (not satisfied)
+            {
+                return false;
+            }
+        }
+        return true;
+
+    }
+
 
     virtual void addGradient(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange,  Eigen::Tensor<Real,3> & gradientBuffer)
     {

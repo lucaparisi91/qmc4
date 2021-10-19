@@ -506,10 +506,11 @@ void pimcConfigurations::save(const std::string & dirname,const std::string & fo
         //f.write(reinterpret_cast<char*>(_data.data()), nBeads()*nChains()*getDimensions()*sizeof(double));
         f << "particle"<<" time" << delim << "x" << delim << "y" << delim << "z" <<delim << "mask" << std::endl;
         f << std::setprecision(7);
-
+        
         for (int t=0;t<=nBeads() ;t++ )
+        for ( const auto & group : getGroups() )
         {
-                for (int i=0;i<nChains();i++)
+                for (int i=group.range()[0];i<=group.range()[1];i++)
                 {
                 
                     f<< i << delim << t << delim;
@@ -517,7 +518,7 @@ void pimcConfigurations::save(const std::string & dirname,const std::string & fo
                     #if DIMENSIONS == 3    
                         f <<  _data(i,0,t) << delim;
                         f <<  _data(i,1,t) << delim;
-                        f <<  _data(i,1,t) << delim;   
+                        f <<  _data(i,2,t) << delim;   
                     #endif
 
                     #if DIMENSIONS == 1    

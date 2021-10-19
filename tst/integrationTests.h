@@ -17,12 +17,18 @@ class twoBodyTest  : public configurationsTest
 
     virtual void accumulate();
 
+    void SetUpCaoBernePropagator(Real radius);
+    void SetRandomMinimumDistance(Real radius, const std::array<Real,DIMENSIONS> box ={TRUNCATE_D(1,1,1)});
+    void SetUpFreeActionWithHardSphereConstraint(Real a);
+
+    
+
     protected:
 
     int nTrials=100000;
     int nBlocks=100000;
 
-
+    void setRandomMinimumDistance( Real radius);
 
 };
 
@@ -30,10 +36,10 @@ class pbcTest  : public twoBodyTest
 {
     public:
 
-    void sample();
-
-    
-
 };
 
-
+class harmonicTrapTest : public twoBodyTest
+{
+    public:
+    void SetUpTwoBodyInteractionHarmonicInTrap_kernel()  ;
+};

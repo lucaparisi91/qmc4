@@ -3,14 +3,14 @@
 
 namespace pimc
 {
-       
+
 template<class greenFunction_t>
 class pairProductKernel : public kernel2B
 {
     public:
     pairProductKernel( std::shared_ptr<const greenFunction_t> greenFunction_) : 
     greenFunction(greenFunction_) {}
-
+    
     Real evaluateTriangular(const Eigen::Tensor<Real,3> & tn, const std::array<int,2> & timeRange, const std::array<int ,2 > & rangeA , const std::array<int , 2 > & rangeB) const
     {
         Real value=0;
@@ -37,7 +37,6 @@ class pairProductKernel : public kernel2B
 
         return sum;
     }
-
 
 
     Real evaluateTriangular(const Eigen::Tensor<Real,3> & tn, const std::array<int,2> & timeRange, const std::array<int ,2 > & rangeA , const std::array<int , 2 > & rangeB, const mask_t & mask) const

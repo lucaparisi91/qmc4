@@ -98,14 +98,18 @@ bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,rand
      }
 
 
+    bool accepted = S.checkConstraints(confs,timeRanges[0],{iChain,iChain});
+    accepted = accepted and S.checkConstraints(confs,timeRanges[1],{iChainNext,iChainNext});
 
+    if (accepted)
+    {
+        auto  sNew= S.evaluate(confs,timeRanges[0], iChain) ;
+        sNew+=S.evaluate(confs,timeRanges[1], iChainNext) ;
+        const auto actionDifference = sNew - sOld;
 
-    auto  sNew= S.evaluate(confs,timeRanges[0], iChain) ;
-    sNew+=S.evaluate(confs,timeRanges[1], iChainNext) ;
+        accepted = sampler.acceptLog(-actionDifference,randG);
 
-    const auto actionDifference = sNew - sOld;
-
-    bool accepted = sampler.acceptLog(-actionDifference,randG);
+    }
 
     if (! accepted)
     {
@@ -117,7 +121,6 @@ bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,rand
          }
 
     }
-    
     return accepted;
 }
 
@@ -790,18 +793,31 @@ bool translateMove::attemptMove(configurations_t & confs , firstOrderAction & S,
 
         iSeq++; 
     }
-
-
-    //evaluate the action in the new configuration
-
-     for (auto iCurrentChain : chainsInThePolimer)
+    
+    bool accept=true;
+    for (auto iCurrentChain : chainsInThePolimer)
      {
-        deltaS+= Spot.evaluate(confs,timeRange,iCurrentChain);   
+        accept=  S.checkConstraints(confs,timeRange,{iCurrentChain,iCurrentChain});
+        if (not accept)
+        {
+            break;
+        }
      }
 
 
+    if (accept)
+    {
+        //evaluate the action in the new configuration
+        for (auto iCurrentChain : chainsInThePolimer)
+        {
+            deltaS+= Spot.evaluate(confs,timeRange,iCurrentChain);
 
-    bool accept = sampler.acceptLog(-deltaS,randG);
+        }
+
+
+
+        accept = sampler.acceptLog(-deltaS,randG);
+    }
 
     if ( not accept)
     {

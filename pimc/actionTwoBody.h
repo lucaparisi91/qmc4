@@ -13,7 +13,8 @@ class actionTwoBody : public action
 
 
     public:
-    actionTwoBody()  {}
+    actionTwoBody() :
+    _distanceMinimumConstraint(false),rMin(0)  {}
 
     void setKernel( std::shared_ptr<kernel2B> kernel_)
     {
@@ -39,7 +40,7 @@ class actionTwoBody : public action
     Real evaluate(const configurations_t & configurations,const std::array<int,2> & timeRange, const std::array<int,2> & particleRange);
 
     Real evaluateTimeDerivative(const configurations_t & configurations,const std::array<int,2> & timeRange, const std::array<int,2> & particleRange);
-
+    
 
     virtual Real evaluate( configurations_t & configurations)
     {
@@ -80,9 +81,10 @@ class actionTwoBody : public action
 
     Real rMin;
 
-
-
-
 };
 
+
+
 }
+
+

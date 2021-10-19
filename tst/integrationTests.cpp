@@ -1,5 +1,110 @@
 #include "integrationTests.h"
 
+#include "../pimc/actionTwoBody.h"
+#include "../pimc/potentialKernel.h"
+#include "../pimc/pairProductKernel.h"
+#include "../pimc/propagators.h"
+
+void harmonicTrapTest::SetUpTwoBodyInteractionHarmonicInTrap_kernel()
+{
+    std::shared_ptr<pimc::action> sT= std::make_shared<pimc::kineticAction>(timeStep, configurations.nChains() , M  , geo);
+
+    int order=2;
+
+    auto V = pimc::makeIsotropicPotentialFunctor(
+        [](Real r) {return 0.5*(r*r) ;} ,
+        [](Real r) {return r  ;} );
+
+        auto kernel = std::make_shared<                         pimc::primitiveApproximationTwoBodyKernel<decltype(V) >  >(std::make_shared<decltype(V)>(V));
+
+    kernel->setTimeStep(timeStep);
+    kernel->setGeometry(geo);
+
+
+    auto sV2B=std::make_shared<pimc::actionTwoBody>();
+    sV2B->setSets({0,0});
+    sV2B->setKernel(kernel);
+
+
+    auto  sOneBody=std::make_shared<pimc::potentialActionOneBody<decltype(V)> >(timeStep,V ,geo,order);
+
+    std::vector<std::shared_ptr<pimc::action> > Vs = {sOneBody,sV2B};
+
+    std::shared_ptr<pimc::action>  sV = std::make_shared<pimc::sumAction>(Vs);
+
+    S= pimc::firstOrderAction(sT,  sV);
+
+}
+
+void twoBodyTest::SetUpFreeActionWithHardSphereConstraint(Real a)
+{
+    std::shared_ptr<pimc::action> sT= std::make_shared<pimc::kineticAction>(timeStep, configurations.nChains() , M  , geo);
+
+    auto V = pimc::makeIsotropicPotentialFunctor(
+        [](Real r) {return 0 ;} ,
+        [](Real r) {return 0  ;} );
+
+        auto kernel = std::make_shared<                         pimc::primitiveApproximationTwoBodyKernel<decltype(V) >  >(std::make_shared<decltype(V)>(V));
+
+    kernel->setTimeStep(timeStep);
+    kernel->setGeometry(geo);
+
+
+    auto sV2B=std::make_shared<pimc::actionTwoBody>();
+    sV2B->setSets({0,0});
+    sV2B->setKernel(kernel);
+    sV2B->setGeometry(geo);
+    sV2B->setTimeStep(timeStep);
+    sV2B->setMinimumDistance(a);
+    
+    std::shared_ptr<pimc::action> sEmpty= std::make_shared<pimc::nullPotentialAction>(timeStep  , geo);
+
+    
+    std::vector<std::shared_ptr<pimc::action> > Vs = {sV2B};
+
+    std::shared_ptr<pimc::action>  sV = std::make_shared<pimc::sumAction>(Vs);
+
+    S= pimc::firstOrderAction(sT,  sV);
+
+}
+
+void twoBodyTest::SetUpCaoBernePropagator(Real radius)
+{
+    using propagator_t = pimc::caoBernePropagator;
+
+    auto kernel =std::make_shared<propagator_t>(timeStep,radius);
+    auto pairKernel = std::make_shared<pimc::pairProductKernel<propagator_t> >(kernel);
+
+    auto S2B = std::make_shared<pimc::actionTwoBody>();
+    S2B->setTimeStep(timeStep);
+    S2B->setGeometry(geo);
+    S2B->setKernel(pairKernel);
+    pairKernel->setGeometry(geo);
+    pairKernel->setTimeStep(timeStep);
+
+    S2B->setSets({0,0});
+
+    S2B->setMinimumDistance(radius);
+
+    auto  sT= std::make_shared<pimc::kineticAction>(timeStep, configurations.nChains() , configurations.nChains()  , geo);
+
+    std::vector<std::shared_ptr<pimc::action> > Vs = {S2B};
+
+    std::shared_ptr<pimc::action>  sV = std::make_shared<pimc::sumAction>(Vs);
+
+    S= pimc::firstOrderAction(sT,  sV);
+
+}
+
+
+void twoBodyTest::SetRandomMinimumDistance(Real radius, const std::array<Real,DIMENSIONS> lBox)
+{
+
+    while (not S.checkConstraints(configurations) )
+    {
+        SetRandom(lBox);
+    } ;
+}
 
 void twoBodyTest::sample()
 {
@@ -489,8 +594,6 @@ TEST_F(twoBodyTest,pbc)
     //advanceHead.setFixedLength();
     //recedeHead.setFixedLength();
 
-
-
     pimc::advanceTail advanceTail(lShort,0);
     pimc::recedeTail recedeTail(lShort,0);
 
@@ -515,7 +618,7 @@ TEST_F(twoBodyTest,pbc)
     tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
     tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal,"recedeHead");
     tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
-
+    
     int tTail=4;
     int lWormShort=4;
 
@@ -530,7 +633,6 @@ TEST_F(twoBodyTest,pbc)
         
 
     configurations.fillHeads();
-    
 
     resetCounters();
 
@@ -539,7 +641,254 @@ TEST_F(twoBodyTest,pbc)
 
     accumulate();
 
+}
+
+
+TEST_F(harmonicTrapTest, twoBodyActionKernel2_grandCanonical )
+{
+    Real C=1;
+    int nBeads=10;
+    int N=2;
+    Real beta=0.1* nBeads;
+
+    SetUp(N,nBeads,beta , {10000000} );
+    //SetUpTwoBodyInteractionHarmonicInTrap();
+    SetUpTwoBodyInteractionHarmonicInTrap_kernel();
+
+    SetGrandCanonicalEnsamble( 0 );
+    SetSeed( 145) ;
+    SetRandom({TRUNCATE_D(0.4,0.4,0.4)});
+
+    int t0=7;
+    int l = int( 0.8* 10);
+    int lShort=int( 0.6* 10);
+    int lOpen=1;
+
+    pimc::translateMove translate(0.1, 2000*M , 0 );
+
+    pimc::levyMove levy(l,0);
+    
+    pimc::moveHead moveHeadMove(lShort,0);
+    pimc::moveTail moveTailMove(lShort,0);
+
+    pimc::openMove open(C, 0, lOpen );
+    pimc::closeMove close(C, 0, lOpen );
+
+
+    pimc::createWorm createWorm(C, 0, lShort , 1 );
+    pimc::deleteWorm removeWorm(C, 0, lShort , 1);
+
+
+
+    //open.setStartingBead(3);
+    //open.setStartingChain(0);
+
+    //close.setStartingBead(3);
+    //close.setStartingChain(0);
+
+    //open.setLengthCut(lOpen);
+    //close.setLengthCut(lOpen);
+
+    pimc::advanceHead advanceHead(lShort,0);
+    pimc::recedeHead recedeHead(lShort,0);
+    
+    //advanceHead.setFixedLength();
+    //recedeHead.setFixedLength();
+
+    pimc::advanceTail advanceTail(lShort,0);
+    pimc::recedeTail recedeTail(lShort,0);
+
+    pimc::swapMove swap( lShort , 200 , 0);
+    //swap.setFixedLength();
+    
+    //advanceHead.setMaximumParticleNumber(2);
+    //recedeHead.setMinParticleNumber(1);
+
+
+    pimc::nConnectedChains nConnectedChains;
+    tab.push_back(&levy,0.6,pimc::sector_t::diagonal,"levy");
+    tab.push_back(&translate,0.4,pimc::sector_t::diagonal,"translate");
+    //tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
+
+    //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");
+
+    tab.push_back(&levy,0.4,pimc::sector_t::offDiagonal,"levy");
+    tab.push_back(&translate,0.1,pimc::sector_t::offDiagonal,"translate");
+    tab.push_back(&close,0.1,pimc::sector_t::offDiagonal,"close");
+    tab.push_back(&moveHeadMove,0.1,pimc::sector_t::offDiagonal,"moveHead");
+    tab.push_back(&moveTailMove,0.1,pimc::sector_t::offDiagonal,"moveTail");
+    tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
+    tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal, "recedeHead");
+    tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
+    
+    int tTail=4;
+    int lWormShort=4;
+
+    //configurations.setHeadTail(0,tTail + lWormShort,tTail -1);
+
+    //configurations.setHeadTail(1,tTail - lCut,-1);
+    //configurations.join(0,1);
+
+    //configurations.join(1,0);        
+
+    configurations.fillHeads();
+
+    resetCounters();
+
+    int nTrials=100000;
+    int nBlocks=100000;
+
+    accumulate();
 
 }
 
 
+#if DIMENSIONS == 3
+TEST_F( twoBodyTest, caoBernePropagator )
+{
+    Real C=1;
+    int nBeads=10;
+
+    int N=2;
+    Real beta=0.1* nBeads;
+    Real a=0.1;
+
+    std::array<double,DIMENSIONS> lBox = {TRUNCATE_D(1,1,1)};
+
+    SetUp(N,nBeads,beta , lBox );
+    //SetUpTwoBodyInteractionHarmonicInTrap();
+    //SetUpCaoBernePropagator(a);
+    //SetUpFreeParticleAction();
+    SetUpFreeActionWithHardSphereConstraint(a);
+
+
+    SetRandomMinimumDistance(a,lBox);
+    SetGrandCanonicalEnsamble( 0 );
+    SetSeed( time(NULL)) ;
+
+    int t0=7;
+    int l = int( 0.8* 10);
+    int lShort=int( 0.6* 10);
+    int lOpen=1;
+
+    pimc::translateMove translate(0.1, 2000*M , 0 );
+
+    pimc::levyMove levy(l,0);
+    
+    pimc::moveHead moveHeadMove(lShort,0);
+    pimc::moveTail moveTailMove(lShort,0);
+
+    pimc::openMove open(C, 0, lOpen );
+    pimc::closeMove close(C, 0, lOpen );
+
+
+    pimc::createWorm createWorm(C, 0, lShort , 1 );
+    pimc::deleteWorm removeWorm(C, 0, lShort , 1);
+
+
+    //open.setStartingBead(3);
+    //open.setStartingChain(0);
+
+    //close.setStartingBead(3);
+    //close.setStartingChain(0);
+
+    //open.setLengthCut(lOpen);
+    //close.setLengthCut(lOpen);
+
+    pimc::advanceHead advanceHead(lShort,0);
+    pimc::recedeHead recedeHead(lShort,0);
+    
+    //advanceHead.setFixedLength();
+    //recedeHead.setFixedLength();
+
+    pimc::advanceTail advanceTail(lShort,0);
+    pimc::recedeTail recedeTail(lShort,0);
+
+    pimc::swapMove swap( lShort , 200 , 0);
+    //swap.setFixedLength();
+    
+    //advanceHead.setMaximumParticleNumber(2);
+    //recedeHead.setMinParticleNumber(1);
+
+    pimc::nConnectedChains nConnectedChains;
+    tab.push_back(&levy,0.6,pimc::sector_t::diagonal,"levy");
+    tab.push_back(&translate,0.4,pimc::sector_t::diagonal,"translate");
+    //tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
+
+    //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");
+
+
+    tab.push_back(&levy,0.4,pimc::sector_t::offDiagonal,"levy");
+    tab.push_back(&translate,0.1,pimc::sector_t::offDiagonal,"translate");
+    tab.push_back(&close,0.1,pimc::sector_t::offDiagonal,"close");
+    tab.push_back(&moveHeadMove,0.1,pimc::sector_t::offDiagonal,"moveHead");
+    tab.push_back(&moveTailMove,0.1,pimc::sector_t::offDiagonal,"moveTail");
+    tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
+    tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal, "recedeHead");
+    tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
+    
+    int tTail=4;
+    int lWormShort=4;
+
+    //configurations.setHeadTail(0,tTail + lWormShort,tTail -1);
+
+    //configurations.setHeadTail(1,tTail - lCut,-1);
+    //configurations.join(0,1);
+
+    //configurations.join(1,0);        
+
+    configurations.fillHeads();
+    resetCounters();
+
+    int nTrials=1000000;
+    int nBlocks=100000;
+
+    auto g = std::make_shared<pimc::pairCorrelation>(0,0);
+    auto gOb=std::make_shared<pimc::histogramObservable>(g,"pairCorr",1000,0,sqrt(3*lBox[0]/2) );
+
+    configurations.save( "configurationsInitial" , "csv");
+
+    for (int i=0;i<nBlocks;i++)
+    {
+        int nClosed=0;
+        int nOpen=0;
+        int n=0;
+        while (nClosed<nTrials and nOpen<nTrials and n<nTrials)
+        {
+
+            tab.attemptMove(configurations,S,randG);
+            
+            
+            if ( configurations.isOpen() )
+            {
+                nOpen+=1;
+            }
+            else 
+            {
+                gOb->accumulate(configurations,S);
+                nClosed+=1;
+            }
+
+            n+=1;
+        }
+
+        ASSERT_TRUE(S.checkConstraints(configurations));
+            
+
+       if ( nClosed == nTrials  )
+       {
+        gOb->out(i);
+        gOb->clear();
+
+       }
+
+
+       tab >> std::cout;
+       tab.resetCounters();
+       configurations.save( "configurations" + std::to_string(i) , "csv");
+
+    }
+
+}
+
+#endif
