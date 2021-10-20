@@ -32,8 +32,7 @@ namespace pimc
     bool kernel2B::checkMinimumDistanceConstraintTriangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA,const std::array<int,2> & rangeB, Real minDistance)
     {
         Real minDistanceSquared=minDistance*minDistance;
-
-
+        
         for (int t=timeRange[0];t<=timeRange[1];t++)
         {
             for (int i=rangeA[0]; i <= rangeA[1] ; i++)

@@ -28,8 +28,8 @@ Real actionTwoBody::evaluate(const configurations_t & configurations,const std::
         {
             return 0;
         }
-        
-        range_t timeRange {timeRange_[0],timeRange_[1]+1};
+
+         range_t timeRange {timeRange_[0],timeRange_[1]+1};
 
         Real sum=0;
 
@@ -137,8 +137,6 @@ void actionTwoBody::addGradient(const configurations_t & configurations,const st
 
 bool actionTwoBody::checkConstraints(const configurations_t & configurations,const std::array<int,2> & timeRange_,const  std::array<int,2> & particleRange)
 {
-
-
     if (_distanceMinimumConstraint)    
     {
          if (timeRange_[1] < timeRange_[0] )
@@ -146,9 +144,10 @@ bool actionTwoBody::checkConstraints(const configurations_t & configurations,con
             return true;
         }
         
+
         range_t timeRange {timeRange_[0],timeRange_[1]+1};
 
-
+        
         auto const & groupA = configurations.getGroups()[setA];
         auto const & groupB = configurations.getGroups()[setB];
     
@@ -157,10 +156,10 @@ bool actionTwoBody::checkConstraints(const configurations_t & configurations,con
             auto rangeA = intersectRanges(  groupA.range(),particleRange );
             
             bool pass = _kernel->checkMinimumDistanceConstraintTriangular( configurations.dataTensor(),timeRange,rangeA , groupA.range(), rMin );
-            
+
             if (pass)
             {
-                pass= _kernel->checkMinimumDistanceConstraintRectangular( configurations.dataTensor(),timeRange,rangeA,{ rangeA[1]+1,groupA.range()[1] }, _distanceMinimumConstraint );
+                pass= _kernel->checkMinimumDistanceConstraintRectangular( configurations.dataTensor(),timeRange,rangeA,{ rangeA[1]+1,groupA.range()[1] }, rMin );
             }
 
             return pass;

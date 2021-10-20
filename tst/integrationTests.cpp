@@ -83,10 +83,17 @@ void twoBodyTest::SetUpCaoBernePropagator(Real radius)
     pairKernel->setTimeStep(timeStep);
 
     S2B->setSets({0,0});
-
     S2B->setMinimumDistance(radius);
+    S2B->setGeometry(geo);
+    S2B->setTimeStep(timeStep);
+
 
     auto  sT= std::make_shared<pimc::kineticAction>(timeStep, configurations.nChains() , configurations.nChains()  , geo);
+
+    std::shared_ptr<pimc::action> sEmpty= std::make_shared<pimc::nullPotentialAction>(timeStep  , geo);
+
+    
+
 
     std::vector<std::shared_ptr<pimc::action> > Vs = {S2B};
 
@@ -751,23 +758,24 @@ TEST_F( twoBodyTest, caoBernePropagator )
 
     int N=2;
     Real beta=0.1* nBeads;
-    Real a=0.1;
+    Real a=0.01;
 
     std::array<double,DIMENSIONS> lBox = {TRUNCATE_D(1,1,1)};
 
     SetUp(N,nBeads,beta , lBox );
     //SetUpTwoBodyInteractionHarmonicInTrap();
-    //SetUpCaoBernePropagator(a);
+    SetUpCaoBernePropagator(a);
     //SetUpFreeParticleAction();
-    SetUpFreeActionWithHardSphereConstraint(a);
 
 
-    SetRandomMinimumDistance(a,lBox);
+    //SetUpFreeActionWithHardSphereConstraint(a);    
     SetGrandCanonicalEnsamble( 0 );
-    SetSeed( time(NULL)) ;
+    SetSeed( 456790) ;
+    SetRandomMinimumDistance(a,lBox);
+
 
     int t0=7;
-    int l = int( 0.8* 10);
+    int l = int( 0.3* 10);
     int lShort=int( 0.6* 10);
     int lOpen=1;
 
@@ -811,8 +819,9 @@ TEST_F( twoBodyTest, caoBernePropagator )
     //recedeHead.setMinParticleNumber(1);
 
     pimc::nConnectedChains nConnectedChains;
-    tab.push_back(&levy,0.6,pimc::sector_t::diagonal,"levy");
-    tab.push_back(&translate,0.4,pimc::sector_t::diagonal,"translate");
+    tab.push_back(&levy,1,pimc::sector_t::diagonal,"levy");
+
+    //tab.push_back(&translate,0.4,pimc::sector_t::diagonal,"translate");
     //tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
 
     //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");
@@ -833,9 +842,8 @@ TEST_F( twoBodyTest, caoBernePropagator )
     //configurations.setHeadTail(0,tTail + lWormShort,tTail -1);
 
     //configurations.setHeadTail(1,tTail - lCut,-1);
-    //configurations.join(0,1);
-
-    //configurations.join(1,0);        
+    configurations.join(0,1);
+    configurations.join(1,0);        
 
     configurations.fillHeads();
     resetCounters();
@@ -844,7 +852,7 @@ TEST_F( twoBodyTest, caoBernePropagator )
     int nBlocks=100000;
 
     auto g = std::make_shared<pimc::pairCorrelation>(0,0);
-    auto gOb=std::make_shared<pimc::histogramObservable>(g,"pairCorr",1000,0,sqrt(3*lBox[0]/2) );
+    auto gOb=std::make_shared<pimc::histogramObservable>(g,"pairCorr",100,0,lBox[0]/2 );
 
     configurations.save( "configurationsInitial" , "csv");
 

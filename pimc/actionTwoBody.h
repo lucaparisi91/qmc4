@@ -24,7 +24,7 @@ class actionTwoBody : public action
 
     auto & kernel(){return _kernel;}
     const auto & kernel()const {return _kernel;}
-
+    
     void setSets(const std::array<int,2> & sets)
     {
         setA=sets[0];
@@ -39,9 +39,8 @@ class actionTwoBody : public action
 
     Real evaluate(const configurations_t & configurations,const std::array<int,2> & timeRange, const std::array<int,2> & particleRange);
 
-    Real evaluateTimeDerivative(const configurations_t & configurations,const std::array<int,2> & timeRange, const std::array<int,2> & particleRange);
+    Real evaluateTimeDerivative(const configurations_t & configurations,const std::array<int,2> & timeRange, const std::array<int,2> & particleRange);    
     
-
     virtual Real evaluate( configurations_t & configurations)
     {
         return evaluate(configurations,

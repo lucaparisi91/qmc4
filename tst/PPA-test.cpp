@@ -928,7 +928,7 @@ TEST_F( pairProductTest , evaluationTwoComponentGrandCanonical )
 
     const auto & rangeA=configurations.getGroups()[0].range();
     const auto & rangeB=configurations.getGroups()[1].range();
-
+    
 
     Real radius=0.01;
     auto S = buildCaoBernePropagator(radius,{0,0});
