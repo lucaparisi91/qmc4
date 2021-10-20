@@ -838,12 +838,12 @@ TEST_F( twoBodyTest, caoBernePropagator )
     
     int tTail=4;
     int lWormShort=4;
-
+    
     //configurations.setHeadTail(0,tTail + lWormShort,tTail -1);
 
     //configurations.setHeadTail(1,tTail - lCut,-1);
-    configurations.join(0,1);
-    configurations.join(1,0);        
+    //configurations.join(0,1);
+    //configurations.join(1,0);        
 
     configurations.fillHeads();
     resetCounters();

@@ -147,7 +147,7 @@ bool actionTwoBody::checkConstraints(const configurations_t & configurations,con
 
         range_t timeRange {timeRange_[0],timeRange_[1]+1};
 
-        
+
         auto const & groupA = configurations.getGroups()[setA];
         auto const & groupB = configurations.getGroups()[setB];
     
@@ -155,11 +155,11 @@ bool actionTwoBody::checkConstraints(const configurations_t & configurations,con
         {
             auto rangeA = intersectRanges(  groupA.range(),particleRange );
             
-            bool pass = _kernel->checkMinimumDistanceConstraintTriangular( configurations.dataTensor(),timeRange,rangeA , groupA.range(), rMin );
+            bool pass = _kernel->checkMinimumDistanceConstraintTriangular( configurations,timeRange,rangeA , groupA.range(), rMin );
 
             if (pass)
             {
-                pass= _kernel->checkMinimumDistanceConstraintRectangular( configurations.dataTensor(),timeRange,rangeA,{ rangeA[1]+1,groupA.range()[1] }, rMin );
+                pass= _kernel->checkMinimumDistanceConstraintRectangular( configurations,timeRange,rangeA,{ rangeA[1]+1,groupA.range()[1] }, rMin );
             }
 
             return pass;
@@ -167,14 +167,7 @@ bool actionTwoBody::checkConstraints(const configurations_t & configurations,con
         }
         else
         {
-            auto rangeA = intersectRanges(  groupA.range(),particleRange );
-            auto rangeB = intersectRanges(  groupB.range(),particleRange );
-
-
-            bool pass= _kernel->checkMinimumDistanceConstraintRectangular( configurations.dataTensor(),timeRange,rangeA,groupB.range(), _distanceMinimumConstraint );
-
-            pass = pass and _kernel->checkMinimumDistanceConstraintRectangular( configurations.dataTensor(),timeRange,rangeB,groupA.range(), _distanceMinimumConstraint );
-            return pass;   
+            throw std::runtime_error("checkConstraints for a mixture not implemented yet");
         }
     }
     else {
@@ -182,6 +175,8 @@ bool actionTwoBody::checkConstraints(const configurations_t & configurations,con
         return true;
     }
 }
+
+
 
 };
 

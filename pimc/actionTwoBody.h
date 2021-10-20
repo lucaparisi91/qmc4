@@ -40,7 +40,7 @@ class actionTwoBody : public action
     Real evaluate(const configurations_t & configurations,const std::array<int,2> & timeRange, const std::array<int,2> & particleRange);
 
     Real evaluateTimeDerivative(const configurations_t & configurations,const std::array<int,2> & timeRange, const std::array<int,2> & particleRange);    
-    
+
     virtual Real evaluate( configurations_t & configurations)
     {
         return evaluate(configurations,
@@ -62,7 +62,10 @@ class actionTwoBody : public action
 
     virtual void addGradient(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange,  Eigen::Tensor<Real,3> & gradientBuffer);
 
+    
     virtual bool checkConstraints(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange);
+
+
 
 
     void setMinimumDistance(Real rMin_) {

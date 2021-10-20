@@ -60,6 +60,7 @@ class kernel2B
 
     }
 
+     
 
     virtual Real evaluateTimeDerivativeRectangular(
         const configurations_t & configurations,
@@ -159,11 +160,42 @@ class kernel2B
 
      virtual void addForceTriangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces) const = 0;
 
-     
+    virtual bool checkMinimumDistanceConstraintRectangular(const configurations_t & configurations , const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Real minDistance)
+    {
+         if (configurations.getEnsamble() == ensamble_t::canonical  )
+         {
+             return checkMinimumDistanceConstraintRectangular(configurations.dataTensor(),timeRange,rangeA,rangeB,minDistance );
+         }
+         else
+        {
+            return checkMinimumDistanceConstraintRectangular(configurations.dataTensor(),timeRange,rangeA,rangeB,minDistance,configurations.getTags() );
+        }
+
+    }
+
+    virtual bool checkMinimumDistanceConstraintTriangular(const configurations_t & configurations, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Real minDistance)
+    {
+         if (configurations.getEnsamble() == ensamble_t::canonical  )
+         {
+             return checkMinimumDistanceConstraintTriangular(configurations.dataTensor(),timeRange,rangeA,rangeB,minDistance );
+         }
+         else
+        {
+            return checkMinimumDistanceConstraintTriangular(configurations.dataTensor(),timeRange,rangeA,rangeB,minDistance,configurations.getTags() );
+        }
+
+    }
+
 
     virtual bool checkMinimumDistanceConstraintRectangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Real minDistance);    
 
     virtual bool checkMinimumDistanceConstraintTriangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Real minDistance);  
+
+    virtual bool checkMinimumDistanceConstraintRectangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Real minDistance,const mask_t & mask);    
+
+    virtual bool checkMinimumDistanceConstraintTriangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Real minDistance, const mask_t & mask);  
+
+    
 
    
     
