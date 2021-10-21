@@ -11,7 +11,6 @@ namespace pimc
 using mask_t = maskTensor;
 using configurations_t = pimcConfigurations;
 
-
 class kernel2B
 {
     public:

@@ -1,6 +1,5 @@
 #include "kernels.h"
 
-
 namespace pimc
 {
     bool kernel2B::checkMinimumDistanceConstraintRectangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA,const std::array<int,2> & rangeB, Real minDistance)
@@ -107,7 +106,7 @@ namespace pimc
                             Real tmp = geometry().difference( tn(i,d,t) - tn(j,d,t) ,d);
                             r2+=tmp*tmp;
                         }
-                        
+
                         if (r2 <= minDistanceSquared)
                         {
                             return false;
@@ -119,7 +118,7 @@ namespace pimc
         }
         return true;
     } 
-
+    
 }
 
 
