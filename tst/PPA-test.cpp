@@ -913,7 +913,6 @@ TEST_F( pairProductTest , evaluationSingleComponentGrandCanonical )
 }
 
 
-
 TEST_F( pairProductTest , evaluationTwoComponentGrandCanonical )
 {   
     int N=6;
@@ -954,12 +953,10 @@ TEST_F( pairProductTest , evaluationTwoComponentGrandCanonical )
     auto sumCheck=evaluateRectangularKernel(G,{0,tTail+1},{1,N/2-1},rangeB);
     sumCheck+=evaluateRectangularKernel(G,{tTail+1,tHead},{0,N/2-1},rangeB);
     sumCheck+=evaluateRectangularKernel(G,{tHead,M},{0,N/2-2},rangeB);
-
-
+    
     ASSERT_NEAR(sum,sumCheck,TOL);
     
 }
-
 
 
 #endif

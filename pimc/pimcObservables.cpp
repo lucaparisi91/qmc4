@@ -10,11 +10,11 @@ Real thermodynamicEnergyEstimator::operator()(configurations_t & confs, firstOrd
     auto & potA = S.getPotentialAction();
     
     auto sA=kA.evaluate(confs);
-    auto sV=potA.evaluate(confs);
+    auto sV=potA.evaluateTimeDerivative(confs);
 
     auto beta = confs.nBeads() * kA.getTimeStep(); 
     sA/=beta;
-    sV/=beta;
+    sV/=confs.nBeads();
 
     return sV - sA +  getDimensions()/(2.*kA.getTimeStep())*confs.nParticles();
 }
@@ -39,7 +39,10 @@ Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderActio
         iEnd=std::max(iEnd,group.iEnd);
             
     }
+
     Spot.addGradient(confs,{0,confs.nBeads()-1},{iStart,iEnd},buffer);
+
+
     const auto & data = confs.dataTensor();     
 
     // compute rC
@@ -189,8 +192,9 @@ Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderActio
 
 
     Real beta = S.getTimeStep() * confs.nBeads();
-    e4= S.getPotentialAction().evaluate(confs);
-    e4/=(beta );
+    e4= S.getPotentialAction().evaluateTimeDerivative(confs);
+    e4/=( confs.nBeads() );
+
 
     e3/=(2*beta);
 

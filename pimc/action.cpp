@@ -36,6 +36,7 @@ Real kineticAction::evaluate( pimcConfigurations_t & configurations , std::array
     return sum/(4* D * getTimeStep());
 }
 
+
 Real kineticAction::evaluate( pimcConfigurations_t & configurations , std::array<int,2> timeSlices , int iChange )
 {   
     Real sum=0;
@@ -65,7 +66,7 @@ Real kineticAction::evaluate( pimcConfigurations_t & configurations )
 
     for (auto & group : particleGroups)
     {
-        sum+=evaluate(configurations  , {0 , nBeads-1} , {group.iStart,group.iEnd} ) ;
+        sum+=evaluate(configurations  , {0 , configurations.nBeads()-1} , {group.iStart,group.iEnd} ) ;
     }
 
     return sum;

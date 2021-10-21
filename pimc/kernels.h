@@ -193,10 +193,8 @@ class kernel2B
     virtual bool checkMinimumDistanceConstraintRectangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Real minDistance,const mask_t & mask);    
 
     virtual bool checkMinimumDistanceConstraintTriangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Real minDistance, const mask_t & mask);  
-
     
 
-   
     
     private:
     

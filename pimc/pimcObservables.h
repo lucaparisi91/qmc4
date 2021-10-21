@@ -7,11 +7,11 @@
 #include "action.h"
 #include "accumulators.h"
 
+
 namespace pimc
 {
 
 class scalarObservable;
-
 
 class scalarEstimator
 {
@@ -47,6 +47,7 @@ public:
     virtual void clear()=0;
 
 };
+
 
 class scalarObservable : public observable
 {

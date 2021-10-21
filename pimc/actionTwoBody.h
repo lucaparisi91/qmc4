@@ -39,7 +39,7 @@ class actionTwoBody : public action
 
     Real evaluate(const configurations_t & configurations,const std::array<int,2> & timeRange, const std::array<int,2> & particleRange);
 
-    Real evaluateTimeDerivative(const configurations_t & configurations,const std::array<int,2> & timeRange, const std::array<int,2> & particleRange);    
+    virtual Real evaluateTimeDerivative(const configurations_t & configurations,const std::array<int,2> & timeRange, const std::array<int,2> & particleRange) override;    
 
     virtual Real evaluate( configurations_t & configurations)
     {
@@ -48,9 +48,8 @@ class actionTwoBody : public action
                         configurations.getGroups()[setA].range()
                         );
     }
-    
 
-    virtual Real evaluateTimeDerivative( configurations_t & configurations)
+    virtual Real evaluateTimeDerivative( const configurations_t & configurations) override
     {
         return evaluateTimeDerivative(configurations,
                         range_t{0,configurations.nBeads()-1},

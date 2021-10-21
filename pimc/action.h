@@ -203,6 +203,14 @@ class action
     virtual bool checkConstraints(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange) { return true; }
     
     virtual bool checkConstraints(const configurations_t & pimcConfigurations);
+    
+    virtual Real evaluateTimeDerivative(const configurations_t & configurations,const std::array<int,2> & timeRange, const std::array<int,2> & particleRange){throw missingImplementation("evaluateTimeDerivative  not implemented for this action.");}
+
+   
+
+    
+    virtual Real evaluateTimeDerivative( const  configurations_t & configurations){throw missingImplementation("evaluateTimeDerivative not implemented for this action.");}
+
 
 
 
@@ -862,6 +870,28 @@ class sumAction : public action
         }
         return sum;
     }
+
+    virtual Real evaluateTimeDerivative( const pimcConfigurations_t & pimcConfigurations) override
+    {
+        Real sum=0;
+        for(auto S : _actions)
+        {
+            sum+=S->evaluateTimeDerivative(pimcConfigurations);
+        }
+        return sum;
+    }
+
+    virtual Real evaluateTimeDerivative(const configurations_t & configurations,const std::array<int,2> & timeRange, const std::array<int,2> & particleRange) override
+    {
+        Real sum=0;
+        for(auto S : _actions)
+        {
+            sum+=S->evaluateTimeDerivative(configurations,timeRange,particleRange);
+        }
+        return sum;
+    }
+
+
 
     virtual bool checkConstraints(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange)
     {

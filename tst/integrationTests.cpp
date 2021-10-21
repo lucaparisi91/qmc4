@@ -5,6 +5,7 @@
 #include "../pimc/pairProductKernel.h"
 #include "../pimc/propagators.h"
 
+
 void harmonicTrapTest::SetUpTwoBodyInteractionHarmonicInTrap_kernel()
 {
     std::shared_ptr<pimc::action> sT= std::make_shared<pimc::kineticAction>(timeStep, configurations.nChains() , M  , geo);
@@ -113,6 +114,7 @@ void twoBodyTest::SetRandomMinimumDistance(Real radius, const std::array<Real,DI
     } ;
 }
 
+
 void twoBodyTest::sample()
 {
 
@@ -132,7 +134,7 @@ void twoBodyTest::sample()
     SetGrandCanonicalEnsamble( 2);
     SetSeed( time(NULL) );
     SetRandom({TRUNCATE_D(0.4,0.4,0.4)});
-    
+
    /*  auto V2 = pimc::makeIsotropicPotentialFunctor(
          [=](Real r) {return 0.*(r*r);} ,
          [=](Real r) {return 0*r  ;}
@@ -838,7 +840,7 @@ TEST_F( twoBodyTest, caoBernePropagator )
     
     int tTail=4;
     int lWormShort=4;
-    
+
     //configurations.setHeadTail(0,tTail + lWormShort,tTail -1);
 
     //configurations.setHeadTail(1,tTail - lCut,-1);
@@ -848,11 +850,22 @@ TEST_F( twoBodyTest, caoBernePropagator )
     configurations.fillHeads();
     resetCounters();
 
-    int nTrials=1000000;
+    int nTrials=10000;
     int nBlocks=100000;
 
     auto g = std::make_shared<pimc::pairCorrelation>(0,0);
     auto gOb=std::make_shared<pimc::histogramObservable>(g,"pairCorr",100,0,lBox[0]/2 );
+    
+    auto eVEst = std::make_shared<pimc::virialEnergyEstimator>(configurations.nChains() , configurations.nBeads()  );
+
+    auto eEst= std::make_shared< pimc::thermodynamicEnergyEstimator>();
+    
+    auto eO= std::make_shared<pimc::scalarObservable>(eEst,std::string("energy") );
+
+    auto eVO= std::make_shared<pimc::scalarObservable>(eVEst,std::string("eV") );
+
+
+    int nUnCorrelationSteps = 100;
 
     configurations.save( "configurationsInitial" , "csv");
 
@@ -861,11 +874,13 @@ TEST_F( twoBodyTest, caoBernePropagator )
         int nClosed=0;
         int nOpen=0;
         int n=0;
+
         while (nClosed<nTrials and nOpen<nTrials and n<nTrials)
         {
-
-            tab.attemptMove(configurations,S,randG);
-            
+            for(int n=0;n<nUnCorrelationSteps;n++)
+            {
+                tab.attemptMove(configurations,S,randG);
+            }
             
             if ( configurations.isOpen() )
             {
@@ -875,28 +890,37 @@ TEST_F( twoBodyTest, caoBernePropagator )
             {
                 gOb->accumulate(configurations,S);
                 nClosed+=1;
+                eVO->accumulate(configurations,S);
+                eO->accumulate(configurations,S);
             }
 
             n+=1;
         }
 
+
         ASSERT_TRUE(S.checkConstraints(configurations));
-            
+
 
        if ( nClosed == nTrials  )
        {
         gOb->out(i);
         gOb->clear();
 
-       }
+        eO->out(i);
+        eO->clear();
 
+        eVO->out(i);
+        eVO->clear();
+
+       }
+       
 
        tab >> std::cout;
        tab.resetCounters();
        configurations.save( "configurations" + std::to_string(i) , "csv");
 
     }
-
+    
 }
 
 #endif

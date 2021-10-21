@@ -151,14 +151,12 @@ class pairProductKernel : public kernel2B
         return sum;
     }
 
-
     virtual void addForceRectangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces) const
     {
         Real value=0;
         std::array<Real,DIMENSIONS> deltaX;
         std::array<Real,DIMENSIONS> deltaXNext;
-        std::array<Real,DIMENSIONS> minusDeltaX;
-        std::array<Real,DIMENSIONS> minusDeltaXNext;
+
 
         for (int t=timeRange[0];t<timeRange[1];t++)
         {
@@ -170,8 +168,7 @@ class pairProductKernel : public kernel2B
                         deltaX[d]=geometry().difference( tn(i,d,t) - tn(j,d,t) ,d);
                         deltaXNext[d]=geometry().difference( tn(i,d,t+1) - tn(j,d,t+1) ,d);
 
-                        minusDeltaX[d]=-deltaX[d];
-                        minusDeltaXNext[d]=-deltaXNext[d];
+                       
 
                     }
 
@@ -201,7 +198,7 @@ class pairProductKernel : public kernel2B
         std::array<Real,DIMENSIONS> deltaX;
         std::array<Real,DIMENSIONS> deltaXNext;
 
-        for (int t=timeRange[0];t<timeRange[1];t++)
+        for (int t=timeRange[0];t<=timeRange[1];t++)
         {
             for ( int i=rangeA[0];i<=rangeA[1];i++)
                 for ( int j=rangeB[0];j<i;j++)
