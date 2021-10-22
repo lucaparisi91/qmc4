@@ -539,11 +539,18 @@ bool swapMove::attemptGrandCanonicalMove(configurations_t & confs, firstOrderAct
     confs.setHead( iChainHead , std::min(tHead + l,M) );
     confs.setHead(iNewChainHead,tHead);
 
+    bool accept= Spot.checkConstraints(confs,{tHead,std::min(tHead + l ,M) -1},iChainHead);
+    accept= accept and Spot.checkConstraints(confs,{0,tHead + l - M  - 1},iPartner);
 
-    deltaS+=Spot.evaluate(confs,{tHead,std::min(tHead + l ,M) -1},iChainHead);
-    deltaS+=Spot.evaluate(confs,{0,tHead + l - M  - 1},iPartner);
+    if (accept)
+    {
+        deltaS+=Spot.evaluate(confs,{tHead,std::min(tHead + l ,M) -1},iChainHead);
+        deltaS+=Spot.evaluate(confs,{0,tHead + l - M  - 1},iPartner);
 
-    bool accept = metropolisSampler.acceptLog(-deltaS,randG);
+        accept = metropolisSampler.acceptLog(-deltaS,randG);
+    }
+
+    ;
     if (accept) 
     {
         if (tHead + l >=M )
@@ -2119,24 +2126,30 @@ bool closeMove::attemptGrandCanonicalMove(configurations_t & confs , firstOrderA
 
     //confs.fillHeads();
 
-    deltaS+=sPot.evaluate(confs,timeRange,iChainHead);
-    deltaS+=sPot.evaluate(confs,timeRange2,iChainTail);
+    bool accept = S.checkConstraints(confs,timeRange , {iChainHead,iChainHead});
+    accept = accept * S.checkConstraints(confs,timeRange2 , {iChainTail,iChainTail});
 
-
-    Real mass = confs.getGroupByChain(iChainHead).mass;
-
-    int nNew = N + 1;
-
-    if ( (tHead + l >=M) and (iChainHead != iChainTail ) )
+    if (accept )
     {
+        deltaS+=sPot.evaluate(confs,timeRange,iChainHead);
+        deltaS+=sPot.evaluate(confs,timeRange2,iChainTail);
+
+        Real mass = confs.getGroupByChain(iChainHead).mass;
+
+        int nNew = N + 1;
+
+        if ( (tHead + l >=M) and (iChainHead != iChainTail ) )
+        {    
+            nNew= N + 2;    
+        }
         
-        nNew= N + 2;    
+
+        auto propRatio = -deltaS + freeParticleLogProbability(difference,S.getTimeStep()*l,mass) -log( openCloseRatioCoefficient(nNew,M)   ) + confs.getChemicalPotential(getSet() )*l*timeStep ;
+
+        accept = sampler.acceptLog(propRatio,randG);
+
     }
-    
 
-    auto propRatio = -deltaS + freeParticleLogProbability(difference,S.getTimeStep()*l,mass) -log( openCloseRatioCoefficient(nNew,M)   ) + confs.getChemicalPotential(getSet() )*l*timeStep ;
-
-    bool accept = sampler.acceptLog(propRatio,randG);
 
     if ( accept)
     {
@@ -2581,25 +2594,36 @@ bool advanceHead::attemptMove(configurations_t & confs , firstOrderAction & S,ra
     _levy.apply(confs,{tHead,tHead+l},iChain,S,randG);
 
     
-    deltaS+=sPot.evaluate(confs,timeRange,iChain);
-
+    
+    bool accept=sPot.checkConstraints(confs,timeRange,iChain);
     int iChainNew=-1100;
 
-    if (tHead + l >= M)
+    if (accept )
     {
-        // creates a new chain
-        iChainNew=confs.pushChain(getSet());
-        confs.setHeadTail(iChainNew,timeRange2[1] + 1,-1);
-        confs.copyData( { M , tHead + l } , iChain, 0,iChainNew ); 
-        deltaS+=sPot.evaluate(confs,timeRange2,iChainNew);
-        confs.join(iChain,iChainNew);
-    }
+        deltaS+=sPot.evaluate(confs,timeRange,iChain);
 
+
+        if (tHead + l >= M)
+        {
+            // creates a new chain
+            iChainNew=confs.pushChain(getSet());
+            confs.setHeadTail(iChainNew,timeRange2[1] + 1,-1);
+            confs.copyData( { M , tHead + l } , iChain, 0,iChainNew );
+            accept= sPot.checkConstraints(confs,timeRange2,iChainNew);
+            if (accept)
+            {
+                deltaS+=sPot.evaluate(confs,timeRange2,iChainNew);
+
+            }
+            confs.join(iChain,iChainNew);
+        }
+
+    }
 
     auto propRatio = -deltaS + confs.getChemicalPotential(getSet())*l*timeStep;
 
 
-    bool accept = sampler.acceptLog(propRatio,randG);
+    accept = accept and sampler.acceptLog(propRatio,randG);
 
     
     if ( enforceMaxParticleNumber)
@@ -3154,7 +3178,13 @@ bool moveHead::attemptMove(configurations_t & confs , firstOrderAction & S,rando
     // perform levy reconstruction on l beads
     _levy.apply(confs,{t0,iHead},iChain,S,randG);
 
-    // evaluates the action
+
+    bool accept =sPot.checkConstraints(confs,timeRange,iChain);
+
+
+    if (accept)
+    {
+        // evaluates the action
     deltaS+=sPot.evaluate(confs,timeRange,iChain);
 
 
@@ -3162,9 +3192,11 @@ bool moveHead::attemptMove(configurations_t & confs , firstOrderAction & S,rando
 
     bool accept = sampler.acceptLog(propRatio,randG);
 
+    }
+
+    
     if ( accept)
     {
-
         
     }
     else
@@ -3286,16 +3318,23 @@ bool moveTail::attemptMove(configurations_t & confs , firstOrderAction & S,rando
         confs.copyData( { M, t1} , iChain, 0,iChain2 );
     }
     
+    bool accept = sPot.checkConstraints(confs,timeRange,iChain);
+    accept=accept and sPot.checkConstraints(confs,timeRange2,iChain2);
 
-    // evaluates the action
+    if (accept)
+    {
+        // evaluates the action
     deltaS+=sPot.evaluate(confs,timeRange,iChain);
     deltaS+=sPot.evaluate(confs,timeRange2,iChain2);
 
-
+  
+    
     auto propRatio = -deltaS;
 
     bool accept = sampler.acceptLog(propRatio,randG);
 
+    }
+    
     if ( accept)
     {
 

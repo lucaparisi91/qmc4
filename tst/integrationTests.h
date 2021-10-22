@@ -21,8 +21,6 @@ class twoBodyTest  : public configurationsTest
     void SetRandomMinimumDistance(Real radius, const std::array<Real,DIMENSIONS> box ={TRUNCATE_D(1,1,1)});
     void SetUpFreeActionWithHardSphereConstraint(Real a);
 
-    
-
     protected:
 
     int nTrials=100000;

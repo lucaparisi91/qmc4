@@ -9,6 +9,7 @@ Real kineticAction::evaluate( pimcConfigurations_t & configurations , std::array
     auto & geo=getGeometry();
     
     Real sum=0;
+    
 
     assert(timeRange[0]>=0);
     assert(timeRange[1]<configurations.nBeads() );

@@ -25,23 +25,31 @@ Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderActio
     auto & Spot = S.getPotentialAction();
     Real e=0;
     Real e2=0 , e3 = 0 , e4=0;
-
     
     int N=0;
     buffer.setConstant(0.);
-    int iStart=1e+9;
-    int iEnd=0;
+    
 
     for ( const auto & group : confs.getGroups() )
     {
         N+=group.iEnd - group.iStart + 1;
-        iStart=std::min(iStart,group.iStart);
-        iEnd=std::max(iEnd,group.iEnd);
+        int iStart=group.iStart;
+        int iEnd=group.iEnd;
+
+        Spot.addGradient(confs,{0,confs.nBeads()-1},{iStart,iEnd},buffer);
+
+        for(int i= iStart;i<=iEnd ; i++)
+        {
+            int iPrev=confs.getChain(i).prev;
+            assert(iPrev >=0 );
+            for(int d=0;d<getDimensions();d++)
+            {
+                buffer(i,d,0)+=buffer(iPrev,d,confs.nBeads() );
+            }
             
+        }
     }
-
-    Spot.addGradient(confs,{0,confs.nBeads()-1},{iStart,iEnd},buffer);
-
+    
 
     const auto & data = confs.dataTensor();     
 
@@ -196,10 +204,10 @@ Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderActio
     e4/=( confs.nBeads() );
 
 
-    e3/=(2*beta);
-
-    e2/=(2*beta*beta);
+    e3/=(2 * beta );
     
+    e2/=(2*beta*beta);
+
     // classical gas free contribution
     Real e1 = confs.nParticles()*   getDimensions()/(2*beta);
     return e1 + e2  + e3 + e4;

@@ -132,6 +132,6 @@ realVectorEstimator::realVectorEstimator(std::string label,realVectorObservable 
 
 realVectorEstimator::realVectorEstimator(realVectorObservable * ob_,const json_t & j) : realVectorEstimator::realVectorEstimator(j["label"].get<std::string>(),ob_)
 {
-  
+
 }
 

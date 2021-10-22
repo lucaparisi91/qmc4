@@ -14,6 +14,8 @@
 class productWavefunction;
 class walker;
 
+
+
 class estimatorBase
 {
 public:

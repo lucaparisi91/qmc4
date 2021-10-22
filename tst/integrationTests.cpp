@@ -729,7 +729,7 @@ TEST_F(harmonicTrapTest, twoBodyActionKernel2_grandCanonical )
     tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
     tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal, "recedeHead");
     tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
-    
+
     int tTail=4;
     int lWormShort=4;
 
@@ -748,7 +748,7 @@ TEST_F(harmonicTrapTest, twoBodyActionKernel2_grandCanonical )
     int nBlocks=100000;
 
     accumulate();
-
+    
 }
 
 
@@ -760,7 +760,7 @@ TEST_F( twoBodyTest, caoBernePropagator )
 
     int N=2;
     Real beta=0.1* nBeads;
-    Real a=0.01;
+    Real a=0.1;
 
     std::array<double,DIMENSIONS> lBox = {TRUNCATE_D(1,1,1)};
 
@@ -772,7 +772,7 @@ TEST_F( twoBodyTest, caoBernePropagator )
 
     //SetUpFreeActionWithHardSphereConstraint(a);    
     SetGrandCanonicalEnsamble( 0 );
-    SetSeed( 456790) ;
+    SetSeed( time( NULL)  ) ;
     SetRandomMinimumDistance(a,lBox);
 
 
@@ -821,9 +821,8 @@ TEST_F( twoBodyTest, caoBernePropagator )
     //recedeHead.setMinParticleNumber(1);
 
     pimc::nConnectedChains nConnectedChains;
-    tab.push_back(&levy,1,pimc::sector_t::diagonal,"levy");
-
-    //tab.push_back(&translate,0.4,pimc::sector_t::diagonal,"translate");
+    tab.push_back(&levy,0.9,pimc::sector_t::diagonal,"levy");
+    tab.push_back(&translate,0.1,pimc::sector_t::diagonal,"translate");
     //tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
 
     //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");

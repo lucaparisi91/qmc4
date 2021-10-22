@@ -219,9 +219,8 @@ class particleNumberEstimator : public scalarEstimator
 class virialEnergyEstimator : public scalarEstimator
 {
     public:
-
   
-    virialEnergyEstimator(int nMax, int MMax) : buffer(nMax,getDimensions(),MMax),rC(nMax,getDimensions(),MMax) {}
+    virialEnergyEstimator(int nMax, int MMax) : buffer(nMax,getDimensions(),MMax+1),rC(nMax,getDimensions(),MMax) {}
 
 
     virialEnergyEstimator(const json_t & j) : virialEnergyEstimator(j["nChains"].get<int>(),j["nBeads"].get<int>() ) {}

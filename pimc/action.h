@@ -10,6 +10,7 @@
 #include <memory>
 #include "../particleKernels/src/twoBodyPotential.h"
 
+
 namespace pimc
 {
 
@@ -201,6 +202,9 @@ class action
     void setGeometry(const geometry_t & geo) {_geo=geo ;}
 
     virtual bool checkConstraints(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange) { return true; }
+
+    virtual bool checkConstraints(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,int iParticle ) { return checkConstraints(pimcConfigurations,timeRange, {iParticle,iParticle}); }
+
     
     virtual bool checkConstraints(const configurations_t & pimcConfigurations);
     
