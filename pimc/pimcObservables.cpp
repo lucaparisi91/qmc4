@@ -197,7 +197,7 @@ Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderActio
              
             }
     }
-
+    
 
     Real beta = S.getTimeStep() * confs.nBeads();
     e4= S.getPotentialAction().evaluateTimeDerivative(confs);

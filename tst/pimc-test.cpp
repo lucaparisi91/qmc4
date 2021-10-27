@@ -2384,13 +2384,18 @@ TEST_F(configurationsTest,closedChain_twoBody)
 {
     Real C=1e-1;
     int nBeads=10;
-    int N=1;
+    int N1=1;
+    int N2=2;
+    
     Real beta=0.1* nBeads;
 
-    SetUp(N,nBeads,beta , {TRUNCATE_D(1,1,1)} );
 
-    SetUpFreeParticleAction();    
-    //SetUpNonInteractingHarmonicAction();
+    SetUp( { N1 , N2  },nBeads,beta , {TRUNCATE_D(10000,10000,10000)} );
+    
+    //SetUpFreeParticleAction();    
+
+    SetUpNonInteractingHarmonicAction();
+
 
     //SetUpTwoBodyInteractionHarmonic();
     //SetUpTwoBodyInteractionHarmonicInTrap();

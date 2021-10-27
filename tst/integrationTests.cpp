@@ -842,39 +842,33 @@ TEST_F( harmonicTrapTest, caoBernePropagator )
     Real C=1e-3;
     int nBeads=100;
 
-
     int N=2;
     Real beta=1;
-    Real a=0.01;
-
+    Real a=0.1;
 
     std::array<double,DIMENSIONS> lBox = {TRUNCATE_D(1,1,1)};
 
-
     SetUp(N,nBeads,beta , lBox );
+
     //SetUpTwoBodyInteractionHarmonicInTrap();
+    SetUpTwoBodyInteractionGaussian_kernel(10,a);
+    //SetUpCaoBernePropagator(a);
 
-    //SetUpTwoBodyInteractionGaussian_kernel(1,a);
 
-    SetUpCaoBernePropagator(a);
-    //SetUpCaoBernePropagatorTrapped(a,0.5);
-
+    //SetUpCaoBernePropagatorTrapped(a);
 
     //SetUpFreeParticleAction();
     //SetUpTwoBodyInteractionHarmonicInTrap_kernel();
 
-
     //SetUpFreeActionWithHardSphereConstraint(a);    
     SetGrandCanonicalEnsamble( 0 );
     SetSeed( time( NULL)  ) ;
-    SetRandomMinimumDistance(a,lBox);
-
+    SetRandomMinimumDistance( a,{ 10 ,10 , 10});
 
     int t0=7;
     int l = int( 0.6* nBeads);
     int lShort=3;
     int lOpen=lShort;
-
 
     pimc::translateMove translate(0.1, 2000*M , 0 );
 
@@ -917,7 +911,7 @@ TEST_F( harmonicTrapTest, caoBernePropagator )
     pimc::nConnectedChains nConnectedChains;
     tab.push_back(&levy,0.8,pimc::sector_t::diagonal,"levy");
     tab.push_back(&translate,0.1,pimc::sector_t::diagonal,"translate");
-    tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
+    //tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
 
     //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");
     
@@ -928,8 +922,7 @@ TEST_F( harmonicTrapTest, caoBernePropagator )
     tab.push_back(&moveTailMove,0.1,pimc::sector_t::offDiagonal,"moveTail");
     //tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
     //tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal, "recedeHead");
-    tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
-
+    //tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
 
     int tTail=4;
     int lWormShort=4;
@@ -1019,6 +1012,8 @@ TEST_F( harmonicTrapTest, caoBernePropagator )
     }
     
 }
+
+
 
 
 #endif

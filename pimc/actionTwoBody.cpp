@@ -47,8 +47,7 @@ Real actionTwoBody::evaluate(const configurations_t & configurations,const std::
             auto rangeB = intersectRanges(  groupB.range(),particleRange );
 
             sum+=_kernel->evaluateRectangular(configurations , timeRange, rangeA , groupB.range() );
-            sum+=_kernel->evaluateRectangular(configurations , timeRange, {groupA.range()[0], rangeA[0] - 1} , rangeB );
-            sum+=_kernel->evaluateRectangular(configurations , timeRange, { rangeA[1] + 1,groupA.range()[1]} , rangeB );
+            sum+=_kernel->evaluateRectangular(configurations , timeRange, rangeB , groupA.range() );
 
         }
 
@@ -80,13 +79,12 @@ Real actionTwoBody::evaluateTimeDerivative(const configurations_t & configuratio
         }
         else
         {
-            auto rangeA = intersectRanges(  groupA.range(),particleRange );
+             auto rangeA = intersectRanges(  groupA.range(),particleRange );
             auto rangeB = intersectRanges(  groupB.range(),particleRange );
 
             sum+=_kernel->evaluateTimeDerivativeRectangular(configurations , timeRange, rangeA , groupB.range() );
-            sum+=_kernel->evaluateTimeDerivativeRectangular(configurations , timeRange, {groupA.range()[0], rangeA[0] - 1} , rangeB );
-            sum+=_kernel->evaluateTimeDerivativeRectangular(configurations , timeRange, { rangeA[1] + 1,groupA.range()[1]} , rangeB );
-            
+            sum+=_kernel->evaluateTimeDerivativeRectangular(configurations , timeRange, rangeB , groupA.range() );
+
         }
 
         return sum;
@@ -118,16 +116,8 @@ void actionTwoBody::addGradient(const configurations_t & configurations,const st
 
         _kernel->addForceRectangular(configurations.dataTensor(), timeRange , rangeA, groupB.range(),  gradientBuffer);
 
+        _kernel->addForceRectangular(configurations.dataTensor(), timeRange , rangeB, groupA.range(),  gradientBuffer);
 
-        _kernel->addForceRectangular(
-            configurations.dataTensor()    , timeRange ,
-             {groupA.range()[0], rangeA[0] - 1}    
-            , rangeB,  gradientBuffer);
-        
-        _kernel->addForceRectangular(
-            configurations.dataTensor()    , timeRange ,
-            {rangeA[1]+1, groupA.range()[1] }    
-            , rangeB,  gradientBuffer);
 
     }
 
@@ -167,7 +157,19 @@ bool actionTwoBody::checkConstraints(const configurations_t & configurations,con
         }
         else
         {
-            throw std::runtime_error("checkConstraints for a mixture not implemented yet");
+             auto rangeA = intersectRanges(  groupA.range(),particleRange );
+             auto rangeB = intersectRanges(  groupB.range(),particleRange );
+
+             bool pass = _kernel->checkMinimumDistanceConstraintTriangular( configurations,timeRange,rangeA , groupB.range(), rMin );
+
+            if (pass)
+            {
+                pass= _kernel->checkMinimumDistanceConstraintRectangular( configurations,timeRange,rangeB,groupA.range(), rMin );
+            }
+
+            return pass;
+
+            
         }
     }
     else {

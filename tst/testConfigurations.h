@@ -24,7 +24,10 @@ protected:
 
     void SetUp( int N_ , int M_ , Real Beta_,std::array<Real,getDimensions()> lBox={ TRUNCATE_D(3000,3000,3000)}) ;
 
+
     void SetUp( std::vector<int> Ns , int M_ , Real Beta_,std::array<Real,getDimensions()> lBox={ TRUNCATE_D(3000,3000,3000)});
+    
+
     
 
     void SetSeed(int seed)
