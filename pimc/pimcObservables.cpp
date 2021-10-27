@@ -8,14 +8,14 @@ Real thermodynamicEnergyEstimator::operator()(configurations_t & confs, firstOrd
 
     auto & kA = S.getKineticAction();
     auto & potA = S.getPotentialAction();
-    
+
     auto sA=kA.evaluate(confs);
     auto sV=potA.evaluateTimeDerivative(confs);
 
     auto beta = confs.nBeads() * kA.getTimeStep(); 
     sA/=beta;
     sV/=confs.nBeads();
-
+    
     return sV - sA +  getDimensions()/(2.*kA.getTimeStep())*confs.nParticles();
 }
 
@@ -28,7 +28,6 @@ Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderActio
     
     int N=0;
     buffer.setConstant(0.);
-    
 
     for ( const auto & group : confs.getGroups() )
     {
@@ -38,7 +37,8 @@ Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderActio
 
         Spot.addGradient(confs,{0,confs.nBeads()-1},{iStart,iEnd},buffer);
 
-        for(int i= iStart;i<=iEnd ; i++)
+
+      for(int i= iStart;i<=iEnd ; i++)
         {
             int iPrev=confs.getChain(i).prev;
             assert(iPrev >=0 );
@@ -47,7 +47,7 @@ Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderActio
                 buffer(i,d,0)+=buffer(iPrev,d,confs.nBeads() );
             }
             
-        }
+        }  
     }
     
 
@@ -137,7 +137,7 @@ Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderActio
         // second term in the virial estimator
         // Does not give any contribution for a classical system
 
-
+        
         for (int t=1;t<confs.nBeads();t++)
             {
                 for (int i = group.iStart ; i<=group.iEnd ; i++)
@@ -202,8 +202,7 @@ Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderActio
     Real beta = S.getTimeStep() * confs.nBeads();
     e4= S.getPotentialAction().evaluateTimeDerivative(confs);
     e4/=( confs.nBeads() );
-
-
+    
     e3/=(2 * beta );
     
     e2/=(2*beta*beta);

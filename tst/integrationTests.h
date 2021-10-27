@@ -17,10 +17,13 @@ class twoBodyTest  : public configurationsTest
 
     virtual void accumulate();
 
+    void SetUpTwoBodyInteractionGaussian_kernel(Real V0, Real R0);
+    #if DIMENSIONS == 3
     void SetUpCaoBernePropagator(Real radius);
+    #endif
     void SetRandomMinimumDistance(Real radius, const std::array<Real,DIMENSIONS> box ={TRUNCATE_D(1,1,1)});
     void SetUpFreeActionWithHardSphereConstraint(Real a);
-
+     void SetUpCaoBernePropagatorTrapped(Real radius,Real omega=0.5);
     protected:
 
     int nTrials=100000;
@@ -33,11 +36,12 @@ class twoBodyTest  : public configurationsTest
 class pbcTest  : public twoBodyTest
 {
     public:
-
+   
 };
 
 class harmonicTrapTest : public twoBodyTest
 {
     public:
     void SetUpTwoBodyInteractionHarmonicInTrap_kernel()  ;
+
 };

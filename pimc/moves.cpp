@@ -70,7 +70,7 @@ bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,rand
      }
 
 
-      if (timeRange[1] > confs.nBeads() )//copy the end bead in second chain to the first chain
+    if (timeRange[1] > confs.nBeads() )//copy the end bead in second chain to the first chain
     {
         confs.copyData( { timeRanges[1][1] , timeRanges[1][1] } , iChainNext, timeRange[1],iChain );
 
@@ -78,10 +78,10 @@ bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,rand
         {
             data(iChain,d,timeRange[1])-= data(iChainNext,d,0) - data(iChain,d,confs.nBeads() );
         }// ensures to reconstruct along a continuos path
-
-        
     }
+    
     _levy.apply(confs,timeRange,iChain,S,randG);
+    
     if (iChainNext!=-1)
      {
          confs.copyData( { timeRanges[0][1]+1 , timeRange[1]-1 } , iChain, 0,iChainNext ); // time periodic boundary conditions
@@ -2126,9 +2126,9 @@ bool closeMove::attemptGrandCanonicalMove(configurations_t & confs , firstOrderA
 
     //confs.fillHeads();
 
-    bool accept = S.checkConstraints(confs,timeRange , {iChainHead,iChainHead});
-    accept = accept * S.checkConstraints(confs,timeRange2 , {iChainTail,iChainTail});
-
+    bool accept = sPot.checkConstraints(confs,timeRange , {iChainHead,iChainHead});
+    accept = accept and  sPot.checkConstraints(confs,timeRange2 , {iChainTail,iChainTail});
+    
     if (accept )
     {
         deltaS+=sPot.evaluate(confs,timeRange,iChainHead);
@@ -2634,7 +2634,7 @@ bool advanceHead::attemptMove(configurations_t & confs , firstOrderAction & S,ra
             accept=false;
         }
     }
-
+    
     if ( accept)
     {
         

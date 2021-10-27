@@ -2382,22 +2382,24 @@ TEST_F(configurationsTest, advanceRecedeSemiGrandCanonical)
 
 TEST_F(configurationsTest,closedChain_twoBody)
 {
-    Real C=1e-3;
+    Real C=1e-1;
     int nBeads=10;
     int N=1;
     Real beta=0.1* nBeads;
 
-    SetUp(N,nBeads,beta );
+    SetUp(N,nBeads,beta , {TRUNCATE_D(1,1,1)} );
 
-    //SetUpFreeParticleAction();    
+    SetUpFreeParticleAction();    
     //SetUpNonInteractingHarmonicAction();
 
     //SetUpTwoBodyInteractionHarmonic();
-    SetUpTwoBodyInteractionHarmonicInTrap();
+    //SetUpTwoBodyInteractionHarmonicInTrap();
 
-    SetGrandCanonicalEnsamble( 2);
+
+    SetGrandCanonicalEnsamble( 0 );
     SetSeed( time(NULL) );
-    SetRandom({TRUNCATE_D(0.4,0.4,0.4)});
+    SetRandom({TRUNCATE_D(1,1,1)});
+
 
    /*  auto V2 = pimc::makeIsotropicPotentialFunctor(
          [=](Real r) {return 0.*(r*r);} ,
@@ -2422,7 +2424,7 @@ TEST_F(configurationsTest,closedChain_twoBody)
 
     pimc::moveHead moveHeadMove(lShort,0);
     pimc::moveTail moveTailMove(lShort,0);
-
+    
     pimc::openMove open(C, 0, lOpen );
     pimc::closeMove close(C, 0, lOpen );
     
@@ -2452,24 +2454,34 @@ TEST_F(configurationsTest,closedChain_twoBody)
 
     pimc::swapMove swap( lShort , 200 , 0);
 
+     auto eVEst = std::make_shared<pimc::virialEnergyEstimator>(configurations.nChains() , configurations.nBeads()  );
+
+    auto eEst= std::make_shared< pimc::thermodynamicEnergyEstimator>();
+
+
+    auto eO= std::make_shared<pimc::scalarObservable>(eEst,std::string("energy") );
+
+    auto eVO= std::make_shared<pimc::scalarObservable>(eVEst,std::string("eV") );
+
+
     advanceHead.setMaximumParticleNumber(3);
     //recedeHead.setMinParticleNumber(1);
 
     pimc::nConnectedChains nConnectedChains;
 
-    tab.push_back(&levy,0.6,pimc::sector_t::diagonal,"levy");
+    tab.push_back(&levy,0.7,pimc::sector_t::diagonal,"levy");
     tab.push_back(&translate,0.3,pimc::sector_t::diagonal,"translate");
     tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
     //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");
 
-    tab.push_back(&levy,0.4,pimc::sector_t::offDiagonal,"levy");
+    tab.push_back(&levy,0.6,pimc::sector_t::offDiagonal,"levy");
     tab.push_back(&translate,0.1,pimc::sector_t::offDiagonal,"translate");
     tab.push_back(&close,0.1,pimc::sector_t::offDiagonal,"close");
     tab.push_back(&moveHeadMove,0.1,pimc::sector_t::offDiagonal,"moveHead");
     tab.push_back(&moveTailMove,0.1,pimc::sector_t::offDiagonal,"moveTail");
-    tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
-    tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal,"recedeHead");
-    tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
+    //tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
+    //tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal,"recedeHead");
+    //tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
 
 
 /*
@@ -2589,6 +2601,10 @@ TEST_F(configurationsTest,closedChain_twoBody)
                 //l2Long+=accumulateAverageLengthSquare( 0,configurations );
                 l2Long+=accumulateLengthSquare( configurations , {0,N-1} , {0,nBeads-1} , geo );
 
+                eVO->accumulate(configurations,S);
+                eO->accumulate(configurations,S);
+
+
                 nLong+=1;
                 int currentN=configurations.nParticles();
                 nEstimator+=currentN;
@@ -2642,6 +2658,12 @@ TEST_F(configurationsTest,closedChain_twoBody)
 
 
            std::fill(particleDistribution.begin(), particleDistribution.end(), 0);
+
+            eO->out(i);
+            eO->clear();
+
+            eVO->out(i);
+            eVO->clear();
 
            l2Long=0;
            nLong=0;
@@ -2958,13 +2980,13 @@ TEST_F(configurationsTest,swap_twoBody)
     int N=2;
     Real beta=0.1* nBeads;
 
-    SetUp(N,nBeads,beta, { 300000} );
+    SetUp(N,nBeads,beta, { 3000} );
 
-    //SetUpFreeParticleAction();    
+    SetUpFreeParticleAction();    
     //SetUpNonInteractingHarmonicAction();
-
-    //SetUpTwoBodyInteractionHarmonic();
-    SetUpTwoBodyInteractionHarmonicInTrap();
+    
+    SetUpTwoBodyInteractionHarmonic();
+    //SetUpTwoBodyInteractionHarmonicInTrap();
     
     SetGrandCanonicalEnsamble(0 );
 

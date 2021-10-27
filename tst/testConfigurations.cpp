@@ -179,11 +179,12 @@ Real accumulateLengthSquare(const pimc::configurations_t & configurations, const
             {
                 for(int d=0;d<DIMENSIONS;d++)
                 {
-                    Real diffd=geo.difference( data( i ,d, t+1) - data(i,d,t) ,d );
+                    Real diffd= data( i ,d, t+1) - data(i,d,t) ;
                     l2+=diffd*diffd;
                 }
             }
         }
+        
 
         return l2;
     }

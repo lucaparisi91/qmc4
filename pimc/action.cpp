@@ -2,8 +2,8 @@
 
 namespace pimc
 {
-
-Real kineticAction::evaluate( pimcConfigurations_t & configurations , std::array<int,2> timeRange , std::array<int,2> particleRange  )
+    
+Real kineticAction::evaluate( const pimcConfigurations_t & configurations , std::array<int,2> timeRange , std::array<int,2> particleRange  )
 {
     const auto & data = configurations.dataTensor();
     auto & geo=getGeometry();
@@ -38,7 +38,7 @@ Real kineticAction::evaluate( pimcConfigurations_t & configurations , std::array
 }
 
 
-Real kineticAction::evaluate( pimcConfigurations_t & configurations , std::array<int,2> timeSlices , int iChange )
+Real kineticAction::evaluate( const pimcConfigurations_t & configurations , std::array<int,2> timeSlices , int iChange )
 {   
     Real sum=0;
 
@@ -54,12 +54,12 @@ Real kineticAction::evaluate( pimcConfigurations_t & configurations , std::array
     return sum;
 }
 
-Real kineticAction::evaluate( pimcConfigurations_t & configurations , std::array<int,2> timeSlices , int iChain1 , int iChain2 )
+Real kineticAction::evaluate( const pimcConfigurations_t & configurations , std::array<int,2> timeSlices , int iChain1 , int iChain2 )
 {   
     return evaluate(configurations,timeSlices,iChain1) + evaluate(configurations,timeSlices,iChain2) ; 
 }
 
-Real kineticAction::evaluate( pimcConfigurations_t & configurations )
+Real kineticAction::evaluate( const pimcConfigurations_t & configurations )
 {
     Real sum=0;
     

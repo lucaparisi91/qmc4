@@ -1,6 +1,7 @@
 #include "traits.h"
 #include "kernels.h"
 
+
 namespace pimc
 {
 
@@ -59,7 +60,11 @@ class pairProductKernel : public kernel2B
                         deltaXNext[d]=geometry().difference( tn(i,d,t+1) - tn(j,d,t+1) ,d);           
 
                     }
-                    sum+=mask(i,t)*mask(j,t)*greenFunction->logEvaluate(deltaX,deltaXNext) ; 
+                    if(mask(i,t)*mask(j,t) == 1 )
+                    {
+                        sum+=greenFunction->logEvaluate(deltaX,deltaXNext) ;
+                    }
+                     
                 }     
         }
 
@@ -67,7 +72,6 @@ class pairProductKernel : public kernel2B
     }
 
 
-    
     Real evaluateTimeDerivativeTriangular(const Eigen::Tensor<Real,3> & tn, const std::array<int,2> & timeRange, const std::array<int ,2 > & rangeA , const std::array<int , 2 > & rangeB) const
     {
         Real value=0;
@@ -117,6 +121,7 @@ class pairProductKernel : public kernel2B
 
                 }
                 sum+=greenFunction->logEvaluate(deltaX,deltaXNext); 
+                
             }     
         }
 
@@ -193,7 +198,7 @@ class pairProductKernel : public kernel2B
 
     virtual void addForceTriangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces) const
     {
-        Real value=0;
+       
 
         std::array<Real,DIMENSIONS> deltaX;
         std::array<Real,DIMENSIONS> deltaXNext;
@@ -251,7 +256,11 @@ Real evaluateRectangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int
 
                 Real ij_mask= mask(i,t) * mask(j,t) ;
 
-                sum+=ij_mask*greenFunction->logEvaluate(deltaX,deltaXNext); 
+                if (ij_mask == 1)
+                {
+                    sum+=ij_mask*greenFunction->logEvaluate(deltaX,deltaXNext);
+                }
+                 
             }     
         }
 

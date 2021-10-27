@@ -185,9 +185,9 @@ class action
 
     action(Real timeStep, const geometryPBC_PIMC & geo_) : _geo(geo_), _timeStep(timeStep) {}
 
-    virtual Real evaluate(configurations_t & configurations, std::array<int,2> timeRange, int iParticle)=0;
+    virtual Real evaluate( const configurations_t & configurations, std::array<int,2> timeRange, int iParticle)=0;
 
-    virtual Real evaluate( configurations_t & pimcConfigurations)=0; // evaluates the whole action
+    virtual Real evaluate( const configurations_t & pimcConfigurations)=0; // evaluates the whole action
 
     virtual void addGradient(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange,  Eigen::Tensor<Real,3> & gradientBuffer){throw missingImplementation("Gradient not implemented for this action.");}
 
@@ -208,7 +208,7 @@ class action
     
     virtual bool checkConstraints(const configurations_t & pimcConfigurations);
     
-    virtual Real evaluateTimeDerivative(const configurations_t & configurations,const std::array<int,2> & timeRange, const std::array<int,2> & particleRange){throw missingImplementation("evaluateTimeDerivative  not implemented for this action.");}
+    virtual Real evaluateTimeDerivative(const configurations_t & configurations,const std::array<int,2> & timeRange, const std::array<int,2> & particleRange){throw missingImplementation("evaluateTimeDerivative ..   not implemented for this action.");}
 
    
 
@@ -235,13 +235,16 @@ class nullPotentialAction : public action
 
 
 
-    virtual Real evaluate(configurations_t & configurations, std::array<int,2> timeRange, int iParticle){return 0;};
+    virtual Real evaluate(const configurations_t & configurations, std::array<int,2> timeRange, int iParticle){return 0;};
 
-    virtual Real evaluate( configurations_t & pimcConfigurations){return 0;}
+    virtual Real evaluate( const configurations_t & pimcConfigurations){return 0;}
 
 
     virtual void addGradient(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange,  Eigen::Tensor<Real,3> & gradientBuffer){// not doing anything
     }
+
+    virtual Real evaluateTimeDerivative( const  configurations_t & configurations) override {return 0;}
+
     
     private:
     
@@ -257,13 +260,13 @@ class kineticAction : public action
     ) : nChains(nChains_),nBeads(nBeads_),distancesBuffer(nBeads_, getDimensions( ) , nChains_),
     D(0.5)  , action::action(tau_,geo_) {}
 
-    virtual Real evaluate( pimcConfigurations_t & configurations , std::array<int,2> timeSlices , std::array<int,2> chainRange ); // evaluates the kinetic action to recalculate from beads(iParticle, timeSliceStart: timeSliceEnd, uses in internal buffer for computing derivatives)
+    virtual Real evaluate(const  pimcConfigurations_t & configurations , std::array<int,2> timeSlices , std::array<int,2> chainRange ); // evaluates the kinetic action to recalculate from beads(iParticle, timeSliceStart: timeSliceEnd, uses in internal buffer for computing derivatives)
     
-    virtual Real evaluate( pimcConfigurations_t & configurations , std::array<int,2> timeSlices , int iChain );
+    virtual Real evaluate( const pimcConfigurations_t & configurations , std::array<int,2> timeSlices , int iChain );
 
-    virtual Real evaluate( pimcConfigurations_t & configurations , std::array<int,2> timeSlices , int iChain1 , int iChain2 );
+    virtual Real evaluate( const pimcConfigurations_t & configurations , std::array<int,2> timeSlices , int iChain1 , int iChain2 );
     
-    Real evaluate(pimcConfigurations_t & configurations); // evaluates the full action
+    Real evaluate( const pimcConfigurations_t & configurations); // evaluates the full action
 
 
 
@@ -407,7 +410,7 @@ class potentialActionOneBody : public action
 
     potentialActionOneBody(Real tau_, functor_t V_ ,geometryPBC_PIMC geo_,int order_=2): V(V_),action::action(tau_,geo_),order(order_) {}
 
-    Real evaluate(pimcConfigurations_t & configurations, std::array<int,2> timeRange, std::array<int,2>  particleRange  ) 
+    Real evaluate( const pimcConfigurations_t & configurations, std::array<int,2> timeRange, std::array<int,2>  particleRange  ) 
     {
         auto & data = configurations.dataTensor();
 
@@ -424,7 +427,6 @@ class potentialActionOneBody : public action
             throw missingImplementation("One body evaluate canonical");
 
         }
-
 
 
         auto sumCentral = reduceOnPositions(V, data, {timeRange[0]+1,timeRange[1]}, particleRange );
@@ -468,7 +470,7 @@ class potentialActionOneBody : public action
         
     }
 
-    Real evaluate(pimcConfigurations_t & configurations, std::array<int,2> timeRange, int iChain  ) 
+    Real evaluate( const pimcConfigurations_t & configurations, std::array<int,2> timeRange, int iChain  ) 
     {
         Real sum=0;
         const auto & groups = configurations.getGroups();
@@ -482,13 +484,13 @@ class potentialActionOneBody : public action
         return sum;
     }
 
-    Real evaluate(pimcConfigurations_t & configurations, std::array<int,2> timeRange, int iChain1 , int iChain2  ) 
+    Real evaluate(const pimcConfigurations_t & configurations, std::array<int,2> timeRange, int iChain1 , int iChain2  ) 
     {
         return evaluate(configurations,timeRange,iChain1) + evaluate(configurations,timeRange,iChain2); 
 
     }
 
-    Real evaluate(pimcConfigurations_t & configurations ) 
+    Real evaluate( const pimcConfigurations_t & configurations ) 
     {
         const auto nChains = configurations.nChains();
         const auto nBeads = configurations.nBeads();
@@ -502,6 +504,15 @@ class potentialActionOneBody : public action
 
         return sum;
     }
+
+    Real evaluateTimeDerivative( const pimcConfigurations_t & configurations ) override
+    {
+        return evaluate(configurations)/getTimeStep();
+    }
+
+    
+
+
 
     virtual void addGradient(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange,  Eigen::Tensor<Real,3> & gradientBuffer)
    {
@@ -601,12 +612,12 @@ class potentialActionTwoBody : public action
          
      }
 
-    virtual Real evaluate(configurations_t & configurations, std::array<int,2> timeRange, int iChain)
+    virtual Real evaluate( const configurations_t & configurations, std::array<int,2> timeRange, int iChain)
      {
         return evaluate(configurations,timeRange,{iChain,iChain});
      };
      
-    virtual Real evaluate(configurations_t & configurations, std::array<int,2> timeRange,std::array<int,2> particleRange)
+    virtual Real evaluate(const configurations_t & configurations, std::array<int,2> timeRange,std::array<int,2> particleRange)
     {
         if (
           (configurations.getEnsamble() == ensamble_t::grandCanonical) or ((configurations.getEnsamble() == ensamble_t::semiGrandCanonical) )
@@ -624,7 +635,7 @@ class potentialActionTwoBody : public action
     return 0;
     }
 
-    virtual Real evaluateCanonical(configurations_t & configurations, std::array<int,2> timeRange,std::array<int,2> particleRange)
+    virtual Real evaluateCanonical( const configurations_t & configurations, std::array<int,2> timeRange,std::array<int,2> particleRange)
      {
         
         configurePot2b(configurations);
@@ -645,7 +656,7 @@ class potentialActionTwoBody : public action
          return (sumCentral + sumTail + sumEnd)*getTimeStep();
      };
 
-     virtual Real evaluateGrandCanonical(configurations_t & configurations, std::array<int,2> timeRange,std::array<int,2> particleRange)
+     virtual Real evaluateGrandCanonical( const configurations_t & configurations, std::array<int,2> timeRange,std::array<int,2> particleRange)
      {
         
         configurePot2b(configurations);
@@ -665,13 +676,13 @@ class potentialActionTwoBody : public action
 
 
 
-     Real evaluate(pimcConfigurations_t & configurations, std::array<int,2> timeRange, int iChain1, int iChain2)
+     Real evaluate(const pimcConfigurations_t & configurations, std::array<int,2> timeRange, int iChain1, int iChain2)
      {
         throw missingImplementation("Two particles updates are not supported");
      };
 
 
-    Real evaluate(pimcConfigurations_t & configurations)
+    Real evaluate(const pimcConfigurations_t & configurations)
     {
 
         const auto & groupA = configurations.getGroups()[iParticleGroupA];
@@ -855,7 +866,7 @@ class sumAction : public action
 
     sumAction(  std::vector<std::shared_ptr<action> > actions_) : _actions(actions_),action::action( actions_[0]->getTimeStep() ,    actions_[0]->getGeometry()  ) {}
 
-    virtual Real evaluate(pimcConfigurations_t & configurations, std::array<int,2> timeRange, int iChain)
+    virtual Real evaluate(const pimcConfigurations_t & configurations, std::array<int,2> timeRange, int iChain)
     {
         Real sum=0;
         for ( auto S : _actions)
@@ -865,7 +876,7 @@ class sumAction : public action
         return sum;
     }
 
-    virtual Real evaluate( pimcConfigurations_t & pimcConfigurations)
+    virtual Real evaluate( const pimcConfigurations_t & pimcConfigurations)
     {
         Real sum=0;
         for(auto S : _actions)
@@ -874,8 +885,8 @@ class sumAction : public action
         }
         return sum;
     }
-
-    virtual Real evaluateTimeDerivative( const pimcConfigurations_t & pimcConfigurations) override
+    
+    virtual Real evaluateTimeDerivative ( const pimcConfigurations_t & pimcConfigurations) override
     {
         Real sum=0;
         for(auto S : _actions)
@@ -946,6 +957,7 @@ class sumAction : public action
     
     std::vector<std::shared_ptr<action> > _actions;
 };
+
 
 class firstOrderAction : public sumAction
 {

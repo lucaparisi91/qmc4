@@ -25,11 +25,48 @@ void harmonicTrapTest::SetUpTwoBodyInteractionHarmonicInTrap_kernel()
     auto sV2B=std::make_shared<pimc::actionTwoBody>();
     sV2B->setSets({0,0});
     sV2B->setKernel(kernel);
+    sV2B->setTimeStep(timeStep);
+    sV2B->setGeometry(geo);
+
 
 
     auto  sOneBody=std::make_shared<pimc::potentialActionOneBody<decltype(V)> >(timeStep,V ,geo,order);
 
     std::vector<std::shared_ptr<pimc::action> > Vs = {sOneBody,sV2B};
+
+    std::shared_ptr<pimc::action>  sV = std::make_shared<pimc::sumAction>(Vs);
+
+    S= pimc::firstOrderAction(sT,  sV);
+
+}
+
+
+void twoBodyTest::SetUpTwoBodyInteractionGaussian_kernel(Real V0, Real R0)
+{
+    std::shared_ptr<pimc::action> sT= std::make_shared<pimc::kineticAction>(timeStep, configurations.nChains() , M  , geo);
+    
+    Real alpha=1./(2*R0*R0);
+
+    auto V = pimc::makeIsotropicPotentialFunctor(
+        [V0, alpha](Real r) {return V0*exp(-alpha*r*r) ;} ,
+        [V0,alpha](Real r) {return  V0*(-2*r*alpha)*exp(-alpha*r*r) ;} );
+
+    auto kernel = std::make_shared<                         pimc::primitiveApproximationTwoBodyKernel<decltype(V) >  >(std::make_shared<decltype(V)>(V));
+
+    kernel->setTimeStep(timeStep);
+    kernel->setGeometry(geo);
+
+
+    auto sV2B=std::make_shared<pimc::actionTwoBody>();
+    sV2B->setSets({0,0});
+    sV2B->setKernel(kernel);
+    sV2B->setTimeStep(timeStep);
+    sV2B->setGeometry(geo);
+
+
+
+    
+    std::vector<std::shared_ptr<pimc::action> > Vs = {sV2B};
 
     std::shared_ptr<pimc::action>  sV = std::make_shared<pimc::sumAction>(Vs);
 
@@ -69,6 +106,8 @@ void twoBodyTest::SetUpFreeActionWithHardSphereConstraint(Real a)
 
 }
 
+#if DIMENSIONS == 3
+
 void twoBodyTest::SetUpCaoBernePropagator(Real radius)
 {
     using propagator_t = pimc::caoBernePropagator;
@@ -101,9 +140,53 @@ void twoBodyTest::SetUpCaoBernePropagator(Real radius)
     std::shared_ptr<pimc::action>  sV = std::make_shared<pimc::sumAction>(Vs);
 
     S= pimc::firstOrderAction(sT,  sV);
+}
+
+
+void twoBodyTest::SetUpCaoBernePropagatorTrapped(Real radius,Real omega)
+{
+    using propagator_t = pimc::caoBernePropagator;
+
+    auto kernel =std::make_shared<propagator_t>(timeStep,radius);
+    auto pairKernel = std::make_shared<pimc::pairProductKernel<propagator_t> >(kernel);
+
+    auto S2B = std::make_shared<pimc::actionTwoBody>();
+    S2B->setTimeStep(timeStep);
+    S2B->setGeometry(geo);
+    S2B->setKernel(pairKernel);
+    pairKernel->setGeometry(geo);
+    pairKernel->setTimeStep(timeStep);
+
+    S2B->setSets({0,0});
+    S2B->setMinimumDistance(radius);
+    S2B->setGeometry(geo);
+    S2B->setTimeStep(timeStep);
+    int order=2;
+
+    auto  sT= std::make_shared<pimc::kineticAction>(timeStep, configurations.nChains() , configurations.nChains()  , geo);
+
+    std::shared_ptr<pimc::action> sEmpty= std::make_shared<pimc::nullPotentialAction>(timeStep  , geo);
+
+    auto V = pimc::makeIsotropicPotentialFunctor(
+         [omega](Real r) {return omega*(r*r) ;} ,
+         [omega](Real r) {return 2*omega*r  ;} );
+    
+     auto  sOneBody=std::make_shared<pimc::potentialActionOneBody<decltype(V)> >(timeStep,V ,geo,order);
+
+
+
+    std::vector<std::shared_ptr<pimc::action> > Vs = {sOneBody,S2B};
+
+
+    std::shared_ptr<pimc::action>  sV = std::make_shared<pimc::sumAction>(Vs);
+
+    S= pimc::firstOrderAction(sT,  sV);
 
 }
 
+
+
+#endif
 
 void twoBodyTest::SetRandomMinimumDistance(Real radius, const std::array<Real,DIMENSIONS> lBox)
 {
@@ -130,6 +213,7 @@ void twoBodyTest::sample()
 
     //SetUpTwoBodyInteractionHarmonic();
     SetUpTwoBodyInteractionHarmonicInTrap();
+    
 
     SetGrandCanonicalEnsamble( 2);
     SetSeed( time(NULL) );
@@ -748,26 +832,36 @@ TEST_F(harmonicTrapTest, twoBodyActionKernel2_grandCanonical )
     int nBlocks=100000;
 
     accumulate();
-    
+
 }
 
 
 #if DIMENSIONS == 3
-TEST_F( twoBodyTest, caoBernePropagator )
+TEST_F( harmonicTrapTest, caoBernePropagator )
 {
-    Real C=1;
-    int nBeads=10;
+    Real C=1e-3;
+    int nBeads=100;
+
 
     int N=2;
-    Real beta=0.1* nBeads;
-    Real a=0.1;
+    Real beta=1;
+    Real a=0.01;
+
 
     std::array<double,DIMENSIONS> lBox = {TRUNCATE_D(1,1,1)};
 
+
     SetUp(N,nBeads,beta , lBox );
     //SetUpTwoBodyInteractionHarmonicInTrap();
+
+    //SetUpTwoBodyInteractionGaussian_kernel(1,a);
+
     SetUpCaoBernePropagator(a);
+    //SetUpCaoBernePropagatorTrapped(a,0.5);
+
+
     //SetUpFreeParticleAction();
+    //SetUpTwoBodyInteractionHarmonicInTrap_kernel();
 
 
     //SetUpFreeActionWithHardSphereConstraint(a);    
@@ -777,9 +871,10 @@ TEST_F( twoBodyTest, caoBernePropagator )
 
 
     int t0=7;
-    int l = int( 0.3* 10);
-    int lShort=int( 0.6* 10);
-    int lOpen=1;
+    int l = int( 0.6* nBeads);
+    int lShort=3;
+    int lOpen=lShort;
+
 
     pimc::translateMove translate(0.1, 2000*M , 0 );
 
@@ -791,10 +886,8 @@ TEST_F( twoBodyTest, caoBernePropagator )
     pimc::openMove open(C, 0, lOpen );
     pimc::closeMove close(C, 0, lOpen );
 
-
     pimc::createWorm createWorm(C, 0, lShort , 1 );
     pimc::deleteWorm removeWorm(C, 0, lShort , 1);
-
 
     //open.setStartingBead(3);
     //open.setStartingChain(0);
@@ -820,40 +913,43 @@ TEST_F( twoBodyTest, caoBernePropagator )
     //advanceHead.setMaximumParticleNumber(2);
     //recedeHead.setMinParticleNumber(1);
 
+// involves levy reconstruction
     pimc::nConnectedChains nConnectedChains;
-    tab.push_back(&levy,0.9,pimc::sector_t::diagonal,"levy");
+    tab.push_back(&levy,0.8,pimc::sector_t::diagonal,"levy");
     tab.push_back(&translate,0.1,pimc::sector_t::diagonal,"translate");
-    //tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
+    tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
 
     //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");
-
-
-    tab.push_back(&levy,0.4,pimc::sector_t::offDiagonal,"levy");
+    
+    tab.push_back(&levy,0.6,pimc::sector_t::offDiagonal,"levy");
     tab.push_back(&translate,0.1,pimc::sector_t::offDiagonal,"translate");
     tab.push_back(&close,0.1,pimc::sector_t::offDiagonal,"close");
     tab.push_back(&moveHeadMove,0.1,pimc::sector_t::offDiagonal,"moveHead");
     tab.push_back(&moveTailMove,0.1,pimc::sector_t::offDiagonal,"moveTail");
-    tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
-    tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal, "recedeHead");
+    //tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
+    //tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal, "recedeHead");
     tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
-    
+
+
     int tTail=4;
     int lWormShort=4;
 
     //configurations.setHeadTail(0,tTail + lWormShort,tTail -1);
 
+
     //configurations.setHeadTail(1,tTail - lCut,-1);
+    
     //configurations.join(0,1);
     //configurations.join(1,0);        
 
     configurations.fillHeads();
     resetCounters();
 
-    int nTrials=10000;
+    int nTrials=1000;
     int nBlocks=100000;
 
     auto g = std::make_shared<pimc::pairCorrelation>(0,0);
-    auto gOb=std::make_shared<pimc::histogramObservable>(g,"pairCorr",100,0,lBox[0]/2 );
+    auto gOb=std::make_shared<pimc::histogramObservable>(g,"pairCorr",1000,0,lBox[0]/2 );
     
     auto eVEst = std::make_shared<pimc::virialEnergyEstimator>(configurations.nChains() , configurations.nBeads()  );
 
@@ -870,20 +966,21 @@ TEST_F( twoBodyTest, caoBernePropagator )
 
     for (int i=0;i<nBlocks;i++)
     {
-        int nClosed=0;
-        int nOpen=0;
+
         int n=0;
 
-        while (nClosed<nTrials and nOpen<nTrials and n<nTrials)
+        while (nClosed<nTrials and n<nTrials)
         {
             for(int n=0;n<nUnCorrelationSteps;n++)
             {
-                tab.attemptMove(configurations,S,randG);
+                bool accept = tab.attemptMove(configurations,S,randG);
+               
+
             }
             
             if ( configurations.isOpen() )
             {
-                nOpen+=1;
+               
             }
             else 
             {
@@ -910,6 +1007,7 @@ TEST_F( twoBodyTest, caoBernePropagator )
 
         eVO->out(i);
         eVO->clear();
+        nClosed=0;
 
        }
        
@@ -921,5 +1019,6 @@ TEST_F( twoBodyTest, caoBernePropagator )
     }
     
 }
+
 
 #endif

@@ -6,12 +6,10 @@ namespace pimc
 {
 //using configurations_t = pimcConfigurations;
 
-
 class actionTwoBody : public action
 {
     using range_t = std::array<int,2>;
-
-
+    
     public:
     actionTwoBody() :
     _distanceMinimumConstraint(false),rMin(0)  {}
@@ -24,7 +22,7 @@ class actionTwoBody : public action
 
     auto & kernel(){return _kernel;}
     const auto & kernel()const {return _kernel;}
-    
+
     void setSets(const std::array<int,2> & sets)
     {
         setA=sets[0];
@@ -32,23 +30,24 @@ class actionTwoBody : public action
     }
 
 
-    Real evaluate(configurations_t & configurations,const std::array<int,2> timeRange, int iParticle)
+    Real evaluate(const configurations_t & configurations,const std::array<int,2> timeRange, int iParticle)
     {
         return evaluate(configurations,timeRange,{iParticle,iParticle});
     }
 
     Real evaluate(const configurations_t & configurations,const std::array<int,2> & timeRange, const std::array<int,2> & particleRange);
+    
 
     virtual Real evaluateTimeDerivative(const configurations_t & configurations,const std::array<int,2> & timeRange, const std::array<int,2> & particleRange) override;    
 
-    virtual Real evaluate( configurations_t & configurations)
+    virtual Real evaluate(const  configurations_t & configurations)
     {
         return evaluate(configurations,
                         range_t{0,configurations.nBeads()-1},
                         configurations.getGroups()[setA].range()
                         );
     }
-
+    
     virtual Real evaluateTimeDerivative( const configurations_t & configurations) override
     {
         return evaluateTimeDerivative(configurations,
@@ -82,9 +81,8 @@ class actionTwoBody : public action
 
     Real rMin;
 
+
 };
-
-
 
 }
 
