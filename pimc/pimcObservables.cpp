@@ -184,6 +184,7 @@ Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderActio
             } 
 
 
+        
         // third term in the virial estimator
         for (int t=0;t<confs.nBeads();t++)
             {
@@ -191,18 +192,20 @@ Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderActio
                 {
                     for(int d=0;d<getDimensions();d++)
                     {
-                        e3+=(data(i,d,t) - rC(i,d,t) )*buffer(i,d,t);
+                        
+                        e3+= ( data(i,d,t) - rC(i,d,t) ) *
+                        buffer(i,d,t);
                     }
+
                 }
              
             }
     }
-    
 
     Real beta = S.getTimeStep() * confs.nBeads();
     e4= S.getPotentialAction().evaluateTimeDerivative(confs);
     e4/=( confs.nBeads() );
-    
+
     e3/=(2 * beta );
     
     e2/=(2*beta*beta);

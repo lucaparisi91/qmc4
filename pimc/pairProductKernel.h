@@ -39,7 +39,7 @@ class pairProductKernel : public kernel2B
         return sum;
     }
 
-
+    
     Real evaluateTriangular(const Eigen::Tensor<Real,3> & tn, const std::array<int,2> & timeRange, const std::array<int ,2 > & rangeA , const std::array<int , 2 > & rangeB, const mask_t & mask) const
     {
         Real value=0;
@@ -198,11 +198,10 @@ class pairProductKernel : public kernel2B
 
     virtual void addForceTriangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces) const
     {
-       
 
         std::array<Real,DIMENSIONS> deltaX;
         std::array<Real,DIMENSIONS> deltaXNext;
-
+        
         for (int t=timeRange[0];t<=timeRange[1];t++)
         {
             for ( int i=rangeA[0];i<=rangeA[1];i++)
@@ -213,7 +212,6 @@ class pairProductKernel : public kernel2B
                         deltaX[d]=geometry().difference( tn(i,d,t) - tn(j,d,t) ,d);
                         deltaXNext[d]=geometry().difference( tn(i,d,t+1) - tn(j,d,t+1) ,d);
                     }
-
 
                     for(int d=0;d<getDimensions();d++)
                     {

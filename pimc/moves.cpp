@@ -36,7 +36,13 @@ bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,rand
 
     auto timeRange = tGen(randG,nBeads,maxBeadLength);
 
-    auto timeRanges = splitPeriodicTimeSlice(timeRange,confs.nBeads());
+    int M= confs.nBeads();
+
+
+    std::array<int,2> timeRange1 { timeRange[0] , std::min(timeRange[1],M) - 1 } ;
+    std::array<int,2> timeRange2 { 0  , timeRange[1] - M -1  };
+
+
     const auto & currentChain = confs.getChain(iChain);
 
     if (timeRange[0] <= currentChain.tail)
@@ -48,7 +54,7 @@ bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,rand
     if (
         (timeRange[1] > currentChain.head and  (currentChain.next == -1 ) )
         or (   ( currentChain.next != -1 ) and
-            ( confs.getChain(iChainNext).head < timeRanges[1][1]   )
+            ( confs.getChain(iChainNext).head < timeRange2[1] + 1   )
     )
         )
     {
@@ -58,21 +64,22 @@ bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,rand
     auto & data = confs.dataTensor();
 
     
-    auto sOld = S.evaluate(confs, timeRanges[0], iChain);
-    sOld += S.evaluate(confs, timeRanges[1], iChainNext);
+    auto sOld = S.evaluate(confs, timeRange1, iChain);
+    sOld += S.evaluate(confs, timeRange2, iChainNext);
 
 
     // copy to internal buffer beads to move
-     confs.copyDataToBuffer(buffer,{timeRanges[0][0] , timeRanges[0][1]+ 1},iChain);
+     confs.copyDataToBuffer(buffer,{timeRange1[0] , timeRange1[1]+ 1},iChain);
+
      if (iChainNext!=-1)
      {
-        confs.copyDataToBuffer(buffer,timeRanges[1],iChainNext, timeRanges[0][1]  - timeRanges[0][0] + 2);
+        confs.copyDataToBuffer(buffer,{0,timeRange2[1]+1},iChainNext, timeRange1[1]  - timeRange1[0] + 2);
      }
 
 
     if (timeRange[1] > confs.nBeads() )//copy the end bead in second chain to the first chain
     {
-        confs.copyData( { timeRanges[1][1] , timeRanges[1][1] } , iChainNext, timeRange[1],iChain );
+        confs.copyData( { timeRange2[1] + 1 , timeRange2[1] + 1 } , iChainNext, timeRange[1],iChain );
 
         for(int d=0;d<getDimensions();d++)
         {
@@ -84,27 +91,25 @@ bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,rand
     
     if (iChainNext!=-1)
      {
-         confs.copyData( { timeRanges[0][1]+1 , timeRange[1]-1 } , iChain, 0,iChainNext ); // time periodic boundary conditions
+         confs.copyData( { timeRange1[1]+1 , timeRange[1]-1 } , iChain, 0 ,iChainNext ); // time periodic boundary conditions
 
-        for(int t=0;t<timeRanges[1][1];t++)
+        for(int t=0;t<=timeRange2[1];t++)
             for(int d=0;d<getDimensions();d++)
             {
                 data(iChainNext,d,t)+=
-                data(iChainNext,d,timeRanges[1][1]) - data(iChain,d,timeRange[1] );
-
+                data(iChainNext,d,timeRange2[1] + 1 ) - data(iChain,d,timeRange[1] );
 
                 //std::cout << data(iChainNext,d,timeRanges[1][1]) - data(iChain,d,timeRange[1] )<<std::endl;
             }// ensures to reconstruct along a continuos path
      }
 
-
-    bool accepted = S.checkConstraints(confs,timeRanges[0],{iChain,iChain});
-    accepted = accepted and S.checkConstraints(confs,timeRanges[1],{iChainNext,iChainNext});
-
+    bool accepted = S.checkConstraints(confs,timeRange1,{iChain,iChain});
+    accepted = accepted and S.checkConstraints(confs,timeRange2,{iChainNext,iChainNext});
+    
     if (accepted)
     {
-        auto  sNew= S.evaluate(confs,timeRanges[0], iChain) ;
-        sNew+=S.evaluate(confs,timeRanges[1], iChainNext) ;
+        auto  sNew= S.evaluate(confs,timeRange1, iChain) ;
+        sNew+=S.evaluate(confs,timeRange2, iChainNext) ;
         const auto actionDifference = sNew - sOld;
 
         accepted = sampler.acceptLog(-actionDifference,randG);
@@ -114,10 +119,12 @@ bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,rand
     if (! accepted)
     {
         // copy back old beads
-        confs.copyDataFromBuffer(buffer,{timeRanges[0][0],timeRanges[0][1]+1},iChain);
+
+        confs.copyDataFromBuffer(buffer,{timeRange1[0] , timeRange1[1]+ 1},iChain);
+
         if (iChainNext!=-1)
          {
-        confs.copyDataFromBuffer(buffer,timeRanges[1],iChainNext, timeRanges[0][1]  - timeRanges[0][0] + 2);
+            confs.copyDataFromBuffer(buffer,timeRange2,iChainNext, timeRange1[1]  - timeRange1[0] + 2);
          }
 
     }

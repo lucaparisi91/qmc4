@@ -61,7 +61,6 @@ namespace pimc
 
             return -dgdtau/g;
 
-
         }
 
         Real logGradientLeft2(const std::array<Real,3> & x1, const std::array<Real,3> & x2, int d) const

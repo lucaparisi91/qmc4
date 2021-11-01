@@ -61,9 +61,6 @@ protected:
         configurations.setDifferenceChemicalPotential(deltamus);
     }
 
-
-   
-
     void addOpenCloseFixedSegment(Real C , int l , int t0)
     {
         open=new pimc::openMove(C, 0, l );
@@ -196,5 +193,8 @@ std::array<Real,getDimensions()> varianceBeadFixedLengths(int iChain , int t0, i
 Real accumulateX2( const pimc::configurations_t & configurations, const pimc::firstOrderAction & S);
 
 Real accumulateX2(int iChain, const pimc::configurations_t & configurations, int t0, int t1);
+
+
+Real accumulateAverageParticleDistanceSquared( const  pimc::configurations_t & configurations , const std::array<int,2> & timeRange , const std::array<int,2> & particleRange , const pimc::action::geometry_t & geo);
 
 #endif

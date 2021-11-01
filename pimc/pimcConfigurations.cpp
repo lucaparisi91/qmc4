@@ -10,7 +10,7 @@ namespace fs = std::filesystem;
 
 namespace pimc
 {
-
+    
 int getTotalSize( const std::vector<particleGroup> & groups )
 {
     int nMax=0;

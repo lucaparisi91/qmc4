@@ -1,7 +1,7 @@
 
 #pragma once
 
-#define DIMENSIONS 3
+#define DIMENSIONS 1
 
 
 #if DIMENSIONS == 3

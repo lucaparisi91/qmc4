@@ -10,9 +10,9 @@
 #include "toolsPimc.h"
 #include <list>
 
+
 namespace pimc
 {
-
 
 class maskTensor
 {

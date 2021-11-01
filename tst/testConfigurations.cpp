@@ -118,6 +118,8 @@ void configurationsTest::SetUpTwoBodyInteractionGaussian( Real V0 , Real alpha )
 
     }
 
+
+
  void configurationsTest::SetUpTwoBodyInteractionHarmonicInTrap()
     {
         std::shared_ptr<pimc::action> sT= std::make_shared<pimc::kineticAction>(timeStep, configurations.nChains() , M  , geo);
@@ -377,6 +379,32 @@ Real accumulateAverageLengthSquare(int iChain, const pimc::configurations_t & co
 
     return accumulateAverageLengthSquare( iChain, configurations,0,t1);
 }
+
+
+Real accumulateAverageParticleDistanceSquared( const  pimc::configurations_t & configurations , const std::array<int,2> & timeRange , const std::array<int,2> & particleRange , const pimc::action::geometry_t & geo)
+{
+    const auto & data = configurations.dataTensor();
+    Real sum=0;
+
+    for(int t=timeRange[0];t<=timeRange[1];t++){ 
+        for(int i=particleRange[0];i<=particleRange[1];i++) { 
+            for(int j=particleRange[0];j<i;j++) {
+                for(int d=0;d<DIMENSIONS;d++)
+                {
+                    Real diff = geo.difference( data(i,d,t) - data(j,d,t) , d );
+                    sum+=diff*diff;
+                }
+            }
+        }
+    }
+
+    auto M = timeRange[1] - timeRange[0] + 1;
+    auto N= particleRange[1] - particleRange[0] + 1;
+
+    return sum/(N*M);
+}
+
+
 
 
 

@@ -64,7 +64,6 @@ void twoBodyTest::SetUpTwoBodyInteractionGaussian_kernel(Real V0, Real R0)
     sV2B->setGeometry(geo);
 
 
-
     
     std::vector<std::shared_ptr<pimc::action> > Vs = {sV2B};
 
@@ -213,9 +212,8 @@ void twoBodyTest::sample()
 
     //SetUpTwoBodyInteractionHarmonic();
     SetUpTwoBodyInteractionHarmonicInTrap();
-    
 
-    SetGrandCanonicalEnsamble( 2);
+    SetGrandCanonicalEnsamble( 2  );
     SetSeed( time(NULL) );
     SetRandom({TRUNCATE_D(0.4,0.4,0.4)});
 
@@ -248,7 +246,7 @@ void twoBodyTest::sample()
     
     pimc::createWorm createWorm(C, 0, lShort , 1 );
     pimc::deleteWorm removeWorm(C, 0, lShort , 1);
-    
+
 
     //open.setStartingBead(7);
     //open.setStartingChain(0);
@@ -264,8 +262,6 @@ void twoBodyTest::sample()
     
     //advanceHead.setFixedLength();
     //recedeHead.setFixedLength();
-
-
 
     pimc::advanceTail advanceTail(lShort,0);
     pimc::recedeTail recedeTail(lShort,0);
@@ -385,9 +381,7 @@ void twoBodyTest::sample()
             tab.attemptMove(configurations,S,randG);
 
             if ( configurations.isOpen() )
-            //if (getWormLength(configurations,0) == lWormShort )
             {
-               
 
                 int l=getWormLength( configurations, 0);
 
@@ -767,12 +761,10 @@ TEST_F(harmonicTrapTest, twoBodyActionKernel2_grandCanonical )
     pimc::openMove open(C, 0, lOpen );
     pimc::closeMove close(C, 0, lOpen );
 
-
     pimc::createWorm createWorm(C, 0, lShort , 1 );
     pimc::deleteWorm removeWorm(C, 0, lShort , 1);
 
-
-
+    
     //open.setStartingBead(3);
     //open.setStartingChain(0);
 
@@ -835,25 +827,360 @@ TEST_F(harmonicTrapTest, twoBodyActionKernel2_grandCanonical )
 
 }
 
+TEST_F(configurationsTest, mixture_twoBody)
+{
+    Real C=1e-1;
+    int nBeads=10;
+    int N1=1;
+    int N2=1;
+    
+
+    Real beta= 0.1* nBeads;
+
+    SetUp( {N1,N2} ,nBeads,beta , {TRUNCATE_D(1000,1000,1000)} );
+
+
+    //SetUpFreeParticleAction();    
+    
+    SetUpNonInteractingHarmonicAction();
+
+
+    //SetUpTwoBodyInteractionHarmonic();
+    //SetUpTwoBodyInteractionHarmonicInTrap();
+
+
+    SetGrandCanonicalEnsamble( 0 );
+    SetSeed( time(NULL) );
+    SetRandom({TRUNCATE_D(1,1,1)});
+
+
+    int l = int( 0.8* 10);
+    int lShort=int( 0.6* 10);
+    int lOpen=3;
+
+
+    pimc::translateMove translateA(0.1, 2000*M , 0 );
+    pimc::translateMove translateB(0.1, 2000*M , 0 );
+    
+
+    pimc::levyMove levyA(l,0);
+    pimc::levyMove levyB(l,0);
+    
+    pimc::moveHead moveHeadMoveA(lShort,0);
+    pimc::moveTail moveTailMoveA(lShort,0);
+    
+    pimc::moveHead moveHeadMoveB(lShort,1);
+    pimc::moveTail moveTailMoveB(lShort,1);
+    
+    pimc::openMove openA(C, 0, lOpen );
+    pimc::closeMove closeA(C, 0, lOpen );
+    
+    pimc::openMove openB(C, 1, lOpen );
+    pimc::closeMove closeB(C, 1, lOpen );
+
+    pimc::createWorm createWormA(C, 0, lShort , 1 );
+    pimc::deleteWorm removeWormA(C, 0, lShort , 1);
+
+    pimc::createWorm createWormB(C, 1, lShort , 1 );
+    pimc::deleteWorm removeWormB(C, 1, lShort , 1);
+
+    //open.setStartingBead(7);
+    //open.setStartingChain(0);
+
+    //close.setStartingBead(7);
+    //close.setStartingChain(0);
+
+    //open.setLengthCut(lOpen);
+    //close.setLengthCut(lOpen);
+
+    pimc::advanceHead advanceHeadA(lShort,0);
+    pimc::recedeHead recedeHeadA(lShort,0);
+
+    pimc::advanceHead advanceHeadB(lShort,1);
+    pimc::recedeHead recedeHeadB(lShort,1);
+    
+    //advanceHead.setFixedLength();
+    //recedeHead.setFixedLength();
+
+
+    pimc::advanceTail advanceTailA(lShort,0);
+    pimc::recedeTail recedeTailA(lShort,0);
+
+    pimc::advanceTail advanceTailB(lShort,1);
+    pimc::recedeTail recedeTailB(lShort,1);
+
+
+    pimc::swapMove swapA( lShort , 200 , 0);
+    pimc::swapMove swapB( lShort , 200 , 1);
+
+     auto eVEst = std::make_shared<pimc::virialEnergyEstimator>(configurations.nChains() , configurations.nBeads()  );
+
+    auto eEst= std::make_shared< pimc::thermodynamicEnergyEstimator>();
+
+
+    auto eO= std::make_shared<pimc::scalarObservable>(eEst,std::string("energy") );
+
+    auto eVO= std::make_shared<pimc::scalarObservable>(eVEst,std::string("eV") );
+
+
+    //advanceHead.setMaximumParticleNumber(3);
+    //recedeHead.setMinParticleNumber(1);
+
+    pimc::nConnectedChains nConnectedChains;
+
+    tab.push_back(&levyA,0.6,pimc::sector_t::diagonal,"levy");
+    tab.push_back(&translateA,0.3,pimc::sector_t::diagonal,"translate");
+    tab.push_back(&openA,0.1,pimc::sector_t::diagonal,"open");
+    //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");
+
+    tab.push_back(&levyA,0.6,pimc::sector_t::offDiagonal,"levy");
+    tab.push_back(&translateA,0.1,pimc::sector_t::offDiagonal,"translate");
+    tab.push_back(&closeA,0.1,pimc::sector_t::offDiagonal,"close");
+    tab.push_back(&moveHeadMoveA,0.1,pimc::sector_t::offDiagonal,"moveHead");
+    tab.push_back(&moveTailMoveA,0.1,pimc::sector_t::offDiagonal,"moveTail");
+    //tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
+    //tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal,"recedeHead");
+    //tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
+
+    tab.push_back(&levyB,0.7,pimc::sector_t::diagonal,"levy");
+    tab.push_back(&translateB,0.3,pimc::sector_t::diagonal,"translate");
+    tab.push_back(&openB,0.1,pimc::sector_t::diagonal,"open");
+    //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");
+
+    tab.push_back(&levyB,0.6,pimc::sector_t::offDiagonal,"levy");
+    tab.push_back(&translateB,0.1,pimc::sector_t::offDiagonal,"translate");
+    tab.push_back(&closeB,0.1,pimc::sector_t::offDiagonal,"close");
+    tab.push_back(&moveHeadMoveB,0.1,pimc::sector_t::offDiagonal,"moveHead");
+    tab.push_back(&moveTailMoveB,0.1,pimc::sector_t::offDiagonal,"moveTail");
+        
+
+
+    //tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
+    //tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal,"recedeHead");
+    //tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
+
+
+
+
+/*
+    tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
+    tab.push_back(&advanceTail,0.05,pimc::sector_t::offDiagonal,"advanceTail");
+    tab.push_back(&recedeTail,0.05,pimc::sector_t::offDiagonal,"recedeTail");
+    tab.push_back(&advanceHead,0.1,pimc::sector_t::offDiagonal,"advanceHead");
+    tab.push_back(&recedeHead,0.1,pimc::sector_t::offDiagonal,"recedeHead");
+    tab.push_back(&removeWorm,0.1,pimc::sector_t::offDiagonal,"removeWorm");
+ */
+
+
+    //int iHead = 7;
+    //int lWormShort=10 + t0 - 3 ;
+
+    //configurations.join(0,1);
+    //configurations.join(1,0);
+
+    //configurations.join(2,2);
+
+    
+
+    //configurations.join(1,0);    
+    //configurations.setHead(1,0);
+
+    //configurations.setHeadTail(0,9,4);
+
+
+    //configurations.setHeadTail(0,M,4-1);
+    //configurations.join(0,1);
+    //configurations.join(2,0);
+
+    //configurations.join(1,1);
+
+    //configurations.join(1,2);
+    
+    //configurations.join(0,1);
+    //configurations.join(1,0);
+
+
+    configurations.fillHeads();
+
+    resetCounters();
+
+    int nTrials=100000;
+    int nBlocks=100000;
+    
+    std::ofstream NOut,l2ShortOut,l2LongOut, ratioOut,particleDistributionOut,wormDistributionOut,lWormOut,nConnectedChainsOut,nRingsOut;
+
+    NOut.open("N.dat");
+    l2ShortOut.open("l2Short.dat");
+    l2LongOut.open("l2Long.dat");
+    particleDistributionOut.open("particleDistribution.dat");
+    wormDistributionOut.open("wormDistribution.dat");
+    lWormOut.open("lWorm.dat");
+    nConnectedChainsOut.open("nConnected.dat");
+    nRingsOut.open("nRings.dat");
+    ratioOut.open("ratio.dat");
+
+    std::vector<int > particleDistribution;
+    int nMax=40;
+    particleDistribution.resize(nMax,0);
+
+    std::vector<int > wormDistribution;
+    int nBeadsWormMax=400;
+    wormDistribution.resize(nBeadsWormMax,0);
+
+    //pimc::advanceHeadTest advance(l);
+    //pimc::recedeHeadTest recede(l);
+
+    NOut << std::setprecision(12);
+
+    Real nShort=0;
+    Real nLong=0;
+    Real n=0;
+
+    Real l2Long=0;
+    Real l2Short=0;
+    Real lWorm=0;
+
+    Real nEstimator=0;
+    Real r=0;
+
+    Real nConnectedRingsEstimator=0;
+    Real nConnectedChainsEstimator=0;
+
+    for (int i=0;i<nBlocks;i++)
+    {
+
+        while (nShort<nTrials and nLong<nTrials and n<nTrials)
+        {
+
+            tab.attemptMove(configurations,S,randG);
+
+            if ( configurations.isOpen() )
+            //if (getWormLength(configurations,0) == lWormShort )
+            {
+
+                int l=getWormLength( configurations, 0);
+
+                lWorm+=l;
+                l2Short+=accumulateAverageLengthSquare(0,configurations);
+                nShort+=1;
+                r+=1;
+
+                if (l < nBeadsWormMax)
+                {
+                    wormDistribution[l]+=1;
+                }
+
+                nConnectedChainsEstimator+=nConnectedChains.count(configurations,0);
+
+            }
+            else 
+            {
+                //l2Long+=accumulateAverageLengthSquare( 0,configurations );
+                l2Long+=accumulateLengthSquare( configurations , configurations.getGroups()[0].range() , {0,nBeads-1} , geo );
+
+                eVO->accumulate(configurations,S);
+                eO->accumulate(configurations,S);
+
+                nLong+=1;
+                int currentN=configurations.nParticles();
+                nEstimator+=currentN;
+                if (currentN < nMax )
+                {
+                    particleDistribution[ currentN ] +=1 ;
+                }
+
+                nConnectedRingsEstimator+=nConnectedChains.count(configurations,0); 
+            }
+
+            n+=1;
+
+        }
+
+       if ( nShort == nTrials  )
+       {
+            l2ShortOut << i << " " << l2Short/nShort << std::endl << std::flush ;
+            lWormOut << i << " " << lWorm/nShort << std::endl << std::flush;
+            
+            for (int iN=0;iN<nBeadsWormMax;iN++)
+           {
+               wormDistributionOut << i << " " << iN << " " <<  wormDistribution[iN] * 1./nTrials << " " << std::endl << std::flush ;
+           }
+
+
+           std::fill(wormDistribution.begin(), wormDistribution.end(), 0);
+
+            nConnectedChainsOut << i << " " << nConnectedChainsEstimator/nTrials << std::endl << std::flush ;
+
+            l2Short=0;
+            nShort=0;
+            lWorm=0;
+            nConnectedChainsEstimator=0;
+
+       }
+
+
+       if (nLong == nTrials)
+       {
+           l2LongOut << i << " " << l2Long/nTrials << std::endl << std::flush;
+           NOut << i << " " << nEstimator * 1./nTrials << std::endl << std::flush ;
+
+           for (int iN=0;iN<nMax;iN++)
+           {
+               particleDistributionOut << i << " " << iN << " " <<  particleDistribution[iN] * 1./nTrials << " " << std::endl << std::flush ;
+           }
+
+           nRingsOut << i << " " << nConnectedRingsEstimator/nTrials << std::endl << std::flush ;
+
+
+
+           std::fill(particleDistribution.begin(), particleDistribution.end(), 0);
+
+            eO->out(i);
+            eO->clear();
+
+            eVO->out(i);
+            eVO->clear();
+
+           l2Long=0;
+           nLong=0;
+           nEstimator=0;
+           nConnectedRingsEstimator=0;
+            
+       }
+
+        if (n == nTrials)
+        {
+            ratioOut << i << " " << r/(n) << std::endl << std::flush ;
+            r=0;
+            n=0;
+        }
+
+        tab >> std::cout;
+        tab.resetCounters();
+
+    }
+
+}
+
 
 #if DIMENSIONS == 3
 TEST_F( harmonicTrapTest, caoBernePropagator )
 {
     Real C=1e-3;
-    int nBeads=100;
+    int nBeads=10;
 
     int N=2;
     Real beta=1;
     Real a=0.1;
+
 
     std::array<double,DIMENSIONS> lBox = {TRUNCATE_D(1,1,1)};
 
     SetUp(N,nBeads,beta , lBox );
 
     //SetUpTwoBodyInteractionHarmonicInTrap();
-    SetUpTwoBodyInteractionGaussian_kernel(10,a);
-    //SetUpCaoBernePropagator(a);
-
+    //SetUpTwoBodyInteractionGaussian_kernel(10,a);
+    SetUpCaoBernePropagator(a);
 
     //SetUpCaoBernePropagatorTrapped(a);
 
@@ -863,7 +1190,8 @@ TEST_F( harmonicTrapTest, caoBernePropagator )
     //SetUpFreeActionWithHardSphereConstraint(a);    
     SetGrandCanonicalEnsamble( 0 );
     SetSeed( time( NULL)  ) ;
-    SetRandomMinimumDistance( a,{ 10 ,10 , 10});
+    SetRandomMinimumDistance( a, lBox );
+
 
     int t0=7;
     int l = int( 0.6* nBeads);
@@ -910,7 +1238,7 @@ TEST_F( harmonicTrapTest, caoBernePropagator )
 // involves levy reconstruction
     pimc::nConnectedChains nConnectedChains;
     tab.push_back(&levy,0.8,pimc::sector_t::diagonal,"levy");
-    tab.push_back(&translate,0.1,pimc::sector_t::diagonal,"translate");
+    //tab.push_back(&translate,0.2,pimc::sector_t::diagonal,"translate");
     //tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
 
     //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");
@@ -957,11 +1285,21 @@ TEST_F( harmonicTrapTest, caoBernePropagator )
 
     configurations.save( "configurationsInitial" , "csv");
 
+
+    std::ofstream l2Out,dis2Out;
+    l2Out.open("l2.dat");
+    dis2Out.open("dis2.dat");
+    
+
+
+    Real l2=0;
+    Real dis2=0;
+
     for (int i=0;i<nBlocks;i++)
     {
 
         int n=0;
-
+        
         while (nClosed<nTrials and n<nTrials)
         {
             for(int n=0;n<nUnCorrelationSteps;n++)
@@ -977,6 +1315,10 @@ TEST_F( harmonicTrapTest, caoBernePropagator )
             }
             else 
             {
+                l2+=accumulateAverageLengthSquare(0,configurations);
+
+                dis2+=accumulateAverageParticleDistanceSquared(configurations,{0,M-1},{0,N-1},S.getGeometry());
+
                 gOb->accumulate(configurations,S);
                 nClosed+=1;
                 eVO->accumulate(configurations,S);
@@ -1000,8 +1342,18 @@ TEST_F( harmonicTrapTest, caoBernePropagator )
 
         eVO->out(i);
         eVO->clear();
-        nClosed=0;
 
+
+        l2/=nClosed;
+        dis2/=nClosed;
+
+        l2Out << i << " " <<  l2 << std::endl;
+        dis2Out << i << " " <<  dis2 << std::endl;
+    
+
+        nClosed=0;
+        l2=0;
+        dis2=0;
        }
        
 
@@ -1017,3 +1369,6 @@ TEST_F( harmonicTrapTest, caoBernePropagator )
 
 
 #endif
+
+
+

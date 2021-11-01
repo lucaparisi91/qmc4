@@ -9,6 +9,7 @@
 #include "testConfigurations.h"
 #include "../pimc/potentialKernel.h"
 #include "../pimc/actionTwoBody.h"
+#include "../pimc/pimcObservables.h"
 
 
 using range_t = std::array<int,2> ;
@@ -922,5 +923,106 @@ TEST_F( pairProductTest , evaluationTwoComponentGrandCanonical )
     
 }
 
+
+TEST_F( pairProductTest ,force_caoBerne )
+{   
+    int N=2;
+    Real beta = 1;
+    int nBeads= 10;
+    //int seed = time(NULL);
+    int seed = 14;
+    std::array<Real,3> lBox { 1, 1 , 1};
+
+
+    SetUp({N}, nBeads , beta,lBox);
+    SetSeed(seed);
+    SetGrandCanonicalEnsamble(0);
+    SetRandom();
+
+    
+    Real radius=0.1;
+    auto S = buildCaoBernePropagator(radius,{0,0});
+
+
+    pimc::caoBernePropagator G(timeStep,radius);
+
+    auto & data = configurations.dataTensor();
+
+    data( 0, 0, 0 )=-0.24914609;data( 0, 0, 1 )=-0.63326559;data( 0, 0, 2 )=0.04404911;data( 0, 0, 3 )=-0.54175423;data( 0, 0, 4 )=-0.13706014;data( 0, 0, 5 )=-0.05633284;data( 0, 0, 6 )=0.16491452;data( 0, 0, 7 )=0.1069371;data( 0, 0, 8 )=0.1287723;data( 0, 0, 9 )=-0.25582294;data( 0, 1, 0 )=-0.24211061;data( 0, 1, 1 )=0.29555052;data( 0, 1, 2 )=-0.14787277;data( 0, 1, 3 )=-0.07470245;data( 0, 1, 4 )=-0.37044532;data( 0, 1, 5 )=-0.46883724;data( 0, 1, 6 )=-0.55243068;data( 0, 1, 7 )=-0.20750581;data( 0, 1, 8 )=-0.0263335;data( 0, 1, 9 )=-0.39686881;data( 0, 2, 0 )=0.09850953;data( 0, 2, 1 )=-0.00311914;data( 0, 2, 2 )=0.15418563;data( 0, 2, 3 )=0.29415353;data( 0, 2, 4 )=0.79375952;data( 0, 2, 5 )=0.64273364;data( 0, 2, 6 )=0.31763686;data( 0, 2, 7 )=0.1501884;data( 0, 2, 8 )=0.72267523;data( 0, 2, 9 )=0.6228651;
+
+    data( 1, 0, 0 )=-0.24444493;data( 1, 0, 1 )=-0.35609057;data( 1, 0, 2 )=-0.28501248;data( 1, 0, 3 )=-0.50135748;data( 1, 0, 4 )=-0.5844828;data( 1, 0, 5 )=-0.68873401;data( 1, 0, 6 )=-0.83258097;data( 1, 0, 7 )=-0.88768303;data( 1, 0, 8 )=-0.64193189;data( 1, 0, 9 )=-0.3116955;data( 1, 1, 0 )=-0.39153071;data( 1, 1, 1 )=0.25005158;data( 1, 1, 2 )=0.53161335;data( 1, 1, 3 )=0.45586793;data( 1, 1, 4 )=0.35839288;data( 1, 1, 5 )=0.17403871;data( 1, 1, 6 )=-0.08572163;data( 1, 1, 7 )=-0.37064796;data( 1, 1, 8 )=-0.09993577;data( 1, 1, 9 )=-0.37215908;data( 1, 2, 0 )=0.44625519;data( 1, 2, 1 )=0.60488931;data( 1, 2, 2 )=-0.01789381;data( 1, 2, 3 )=0.04955277;data( 1, 2, 4 )=-0.31945039;data( 1, 2, 5 )=-0.04772224;data( 1, 2, 6 )=0.10034472;data( 1, 2, 7 )=-0.31899398;data( 1, 2, 8 )=0.17891595;data( 1, 2, 9 )=0.53230467;
+
+    configurations.fillHeads();
+
+
+    Eigen::Tensor <Real,3> force(N,DIMENSIONS,M+1);
+    force.setConstant(0);
+    S->addGradient(configurations,{0,nBeads-1},{0,1},force);
+
+    
+
+
+    std::array<Real,3> deltaX;
+    std::array<Real,3> deltaXNext;
+
+    int t=0;
+    for(int d=0;d< DIMENSIONS ; d++)
+    {
+        deltaX[d]=geo.difference( data(0,d,t) - data(1,d,t) , d  );
+        deltaXNext[d]=geo.difference( data(0,d,t+1) - data(1,d,t+1) , d  );
+    }
+
+    ASSERT_NEAR(  G.logEvaluate(deltaX,deltaXNext) , 0.4396095906688093 , 1e-6);
+    ASSERT_NEAR(  G.logGradientLeft(deltaX,deltaXNext,0) , 0.4660289447131648 ,1e-6);
+    ASSERT_NEAR(  G.logGradientRight(deltaX,deltaXNext,0) , 0.626024700461992 ,1e-6);
+
+
+    for(int i=0; i<N ;i++)
+    {
+        for( int d=0;d<DIMENSIONS;d++)
+        {
+            force( i  ,d , 0)+=force(i,d,nBeads) ;
+        }
+    }
+
+
+    ASSERT_NEAR( force(0,0,0) , 0.22950966187915026 , 1e-6);
+    ASSERT_NEAR( force(0,1,2 ) , -0.7816965809250429 , 1e-6);
+    ASSERT_NEAR( force(0,0,9 ) , -102.25757978966121 , 1e-6);
+    
+    ASSERT_NEAR( S->evaluateTimeDerivative(configurations) , 9.846178285754494 ,1e-7  );
+
+
+    std::shared_ptr<pimc::action> sT= std::make_shared<pimc::kineticAction>(timeStep, configurations.nChains() , M  , geo);
+
+    auto sFull = std::make_shared<pimc::firstOrderAction>( sT , S );
+    
+
+    auto eVEst = std::make_shared<pimc::virialEnergyEstimator>(configurations.nChains() , configurations.nBeads()  );
+
+    auto eEst= std::make_shared< pimc::thermodynamicEnergyEstimator>();
+
+    auto e = (*eEst)(configurations,*sFull);
+
+    ASSERT_NEAR(e, 2.864121874704999 , 1e-6);
+
+    auto eV = (*eVEst)(configurations,*sFull);
+    
+    
+    Real sumForcesSquared=0;
+    for(int t=0;t<nBeads; t++ )
+        for( int i=0;i< N ; i++)
+        {
+            for(int d=0;d<DIMENSIONS ; d++)
+            {
+                sumForcesSquared+=force(i,d,t)*force(i,d,t);
+            }
+        }
+
+    ASSERT_NEAR(sumForcesSquared,78594.65056416151, 1e-4 );
+
+    ASSERT_NEAR(eV, 40.28941441137296 , 1e-6);
+
+}
 
 #endif

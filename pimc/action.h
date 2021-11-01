@@ -958,7 +958,6 @@ class sumAction : public action
     std::vector<std::shared_ptr<action> > _actions;
 };
 
-
 class firstOrderAction : public sumAction
 {
 public:

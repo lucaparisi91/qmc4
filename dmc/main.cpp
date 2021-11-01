@@ -311,13 +311,11 @@ int main(int argc, char** argv)
   auto storers = getFactory().createStorers(j["measurements"]);
 
   
-  
-  if (method == "vmc")
+  if ( method == "vmc" )
     {
       vmcDriver vmcO(&psi,timeStep);
       vmcO.getStepsPerBlock()=stepsPerBlock;
       vmcO.getCorrelationSteps()=correlationSteps;
-      
 
       vmcO.getEstimators().push_back(m);
 
@@ -333,9 +331,9 @@ int main(int argc, char** argv)
       	}
       
       for (auto & est : ests)
-	{
-	  vmcO.getEstimators().push_back(est); 
-	}
+	  {
+	    vmcO.getEstimators().push_back(est); 
+	  }
       
       
       vmcO.getRandomGenerator().seed(seed + pTools::rank() );
