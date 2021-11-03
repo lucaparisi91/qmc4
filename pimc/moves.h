@@ -599,8 +599,14 @@ class closeMove : public singleSetMove
     
     void setStartingChain(int m){setStartingChainRandom=false; startingChain=m;assert(m>=0);};
 
+    void setAtomNumberOnClose(size_t N,const std::vector<int> & sets);
+
+
+
 
     private:
+
+    bool checkConstraintsOnClose(const configurations_t & confs) ;
 
     Real openCloseRatioCoefficient(int N,int M);
 
@@ -622,6 +628,13 @@ class closeMove : public singleSetMove
     int lengthCut;
     bool setStartingChainRandom;
     int startingChain;
+
+    bool enforceAtomeNumberOnClose;
+    size_t atomNumberOnClose;
+    std::vector<int> setsMaxParticleNumber;
+
+
+
 };
 
 // advance and recede in opposite directions

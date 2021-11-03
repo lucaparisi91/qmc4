@@ -44,6 +44,9 @@ protected:
     
     void SetUpTwoBodyInteractionHarmonicInTrap();
 
+    void SetUpTwoBodyInteractionHarmonicInTrap(const std::vector<std::pair<int,int> > & sets );
+
+
 
     void SetUpNonInteractingHarmonicAction(int order=2);
     
@@ -52,6 +55,12 @@ protected:
     {
         configurations.setEnsamble(pimc::ensamble_t::grandCanonical);
         configurations.setChemicalPotential({chemicalPotential});
+    }
+
+    void SetGrandCanonicalEnsamble( const std::vector<Real>  & chemicalPotential)
+    {
+        configurations.setEnsamble(pimc::ensamble_t::grandCanonical);
+        configurations.setChemicalPotential(chemicalPotential);
     }
 
     void SetSemiGrandCanonicalEnsamble(Real deltamu)

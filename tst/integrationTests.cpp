@@ -5,8 +5,12 @@
 #include "../pimc/pairProductKernel.h"
 #include "../pimc/propagators.h"
 
-
 void harmonicTrapTest::SetUpTwoBodyInteractionHarmonicInTrap_kernel()
+{
+    SetUpTwoBodyInteractionHarmonicInTrap_kernel({ {0,0} } );
+}
+
+void harmonicTrapTest::SetUpTwoBodyInteractionHarmonicInTrap_kernel(const std::vector<std::pair<int,int> > & sets )
 {
     std::shared_ptr<pimc::action> sT= std::make_shared<pimc::kineticAction>(timeStep, configurations.nChains() , M  , geo);
 
@@ -21,18 +25,26 @@ void harmonicTrapTest::SetUpTwoBodyInteractionHarmonicInTrap_kernel()
     kernel->setTimeStep(timeStep);
     kernel->setGeometry(geo);
 
+    std::vector<std::shared_ptr<pimc::action> > Vs;
 
-    auto sV2B=std::make_shared<pimc::actionTwoBody>();
-    sV2B->setSets({0,0});
-    sV2B->setKernel(kernel);
-    sV2B->setTimeStep(timeStep);
-    sV2B->setGeometry(geo);
+    for ( auto [ setA, setB ] : sets )
+        {
+            auto sV2B=std::make_shared<pimc::actionTwoBody>();
+            sV2B->setSets({setA,setB});
+            sV2B->setKernel(kernel);
+            sV2B->setTimeStep(timeStep);
+            sV2B->setGeometry(geo);
+            Vs.push_back(sV2B);
 
+        }
 
+    for (int set=0;set<configurations.getGroups().size() ; set++)
+    {
+        auto  sOneBody=std::make_shared<pimc::potentialActionOneBody<decltype(V)> >(timeStep,V ,geo,set,order);
+        Vs.push_back(sOneBody);
 
-    auto  sOneBody=std::make_shared<pimc::potentialActionOneBody<decltype(V)> >(timeStep,V ,geo,order);
+    }
 
-    std::vector<std::shared_ptr<pimc::action> > Vs = {sOneBody,sV2B};
 
     std::shared_ptr<pimc::action>  sV = std::make_shared<pimc::sumAction>(Vs);
 
@@ -820,52 +832,54 @@ TEST_F(harmonicTrapTest, twoBodyActionKernel2_grandCanonical )
 
     resetCounters();
 
-    int nTrials=100000;
+    int nTrials=1000;
     int nBlocks=100000;
 
     accumulate();
 
 }
 
-TEST_F(configurationsTest, mixture_twoBody)
+TEST_F( harmonicTrapTest ,mixture_twoBody)
 {
-    Real C=1e-1;
+    Real C=1e-3;
     int nBeads=10;
-    int N1=1;
-    int N2=1;
-    
+    int N1=2;
+    int N2=2;
+
 
     Real beta= 0.1* nBeads;
 
-    SetUp( {N1,N2} ,nBeads,beta , {TRUNCATE_D(1000,1000,1000)} );
-
+    SetUp( {N1,N2} ,nBeads,beta , {TRUNCATE_D(10000,10000,10000)} );
 
     //SetUpFreeParticleAction();    
     
-    SetUpNonInteractingHarmonicAction();
+    //SetUpNonInteractingHarmonicAction();
 
 
     //SetUpTwoBodyInteractionHarmonic();
-    //SetUpTwoBodyInteractionHarmonicInTrap();
+
+    //SetUpTwoBodyInteractionHarmonicInTrap_kernel( { {0,0} ,{0,1} , {1,1}} );
+    SetUpTwoBodyInteractionHarmonicInTrap_kernel( { } );
 
 
-    SetGrandCanonicalEnsamble( 0 );
+
+    SetGrandCanonicalEnsamble( {0,0} );
     SetSeed( time(NULL) );
     SetRandom({TRUNCATE_D(1,1,1)});
 
-
     int l = int( 0.8* 10);
-    int lShort=int( 0.6* 10);
+    int lShort=int( 0.3* 10);
     int lOpen=3;
 
 
     pimc::translateMove translateA(0.1, 2000*M , 0 );
-    pimc::translateMove translateB(0.1, 2000*M , 0 );
+    pimc::translateMove translateB(0.1, 2000*M , 1 );
     
 
     pimc::levyMove levyA(l,0);
-    pimc::levyMove levyB(l,0);
+    pimc::levyMove levyB(l,1);
     
+
     pimc::moveHead moveHeadMoveA(lShort,0);
     pimc::moveTail moveTailMoveA(lShort,0);
     
@@ -883,6 +897,12 @@ TEST_F(configurationsTest, mixture_twoBody)
 
     pimc::createWorm createWormB(C, 1, lShort , 1 );
     pimc::deleteWorm removeWormB(C, 1, lShort , 1);
+
+
+
+    //closeA.setAtomNumberOnClose(N1+N2,{0,1});
+    //closeB.setAtomNumberOnClose(N1+N2,{0,1});
+
 
     //open.setStartingBead(7);
     //open.setStartingChain(0);
@@ -923,81 +943,48 @@ TEST_F(configurationsTest, mixture_twoBody)
     auto eVO= std::make_shared<pimc::scalarObservable>(eVEst,std::string("eV") );
 
 
-    //advanceHead.setMaximumParticleNumber(3);
-    //recedeHead.setMinParticleNumber(1);
+    advanceHeadA.setMaximumParticleNumber( 2 );
+    recedeHeadA.setMinParticleNumber(1);
+
+    advanceHeadB.setMaximumParticleNumber( 2 );
+    recedeHeadB.setMinParticleNumber(1);
+
+
 
     pimc::nConnectedChains nConnectedChains;
 
     tab.push_back(&levyA,0.6,pimc::sector_t::diagonal,"levy");
     tab.push_back(&translateA,0.3,pimc::sector_t::diagonal,"translate");
     tab.push_back(&openA,0.1,pimc::sector_t::diagonal,"open");
+
     //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");
 
-    tab.push_back(&levyA,0.6,pimc::sector_t::offDiagonal,"levy");
+    tab.push_back(&levyA,0.4,pimc::sector_t::offDiagonal,"levy");
     tab.push_back(&translateA,0.1,pimc::sector_t::offDiagonal,"translate");
     tab.push_back(&closeA,0.1,pimc::sector_t::offDiagonal,"close");
     tab.push_back(&moveHeadMoveA,0.1,pimc::sector_t::offDiagonal,"moveHead");
     tab.push_back(&moveTailMoveA,0.1,pimc::sector_t::offDiagonal,"moveTail");
-    //tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
-    //tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal,"recedeHead");
-    //tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
+    tab.push_back(&advanceHeadA,0.05,pimc::sector_t::offDiagonal,"advanceHead");
+    tab.push_back(&recedeHeadA,0.05,pimc::sector_t::offDiagonal,"recedeHead");
+    tab.push_back(&swapA,0.1,pimc::sector_t::offDiagonal,"swap");
 
-    tab.push_back(&levyB,0.7,pimc::sector_t::diagonal,"levy");
+    tab.push_back(&levyB,0.6,pimc::sector_t::diagonal,"levy");
     tab.push_back(&translateB,0.3,pimc::sector_t::diagonal,"translate");
     tab.push_back(&openB,0.1,pimc::sector_t::diagonal,"open");
     //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");
 
-    tab.push_back(&levyB,0.6,pimc::sector_t::offDiagonal,"levy");
+
+    tab.push_back(&levyB,0.4,pimc::sector_t::offDiagonal,"levy");
     tab.push_back(&translateB,0.1,pimc::sector_t::offDiagonal,"translate");
     tab.push_back(&closeB,0.1,pimc::sector_t::offDiagonal,"close");
     tab.push_back(&moveHeadMoveB,0.1,pimc::sector_t::offDiagonal,"moveHead");
     tab.push_back(&moveTailMoveB,0.1,pimc::sector_t::offDiagonal,"moveTail");
-        
+    tab.push_back(&swapB,0.1,pimc::sector_t::offDiagonal,"swap");
+    tab.push_back(&advanceHeadB,0.05,pimc::sector_t::offDiagonal,"advanceHead");
+    tab.push_back(&recedeHeadB,0.05,pimc::sector_t::offDiagonal,"recedeHead");
 
 
-    //tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
-    //tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal,"recedeHead");
-    //tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
-
-
-
-
-/*
-    tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
-    tab.push_back(&advanceTail,0.05,pimc::sector_t::offDiagonal,"advanceTail");
-    tab.push_back(&recedeTail,0.05,pimc::sector_t::offDiagonal,"recedeTail");
-    tab.push_back(&advanceHead,0.1,pimc::sector_t::offDiagonal,"advanceHead");
-    tab.push_back(&recedeHead,0.1,pimc::sector_t::offDiagonal,"recedeHead");
-    tab.push_back(&removeWorm,0.1,pimc::sector_t::offDiagonal,"removeWorm");
- */
-
-
-    //int iHead = 7;
-    //int lWormShort=10 + t0 - 3 ;
-
-    //configurations.join(0,1);
-    //configurations.join(1,0);
-
-    //configurations.join(2,2);
-
-    
-
-    //configurations.join(1,0);    
-    //configurations.setHead(1,0);
-
-    //configurations.setHeadTail(0,9,4);
-
-
-    //configurations.setHeadTail(0,M,4-1);
-    //configurations.join(0,1);
-    //configurations.join(2,0);
-
-    //configurations.join(1,1);
-
-    //configurations.join(1,2);
-    
-    //configurations.join(0,1);
-    //configurations.join(1,0);
+    //configurations.setHeadTail(0,9,-1);
 
 
     configurations.fillHeads();
@@ -1007,7 +994,8 @@ TEST_F(configurationsTest, mixture_twoBody)
     int nTrials=100000;
     int nBlocks=100000;
     
-    std::ofstream NOut,l2ShortOut,l2LongOut, ratioOut,particleDistributionOut,wormDistributionOut,lWormOut,nConnectedChainsOut,nRingsOut;
+    std::ofstream NOut,l2ShortOut,l2LongOut, ratioOut,particleDistributionOut,wormDistributionOut,lWormOut,nConnectedChainsOut,nRingsOut,magnetizationSquaredOut;
+
 
     NOut.open("N.dat");
     l2ShortOut.open("l2Short.dat");
@@ -1018,6 +1006,9 @@ TEST_F(configurationsTest, mixture_twoBody)
     nConnectedChainsOut.open("nConnected.dat");
     nRingsOut.open("nRings.dat");
     ratioOut.open("ratio.dat");
+
+    magnetizationSquaredOut.open("magnetizationSquared.dat");
+
 
     std::vector<int > particleDistribution;
     int nMax=40;
@@ -1040,9 +1031,16 @@ TEST_F(configurationsTest, mixture_twoBody)
     Real l2Short=0;
     Real lWorm=0;
 
-    Real nEstimator=0;
+    Real n1Estimator=0;
+    Real n2Estimator=0;
+    
+
     Real r=0;
 
+
+    Real magnetizationSquared=0;
+
+    
     Real nConnectedRingsEstimator=0;
     Real nConnectedChainsEstimator=0;
 
@@ -1055,25 +1053,29 @@ TEST_F(configurationsTest, mixture_twoBody)
             tab.attemptMove(configurations,S,randG);
 
             if ( configurations.isOpen() )
-            //if (getWormLength(configurations,0) == lWormShort )
             {
+                r+=1;
+            }
 
+            if ( configurations.isOpen(0) )
+            {
+                
                 int l=getWormLength( configurations, 0);
 
                 lWorm+=l;
                 l2Short+=accumulateAverageLengthSquare(0,configurations);
-                nShort+=1;
-                r+=1;
 
-                if (l < nBeadsWormMax)
+                nShort+=1;
+                
+              /*   if (l < nBeadsWormMax)
                 {
                     wormDistribution[l]+=1;
                 }
 
-                nConnectedChainsEstimator+=nConnectedChains.count(configurations,0);
+                nConnectedChainsEstimator+=nConnectedChains.count(configurations,0); */
 
             }
-            else 
+            else if ( not configurations.isOpen() )
             {
                 //l2Long+=accumulateAverageLengthSquare( 0,configurations );
                 l2Long+=accumulateLengthSquare( configurations , configurations.getGroups()[0].range() , {0,nBeads-1} , geo );
@@ -1082,12 +1084,20 @@ TEST_F(configurationsTest, mixture_twoBody)
                 eO->accumulate(configurations,S);
 
                 nLong+=1;
-                int currentN=configurations.nParticles();
-                nEstimator+=currentN;
-                if (currentN < nMax )
+                int currentN1=configurations.nParticles(0);
+                int currentN2=configurations.nParticles(1);
+                
+                n1Estimator+=currentN1;
+                n2Estimator+=currentN2;
+
+                magnetizationSquared+=(currentN1 - currentN2) * (currentN1 - currentN2);
+
+
+                if (currentN1 < nMax )
                 {
-                    particleDistribution[ currentN ] +=1 ;
+                    particleDistribution[ currentN1 ] +=1 ;
                 }
+                
 
                 nConnectedRingsEstimator+=nConnectedChains.count(configurations,0); 
             }
@@ -1122,7 +1132,9 @@ TEST_F(configurationsTest, mixture_twoBody)
        if (nLong == nTrials)
        {
            l2LongOut << i << " " << l2Long/nTrials << std::endl << std::flush;
-           NOut << i << " " << nEstimator * 1./nTrials << std::endl << std::flush ;
+           NOut << i << " " << n1Estimator * 1./nTrials << " " << n2Estimator * 1./nTrials << std::endl << std::flush ;
+
+           magnetizationSquaredOut << i << " " << magnetizationSquared * 1./nTrials  << std::endl << std::flush ;
 
            for (int iN=0;iN<nMax;iN++)
            {
@@ -1143,9 +1155,12 @@ TEST_F(configurationsTest, mixture_twoBody)
 
            l2Long=0;
            nLong=0;
-           nEstimator=0;
+           n1Estimator=0;
+           n2Estimator=0;
            nConnectedRingsEstimator=0;
-            
+           magnetizationSquared=0;
+
+
        }
 
         if (n == nTrials)
@@ -1159,7 +1174,7 @@ TEST_F(configurationsTest, mixture_twoBody)
         tab.resetCounters();
 
     }
-
+    
 }
 
 

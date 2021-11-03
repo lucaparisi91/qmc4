@@ -1846,7 +1846,9 @@ startingBead(-1),
 lengthCut(-1),
 startingChain(-1),
 setStartingChainRandom(true),
-singleSetMove(set)
+singleSetMove(set),
+enforceAtomeNumberOnClose(false),
+atomNumberOnClose(0)
 {}
 
 
@@ -2032,11 +2034,55 @@ Real closeMove::openCloseRatioCoefficient(int N,int M)
 
         return coeff;
     }
+
+void closeMove::setAtomNumberOnClose(size_t N,const std::vector<int> & sets)
+{
+    setsMaxParticleNumber=sets;
+    enforceAtomeNumberOnClose=true;
+    atomNumberOnClose=N;
+
+
+}
+
+bool closeMove::checkConstraintsOnClose(const configurations_t & configurations)
+{
+
+    if (enforceAtomeNumberOnClose)
+    {
+        int N=0;
+
+        for (auto set : setsMaxParticleNumber)
+        {
+            N+=nParticlesOnClose(configurations, set );
+        };
+
+        if (N != atomNumberOnClose)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+
+        }
+    }
+    else
+    {
+        return true;
+    }    
+}
+
 bool closeMove::attemptGrandCanonicalMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG )
 {
   /*   std::cout << "Before close" << std::endl;
     confs >> std::cout;
     std::cout << std::endl; */
+    
+
+    if ( not checkConstraintsOnClose(confs))
+    {
+        return false;
+    }
 
      if (! confs.isOpen(getSet()) )
     {
@@ -2157,6 +2203,8 @@ bool closeMove::attemptGrandCanonicalMove(configurations_t & confs , firstOrderA
 
     }
 
+
+   
 
     if ( accept)
     {
@@ -2627,12 +2675,13 @@ bool advanceHead::attemptMove(configurations_t & confs , firstOrderAction & S,ra
 
     }
 
-    auto propRatio = -deltaS + confs.getChemicalPotential(getSet())*l*timeStep;
-
-
-    accept = accept and sampler.acceptLog(propRatio,randG);
-
+    if (accept)
+    {
+        auto propRatio = -deltaS + confs.getChemicalPotential(getSet())*l*timeStep;
+        accept=sampler.acceptLog(propRatio,randG);
+    }
     
+
     if ( enforceMaxParticleNumber)
     {   
         int nParticlesAfterClose=nParticlesOnClose(confs,getSet());
@@ -2641,7 +2690,8 @@ bool advanceHead::attemptMove(configurations_t & confs , firstOrderAction & S,ra
             accept=false;
         }
     }
-    
+
+
     if ( accept)
     {
         
@@ -3197,7 +3247,7 @@ bool moveHead::attemptMove(configurations_t & confs , firstOrderAction & S,rando
 
     auto propRatio = -deltaS;
 
-    bool accept = sampler.acceptLog(propRatio,randG);
+    accept = sampler.acceptLog(propRatio,randG);
 
     }
 
@@ -3331,14 +3381,14 @@ bool moveTail::attemptMove(configurations_t & confs , firstOrderAction & S,rando
     if (accept)
     {
         // evaluates the action
-    deltaS+=sPot.evaluate(confs,timeRange,iChain);
-    deltaS+=sPot.evaluate(confs,timeRange2,iChain2);
+        deltaS+=sPot.evaluate(confs,timeRange,iChain);
+        deltaS+=sPot.evaluate(confs,timeRange2,iChain2);
 
-  
     
-    auto propRatio = -deltaS;
+        
+        auto propRatio = -deltaS;
 
-    bool accept = sampler.acceptLog(propRatio,randG);
+        accept = sampler.acceptLog(propRatio,randG);
 
     }
     

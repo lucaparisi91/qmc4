@@ -44,4 +44,6 @@ class harmonicTrapTest : public twoBodyTest
     public:
     void SetUpTwoBodyInteractionHarmonicInTrap_kernel()  ;
 
+    void SetUpTwoBodyInteractionHarmonicInTrap_kernel(const std::vector<std::pair<int,int> > & sets );
+    
 };

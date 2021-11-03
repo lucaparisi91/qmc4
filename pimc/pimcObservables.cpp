@@ -207,12 +207,12 @@ Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderActio
     e4/=( confs.nBeads() );
 
     e3/=(2 * beta );
-    
     e2/=(2*beta*beta);
-
+    
     // classical gas free contribution
     Real e1 = confs.nParticles()*   getDimensions()/(2*beta);
     return e1 + e2  + e3 + e4;
+
 
 }
 

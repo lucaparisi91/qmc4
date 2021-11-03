@@ -2,22 +2,9 @@
 namespace pimc
 {
 
-using range_t = std::array<int,2>;
 
 
-auto intersectRanges(const range_t & rangeA,const range_t & rangeB )
-{
-    range_t intersection{std::max(rangeA[0],rangeB[0]),std::min(rangeA[1],rangeB[1]) };
 
-    if (intersection[1] < intersection[0])
-    {
-        return range_t{0,-1};
-    }
-    else
-    {
-        return intersection;
-    }
-}
 
 Real actionTwoBody::evaluate(const configurations_t & configurations,const std::array<int,2> & timeRange_, const range_t & particleRange )
     {

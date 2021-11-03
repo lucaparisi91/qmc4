@@ -2384,11 +2384,11 @@ TEST_F(configurationsTest,closedChain_twoBody)
 {
     Real C=1e-1;
     int nBeads=10;
-    int N=10;
+    int N=1;
     
     Real beta=0.1* nBeads;
-
-    SetUp( N,nBeads,beta , {TRUNCATE_D(1,1,1)} );
+    
+    SetUp( N,nBeads,beta , {TRUNCATE_D(10000,10000,10000)} );
 
     //SetUpFreeParticleAction();    
     
@@ -2474,12 +2474,12 @@ TEST_F(configurationsTest,closedChain_twoBody)
 
     tab.push_back(&levy,0.7,pimc::sector_t::diagonal,"levy");
     tab.push_back(&translate,0.3,pimc::sector_t::diagonal,"translate");
-    tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
+    //tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
     //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");
 
-    tab.push_back(&levy,0.6,pimc::sector_t::offDiagonal,"levy");
+    tab.push_back(&levy,0.7,pimc::sector_t::offDiagonal,"levy");
     tab.push_back(&translate,0.1,pimc::sector_t::offDiagonal,"translate");
-    tab.push_back(&close,0.1,pimc::sector_t::offDiagonal,"close");
+    //tab.push_back(&close,0.1,pimc::sector_t::offDiagonal,"close");
     tab.push_back(&moveHeadMove,0.1,pimc::sector_t::offDiagonal,"moveHead");
     tab.push_back(&moveTailMove,0.1,pimc::sector_t::offDiagonal,"moveTail");
     //tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
@@ -2510,7 +2510,7 @@ TEST_F(configurationsTest,closedChain_twoBody)
     //configurations.join(1,0);    
     //configurations.setHead(1,0);
 
-    //configurations.setHeadTail(0,9,4);
+    configurations.setHeadTail(0,9,-1);
 
 
     //configurations.setHeadTail(0,M,4-1);

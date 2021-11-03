@@ -12,7 +12,7 @@ void configurationsTest::SetRandom(const std::array<Real,DIMENSIONS> & lBox )
                     data(i,d,t)=(uniformDistribution(randG)-0.5 )*lBox[d];
                 }
         configurations.fillHeads();
-    
+
     }
 
  void configurationsTest::SetUp( int N_ , int M_ , Real Beta_,std::array<Real,getDimensions()> lBox) {
@@ -119,8 +119,15 @@ void configurationsTest::SetUpTwoBodyInteractionGaussian( Real V0 , Real alpha )
     }
 
 
+void configurationsTest::SetUpTwoBodyInteractionHarmonicInTrap()
+{
 
- void configurationsTest::SetUpTwoBodyInteractionHarmonicInTrap()
+    SetUpTwoBodyInteractionHarmonicInTrap( { {0,0} });
+
+}
+
+
+ void configurationsTest::SetUpTwoBodyInteractionHarmonicInTrap( const std::vector<std::pair<int,int> > & sets)
     {
         std::shared_ptr<pimc::action> sT= std::make_shared<pimc::kineticAction>(timeStep, configurations.nChains() , M  , geo);
 
@@ -129,12 +136,24 @@ void configurationsTest::SetUpTwoBodyInteractionGaussian( Real V0 , Real alpha )
         auto V = pimc::makeIsotropicPotentialFunctor(
          [](Real r) {return 0.5*(r*r) ;} ,
          [](Real r) {return r  ;} );
+        
+        std::vector<std::shared_ptr<pimc::action> > Vs;
 
-        auto sV2B=std::make_shared<pimc::potentialActionTwoBody<decltype(V)>  >(timeStep,configurations.nChains(),configurations.nBeads(),V,geo,0,0);
+        for ( int set=0;set<configurations.getGroups().size() ; set++)
+        {
+            auto  sOneBody=std::make_shared<pimc::potentialActionOneBody<decltype(V)> >(timeStep,V ,geo,set,order);
+            Vs.push_back(sOneBody);
 
-        auto  sOneBody=std::make_shared<pimc::potentialActionOneBody<decltype(V)> >(timeStep,V ,geo,order);
+        }
+        
 
-        std::vector<std::shared_ptr<pimc::action> > Vs = {sOneBody,sV2B};
+        for ( auto [ setA, setB ] : sets )
+        {
+            auto sV2B=std::make_shared<pimc::potentialActionTwoBody<decltype(V)>  >(timeStep,configurations.nChains(),configurations.nBeads(),V,geo,setA,setB);
+
+            Vs.push_back(sV2B);
+
+        }
 
         std::shared_ptr<pimc::action>  sV = std::make_shared<pimc::sumAction>(Vs);
 
@@ -148,17 +167,19 @@ void configurationsTest::SetUpTwoBodyInteractionGaussian( Real V0 , Real alpha )
 
 
 
-
      auto V = pimc::makeIsotropicPotentialFunctor(
          [](Real r) {return 0.5*(r*r) ;} ,
          [](Real r) {return r  ;} );
 
-
-
-    std::shared_ptr<pimc::action> sOneBody=std::make_shared<pimc::potentialActionOneBody<decltype(V)> >(timeStep,V ,geo,order);
     
-    
-    std::vector<std::shared_ptr<pimc::action> > Vs = {sOneBody};
+    std::vector<std::shared_ptr<pimc::action> > Vs;
+
+    for( int set=0;set<configurations.getGroups().size() ;set++  )
+    {
+        std::shared_ptr<pimc::action> sOneBody=std::make_shared<pimc::potentialActionOneBody<decltype(V)> >(timeStep,V ,geo,set,order);
+        Vs.push_back( sOneBody);
+    }
+
 
     std::shared_ptr<pimc::action>  sV = std::make_shared<pimc::sumAction>(Vs);
 

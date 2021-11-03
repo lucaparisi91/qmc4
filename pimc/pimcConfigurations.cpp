@@ -1121,7 +1121,7 @@ pimcConfigurations pimcConfigurations::loadHDF5(const std::string & filename)
 
 int nParticlesOnClose(const pimcConfigurations & configurations, int set)
 {
-    int nParticles=configurations.nParticles();
+    int nParticles=configurations.nParticles(set);
     int M = configurations.nBeads();
     if ( configurations.getGroups()[set].isOpen() )
     {

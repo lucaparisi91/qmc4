@@ -399,24 +399,28 @@ auto makeIsotropicPotentialFunctor(V_t V_,grad_t grad)
 
 #endif
 
-
 template<class functor_t>
 class potentialActionOneBody : public action
 {
     public:
     potentialActionOneBody(Real tau, geometryPBC_PIMC geo_, const json_t & j):
-    potentialActionOneBody::potentialActionOneBody(tau,functor_t(j["potential"]) , geo_   ) {} 
+    potentialActionOneBody::potentialActionOneBody(tau,functor_t(j["potential"]) , geo_ , j["set"].get<int>()   ) {} 
 
 
-    potentialActionOneBody(Real tau_, functor_t V_ ,geometryPBC_PIMC geo_,int order_=2): V(V_),action::action(tau_,geo_),order(order_) {}
+    potentialActionOneBody(Real tau_, functor_t V_ ,geometryPBC_PIMC geo_, int set=0, int order_=2): V(V_),action::action(tau_,geo_),order(order_),_set(set) {}
 
-    Real evaluate( const pimcConfigurations_t & configurations, std::array<int,2> timeRange, std::array<int,2>  particleRange  ) 
+    Real evaluate( const pimcConfigurations_t & configurations, std::array<int,2> timeRange, std::array<int,2>  range  ) 
     {
+        const auto & group = configurations.getGroups()[_set];
+
+        auto particleRange = intersectRanges(  group.range(), range );
+
+
         auto & data = configurations.dataTensor();
 
         if (timeRange[0] > timeRange[1])
         {
-            return 0; 
+            return 0;
         }
 
         if (configurations.getEnsamble() == ensamble_t::canonical)
@@ -473,14 +477,13 @@ class potentialActionOneBody : public action
     Real evaluate( const pimcConfigurations_t & configurations, std::array<int,2> timeRange, int iChain  ) 
     {
         Real sum=0;
-        const auto & groups = configurations.getGroups();
-        for (const auto & group : groups)
+        const auto & group = configurations.getGroups()[_set];
+
+        if ( (iChain >=group.iStart) and (iChain <= group.iEnd) )
         {
-            if ( (iChain >=group.iStart) and (iChain <= group.iEnd) )
-            {
-                sum+=evaluate(configurations,timeRange,{iChain,iChain});
-            }
+            sum+=evaluate(configurations,timeRange,{iChain,iChain});
         }
+
         return sum;
     }
 
@@ -495,12 +498,12 @@ class potentialActionOneBody : public action
         const auto nChains = configurations.nChains();
         const auto nBeads = configurations.nBeads();
         Real sum=0;
-        const auto & groups = configurations.getGroups();
-        for (const auto & group : groups)
-        {
-        
+
+        const auto & group = configurations.getGroups()[_set];
+
+
         sum += evaluate(configurations, {0,nBeads-1},{group.iStart,group.iEnd});
-        }
+
 
         return sum;
     }
@@ -514,8 +517,14 @@ class potentialActionOneBody : public action
 
 
 
-    virtual void addGradient(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange,  Eigen::Tensor<Real,3> & gradientBuffer)
+    virtual void addGradient(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & range,  Eigen::Tensor<Real,3> & gradientBuffer)
    {
+
+       const auto & group = pimcConfigurations.getGroups()[_set];
+       auto particleRange = intersectRanges(  group.range(),range );
+
+
+
         if (order == 1)
         {
             throw missingImplementation("First order oneBody addGradient");
@@ -592,6 +601,8 @@ class potentialActionOneBody : public action
     private:
     functor_t V;
     int order;
+    int _set;
+
 };
 
 

@@ -36,10 +36,12 @@ namespace pimc{
     std::array<std::array<int,2>, 2> splitPeriodicTimeSlice(const std::array<int,2> & timeSlice, int nBeads);
     
     Real freeParticleLogProbability(std::array<Real,getDimensions()> & delta,Real tau,Real mass=1);
-    
-
 
     Real average(const std::vector<Real> & observables);
+    
+    using range_t = std::array<int,2>;
+
+    range_t intersectRanges(const range_t & rangeA,const range_t & rangeB );
     
 }
 

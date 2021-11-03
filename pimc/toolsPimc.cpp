@@ -78,4 +78,18 @@ int getTotParticlesFromJson(const json_t & j)
     return std::accumulate(nParticles.begin(),nParticles.end(),0);
 }
 
+range_t intersectRanges(const range_t & rangeA,const range_t & rangeB )
+    {
+        range_t intersection{std::max(rangeA[0],rangeB[0]),std::min(rangeA[1],rangeB[1]) };
+
+        if (intersection[1] < intersection[0])
+        {
+            return range_t{0,-1};
+        }
+        else
+        {
+            return intersection;
+        }
+    }
+
 }
