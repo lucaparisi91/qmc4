@@ -1025,4 +1025,83 @@ TEST_F( pairProductTest ,force_caoBerne )
 
 }
 
+
+
+
 #endif
+
+
+#include "../pimc/potentialKernelConstructor.h"
+#include "../pimc/pimcPotentials.h"
+
+TEST(constructor,kernels_primitiveApproximation)
+{
+    pimc::primitiveApproximationTwoBodyKernelConstructor creator;
+
+
+
+    creator.registerPotential<pimc::gaussianPotential>("gaussian");
+
+
+    auto j = R"(
+        {
+            "kind": "twoBody",
+            "groupA": 0,
+            "groupB": 0,
+            "potential": {
+                "kind": "gaussian",
+                "V0": 9.551928857173605,
+                "alpha": 207.23908249999997
+            }
+        }
+            )"_json;
+    
+    
+    Real timeStep = 0.1 ;
+    pimc::geometryPBC_PIMC geo(  { TRUNCATE_D(1,1,1) }   );
+
+
+    creator.setTimeStep(timeStep);
+    creator.setGeometry(geo);
+
+
+    auto kernel = creator.create(j );
+
+}
+
+#include "../pimc/actionTwoBodyConstructor.h"
+
+
+TEST(constructor,actionTwoBody)
+{
+    pimc::actionTwoBodyConstructor creator;
+
+    creator.registerPotential<pimc::gaussianPotential>("gaussian");
+
+    auto j = R"(
+        {
+            "kind": "twoBody",
+            "groupA": 0,
+            "groupB": 0,
+            "potential": {
+                "kind": "gaussian",
+                "V0": 9.551928857173605,
+                "alpha": 207.23908249999997
+            }
+        }
+            )"_json;
+    
+    
+    Real timeStep = 0.1 ;
+    pimc::geometryPBC_PIMC geo(  { TRUNCATE_D(1,1,1) }   );
+
+
+    creator.setTimeStep(timeStep);
+    creator.setGeometry(geo);
+    
+
+    auto S = creator.create(j );
+
+    
+
+}

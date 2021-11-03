@@ -820,7 +820,7 @@ TEST_F(harmonicTrapTest, twoBodyActionKernel2_grandCanonical )
 
     int tTail=4;
     int lWormShort=4;
-
+    
     //configurations.setHeadTail(0,tTail + lWormShort,tTail -1);
 
     //configurations.setHeadTail(1,tTail - lCut,-1);

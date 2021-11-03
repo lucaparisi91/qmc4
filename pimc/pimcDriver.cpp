@@ -191,6 +191,7 @@ void pimcDriver::run()
     sC.registerPotential<isotropicHarmonicPotential>();
     sC.registerPotential<gaussianPotential>();
 
+    
 
 
     std::shared_ptr<action> sV=

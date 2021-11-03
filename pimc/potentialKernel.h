@@ -1,17 +1,25 @@
+#ifndef POTENTIAL_KERNEL_H
+#define POTENTIAL_KERNEL_H
+
 #include "kernels.h"
 /*
 Describe the primitive approximation two body kernel
 */
 
+
 namespace pimc
 {
+
+
 template<class V_t>
 class primitiveApproximationTwoBodyKernel : public kernel2B
 {
     public:
 
-    
     primitiveApproximationTwoBodyKernel(const  std::shared_ptr<V_t> & V_) : V(V_) {};
+
+
+
 
     virtual Real evaluateRectangular(
         const Eigen::Tensor<Real,3> & tn
@@ -241,3 +249,5 @@ class primitiveApproximationTwoBodyKernel : public kernel2B
 };
 
 }
+
+#endif

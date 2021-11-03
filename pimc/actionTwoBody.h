@@ -1,3 +1,6 @@
+#ifndef ACTION_TWO_BODY_H
+#define ACTION_TWO_BODY_H
+
 #include "memory"
 #include "kernels.h"
 #include "action.h"
@@ -6,10 +9,11 @@ namespace pimc
 {
 //using configurations_t = pimcConfigurations;
 
+
 class actionTwoBody : public action
 {
     using range_t = std::array<int,2>;
-    
+
     public:
     actionTwoBody() :
     _distanceMinimumConstraint(false),rMin(0)  {}
@@ -87,3 +91,4 @@ class actionTwoBody : public action
 }
 
 
+#endif
