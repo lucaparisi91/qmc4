@@ -39,7 +39,10 @@ namespace pimc
         template<class V_t>
         void registerPotential( const std::string & name)
         {
-            createorMap[name] =  primitiveApproximationConstructors::constructorFromPotential<V_t>();
+            createorMap[ name ] =  std::make_shared<
+                primitiveApproximationConstructors::constructorFromPotential<V_t>
+            > ();
+            
         }
 
         void setTimeStep( Real timeStep){_timeStep=timeStep;}
@@ -49,7 +52,7 @@ namespace pimc
         auto create( const json_t & j )
         {
             auto key = j["potential"]["kind"];
-            auto kernel= createorMap.at(key).create(j);
+            auto kernel= createorMap.at(key)->create(j);
             kernel->setTimeStep(_timeStep);
             kernel->setGeometry(_geo);
             return kernel;
@@ -62,8 +65,11 @@ namespace pimc
         Real _timeStep;
         geometry_t _geo;
 
+        std::map< 
+            std::string  ,  
+            std::shared_ptr< primitiveApproximationConstructors::constructorFromPotentialBase >    
 
-        std::map< std::string  ,  primitiveApproximationConstructors::constructorFromPotentialBase > createorMap;
+        > createorMap;
 
     };
 

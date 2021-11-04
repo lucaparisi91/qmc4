@@ -820,7 +820,7 @@ TEST_F(harmonicTrapTest, twoBodyActionKernel2_grandCanonical )
 
     int tTail=4;
     int lWormShort=4;
-    
+
     //configurations.setHeadTail(0,tTail + lWormShort,tTail -1);
 
     //configurations.setHeadTail(1,tTail - lCut,-1);
@@ -857,10 +857,11 @@ TEST_F( harmonicTrapTest ,mixture_twoBody)
 
 
     //SetUpTwoBodyInteractionHarmonic();
+    
+    SetUpTwoBodyInteractionHarmonicInTrap_kernel( { {0,0} ,{0,1} , {1,1}} );
 
-    //SetUpTwoBodyInteractionHarmonicInTrap_kernel( { {0,0} ,{0,1} , {1,1}} );
-    SetUpTwoBodyInteractionHarmonicInTrap_kernel( { } );
 
+    //SetUpTwoBodyInteractionHarmonicInTrap_kernel( { } );
 
 
     SetGrandCanonicalEnsamble( {0,0} );
@@ -874,7 +875,7 @@ TEST_F( harmonicTrapTest ,mixture_twoBody)
 
     pimc::translateMove translateA(0.1, 2000*M , 0 );
     pimc::translateMove translateB(0.1, 2000*M , 1 );
-    
+
 
     pimc::levyMove levyA(l,0);
     pimc::levyMove levyB(l,1);
@@ -943,11 +944,12 @@ TEST_F( harmonicTrapTest ,mixture_twoBody)
     auto eVO= std::make_shared<pimc::scalarObservable>(eVEst,std::string("eV") );
 
 
-    advanceHeadA.setMaximumParticleNumber( 2 );
-    recedeHeadA.setMinParticleNumber(1);
+    advanceHeadA.setMaximumParticleNumber( 200 );
+    //recedeHeadA.setMinParticleNumber(1);
 
-    advanceHeadB.setMaximumParticleNumber( 2 );
-    recedeHeadB.setMinParticleNumber(1);
+
+    advanceHeadB.setMaximumParticleNumber( 200 );
+    //recedeHeadB.setMinParticleNumber(1);
 
 
 
@@ -1036,7 +1038,6 @@ TEST_F( harmonicTrapTest ,mixture_twoBody)
     
 
     Real r=0;
-
 
     Real magnetizationSquared=0;
 

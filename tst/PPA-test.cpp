@@ -1078,6 +1078,7 @@ TEST(constructor,actionTwoBody)
 
     creator.registerPotential<pimc::gaussianPotential>("gaussian");
 
+
     auto j = R"(
         {
             "kind": "twoBody",
@@ -1090,18 +1091,17 @@ TEST(constructor,actionTwoBody)
             }
         }
             )"_json;
-    
+
     
     Real timeStep = 0.1 ;
     pimc::geometryPBC_PIMC geo(  { TRUNCATE_D(1,1,1) }   );
-
+    
 
     creator.setTimeStep(timeStep);
     creator.setGeometry(geo);
-    
+
 
     auto S = creator.create(j );
 
-    
 
 }

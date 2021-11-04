@@ -5,7 +5,7 @@
     "stepsPerBlock": 1000,
     "correlationSteps": 10,
     "particles": [
-        10
+        1 
     ],
     "maxParticles": [
         20000

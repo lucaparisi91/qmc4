@@ -215,6 +215,30 @@ class particleNumberEstimator : public scalarEstimator
     int _setA;
 };
 
+class magnetizationSquaredEstimator : public scalarEstimator 
+{
+    
+    public:
+    
+    magnetizationSquaredEstimator(int setA,int setB) : _setA(setA), _setB(setB) {}
+    
+    magnetizationSquaredEstimator(const json_t & j) :  magnetizationSquaredEstimator( j["groupA"].get<int>() , j["groupB"].get<int>()  ) {}
+    
+    virtual Real operator()(configurations_t & configurations, firstOrderAction & S) {
+
+        int NA = configurations.nParticles(_setA) ;
+        int NB = configurations.nParticles(_setB) ;
+
+        return (NA - NB)*(NA-NB);
+        }
+        
+    private: 
+    
+    int _setA;
+    int _setB;
+
+};
+
 
 class virialEnergyEstimator : public scalarEstimator
 {

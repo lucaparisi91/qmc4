@@ -8,6 +8,10 @@
 #include "pimcObservablesFactory.h"
 #include <filesystem>
 #include "pimcPotentials.h"
+#include "actionsConstructor.h"
+#include "actionOneBodyConstructor.h"
+#include "actionTwoBodyConstructor.h"
+
 
 namespace fs = std::filesystem;
 
@@ -59,8 +63,6 @@ currentEnsamble(ensamble_t::canonical)
     timeStep = beta/nBeads;
     
     seed = j["seed"].get<int>();
-
-
 
 
     #if DIMENSIONS == 1
@@ -161,6 +163,8 @@ currentEnsamble(ensamble_t::canonical)
 
 }
 
+
+
 void pimcDriver::run()
 {
     // build action 
@@ -185,17 +189,37 @@ void pimcDriver::run()
     #endif
 
     int nChains = std::accumulate(nMaxParticles.begin(),nMaxParticles.end() , 0);
-    
-    actionConstructor sC(geo,timeStep,nChains,nBeads);
-    
-    sC.registerPotential<isotropicHarmonicPotential>();
-    sC.registerPotential<gaussianPotential>();
 
+    auto sOneBodyC = std::make_shared<potentialActionOneBodyConstructor>();
+
+
+    sOneBodyC->setTimeStep(timeStep);
+    sOneBodyC->setGeometry( geo );
+    sOneBodyC->setTimeStep(timeStep);
+
+    sOneBodyC->registerPotential< isotropicHarmonicPotential>("harmonic");
+    sOneBodyC->registerPotential<gaussianPotential>("gaussian");
+
+    actionsConstructor sC;
+    sC.addConstructor("oneBody",sOneBodyC);
+
+    auto sTwoBodyCreator = std::make_shared< actionTwoBodyConstructor >() ;
+
+    sTwoBodyCreator->setTimeStep(timeStep);
+    sTwoBodyCreator->setGeometry(geo);
     
 
+    sTwoBodyCreator->registerPotential<pimc::gaussianPotential>("gaussian");
+    sTwoBodyCreator->registerPotential<pimc::isotropicHarmonicPotential>("harmonic");
+
+    sC.addConstructor("twoBody",sTwoBodyCreator);
+
+
+    //sC.registerPotential<isotropicHarmonicPotential>();
+    //sC.registerPotential<gaussianPotential>();
+    
 
     std::shared_ptr<action> sV=
-    //std::make_shared<pimc::potentialActionOneBody<decltype(hV)> >(timeStep, geo,settings);
     std::make_shared<sumAction>(sC.createActions(j["action"])); 
 
     S = pimc::firstOrderAction(sT, sV);
@@ -216,7 +240,6 @@ void pimcDriver::run()
 
     if (currentEnsamble == ensamble_t::grandCanonical)
     {
-        
         configurations.setChemicalPotential(chemicalPotential);
     }
 

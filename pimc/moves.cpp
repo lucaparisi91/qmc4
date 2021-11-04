@@ -1096,16 +1096,27 @@ bool createWorm::attemptMove(configurations_t & confs , firstOrderAction & S,ran
         confs.copyData( { M , t0 + l } , iChainTail, 0,iChainHead ); 
     }
 
+    bool accept=sPot.checkConstraints(confs,timeRange,iChainTail);
 
-    deltaS+=sPot.evaluate(confs,timeRange,iChainTail);
-    deltaS+=sPot.evaluate(confs,timeRange2,iChainHead);
+    if (accept)
+    {
+        accept=sPot.checkConstraints(confs,timeRange2,iChainHead);
+    }
 
-    auto propRatio = -deltaS + confs.getChemicalPotential(getSet() )*l*timeStep - probabilityInitialPosition(geo,x1) + log(getCoefficientAccept(C,M,lMax ) );
+    if (accept)
+    {
+        deltaS+=sPot.evaluate(confs,timeRange,iChainTail);
+        deltaS+=sPot.evaluate(confs,timeRange2,iChainHead);
+
+        auto propRatio = -deltaS + confs.getChemicalPotential(getSet() )*l*timeStep - probabilityInitialPosition(geo,x1) + log(getCoefficientAccept(C,M,lMax ) );
+
+        accept = sampler.acceptLog(propRatio,randG);
+        
+    }
 
 
-
-    bool accept = sampler.acceptLog(propRatio,randG);
-
+    
+    
     if ( accept)
     {
         
@@ -2077,7 +2088,7 @@ bool closeMove::attemptGrandCanonicalMove(configurations_t & confs , firstOrderA
   /*   std::cout << "Before close" << std::endl;
     confs >> std::cout;
     std::cout << std::endl; */
-    
+
 
     if ( not checkConstraintsOnClose(confs))
     {
