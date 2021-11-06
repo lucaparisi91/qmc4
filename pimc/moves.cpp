@@ -2064,6 +2064,7 @@ bool closeMove::checkConstraintsOnClose(const configurations_t & configurations)
 
         for (auto set : setsMaxParticleNumber)
         {
+            
             N+=nParticlesOnClose(configurations, set );
         };
 

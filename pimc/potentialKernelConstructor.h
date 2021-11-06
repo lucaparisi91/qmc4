@@ -23,7 +23,7 @@ namespace pimc
             {
                 auto V = std::make_shared<V_t>(j["potential"]);
                 return std::make_shared<primitiveApproximationTwoBodyKernel<V_t> >(V);
-
+                
             }
         };
 

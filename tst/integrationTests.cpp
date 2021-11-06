@@ -853,12 +853,12 @@ TEST_F( harmonicTrapTest ,mixture_twoBody)
 
     //SetUpFreeParticleAction();    
     
-    //SetUpNonInteractingHarmonicAction();
-
+    SetUpNonInteractingHarmonicAction();
 
     //SetUpTwoBodyInteractionHarmonic();
     
-    SetUpTwoBodyInteractionHarmonicInTrap_kernel( { {0,0} ,{0,1} , {1,1}} );
+
+    //SetUpTwoBodyInteractionHarmonicInTrap_kernel( { {0,0} ,{0,1} , {1,1}} );
 
 
     //SetUpTwoBodyInteractionHarmonicInTrap_kernel( { } );
@@ -898,11 +898,10 @@ TEST_F( harmonicTrapTest ,mixture_twoBody)
 
     pimc::createWorm createWormB(C, 1, lShort , 1 );
     pimc::deleteWorm removeWormB(C, 1, lShort , 1);
+    
 
-
-
-    //closeA.setAtomNumberOnClose(N1+N2,{0,1});
-    //closeB.setAtomNumberOnClose(N1+N2,{0,1});
+    closeA.setAtomNumberOnClose(N1+N2,{0,1});
+    closeB.setAtomNumberOnClose(N1+N2,{0,1});
 
 
     //open.setStartingBead(7);

@@ -252,7 +252,6 @@ void pimcDriver::run()
         configurations=pimc::pimcConfigurations::loadHDF5(checkPointFile);
     }
 
-    
 
     std::vector<std::shared_ptr<observable> > observables;
     
@@ -261,6 +260,8 @@ void pimcDriver::run()
     obFactory.registerObservable<virialEnergyEstimator>("virialEnergy");
     obFactory.registerObservable<thermodynamicEnergyEstimator>("thermalEnergy");
     obFactory.registerObservable<particleNumberEstimator>("nParticles");
+    obFactory.registerObservable<magnetizationSquaredEstimator>("magnetizationSquared");
+
 
     obFactory.registerObservable<pairCorrelation>("pairCorrelation");
 
@@ -410,7 +411,6 @@ void pimcDriver::run()
                 std::cout << "Energy: " << eO->average() << std::endl;
             }
         }
-             
 
         for (auto & O : observables)
         {
@@ -421,6 +421,7 @@ void pimcDriver::run()
 
         std::cout << "Acceptance ratio: " << success*1./((i+1)*stepsPerBlock*correlationSteps) << std::endl;
 
+        
         tab >> std::cout;
 
         ratioOut << i << " " << nOpen<< " " << nClosed <<std::endl;

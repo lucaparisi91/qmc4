@@ -228,7 +228,7 @@ class magnetizationSquaredEstimator : public scalarEstimator
 
         int NA = configurations.nParticles(_setA) ;
         int NB = configurations.nParticles(_setB) ;
-
+        
         return (NA - NB)*(NA-NB);
         }
         
