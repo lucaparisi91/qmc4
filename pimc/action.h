@@ -646,6 +646,18 @@ class potentialActionTwoBody : public action
     return 0;
     }
 
+
+    virtual Real evaluateTimeDerivative(const configurations_t & configurations,const std::array<int,2> & timeRange, const std::array<int,2> & particleRange)
+    {
+        return evaluate(configurations,timeRange, particleRange)/getTimeStep();
+    }
+
+    virtual Real evaluateTimeDerivative(const configurations_t & configurations)
+    {
+        return evaluate(configurations)/getTimeStep();
+    }
+
+
     virtual Real evaluateCanonical( const configurations_t & configurations, std::array<int,2> timeRange,std::array<int,2> particleRange)
      {
         

@@ -1,5 +1,6 @@
 #include "testConfigurations.h"
 
+
 void configurationsTest::SetRandom(const std::array<Real,DIMENSIONS> & lBox )
     {
         std::uniform_real_distribution<double> uniformDistribution(0.0,1.0);
@@ -117,6 +118,41 @@ void configurationsTest::SetUpTwoBodyInteractionGaussian( Real V0 , Real alpha )
        S= pimc::firstOrderAction(sT,  sV);
 
     }
+
+#include "../pimc/pairProductKernel.h"
+#include "../pimc/propagators.h"
+#include "../pimc/actionTwoBody.h"
+
+void configurationsTest::SetUpTwoBodyInteractionGaussian_pairProductKernel( Real V0 , Real alpha )
+    {
+        std::shared_ptr<pimc::action> sT= std::make_shared<pimc::kineticAction>(timeStep, configurations.nChains() , M  , geo);
+    
+        auto V = pimc::makeIsotropicPotentialFunctor(
+         [V0,alpha](Real r) {return V0*exp(-alpha*r*r) ;} ,
+         [V0,alpha](Real r) {return -V0*2*alpha*r*exp(-alpha*r*r)  ;} );
+
+        using propagator_t=pimc::primitivePropagator<decltype(V)>;
+
+
+        auto G= std::make_shared< propagator_t >(timeStep,V);
+        auto pairKernel = std::make_shared< pimc::pairProductKernel<propagator_t> >( G );
+        pairKernel->setTimeStep(timeStep);
+        pairKernel->setGeometry(geo);
+        auto SPP = std::make_shared<pimc::actionTwoBody>();
+        SPP->setTimeStep(timeStep);
+        SPP->setGeometry(geo);
+        SPP->setKernel(pairKernel);
+        SPP->setSets({0,0});
+
+
+       S= pimc::firstOrderAction(sT,  SPP);
+
+    }
+
+
+
+
+
 
 
 void configurationsTest::SetUpTwoBodyInteractionHarmonicInTrap()
@@ -487,3 +523,4 @@ std::array<Real,getDimensions()> varianceBeadFixedLengths(int iChain , int t0, i
 
     return varianceExpected;
 }
+

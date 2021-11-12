@@ -6,8 +6,8 @@
 #include <random>
 #include <array>
 
-namespace pimc{
 
+namespace pimc{
 
 
 #if DIMENSIONS==1

@@ -299,6 +299,8 @@ public:
 
 
 
+        void setRandom( const  std::array<Real,DIMENSIONS> & lBox,randomGenerator_t & rand);
+
 
 
         const auto & getTags() const  {return _tags;}

@@ -1160,6 +1160,23 @@ int nParticlesOnClose(const pimcConfigurations & configurations, int set)
 
 
 
+void pimcConfigurations::setRandom( const std::array<Real,DIMENSIONS> & lBox,randomGenerator_t & randG)
+{
+    std::uniform_real_distribution<double> uniformDistribution(0.0,1.0);
+
+    auto & data=dataTensor();
+
+    for (int t=0;t<data.dimensions()[2];t++)
+        for (int i=0;i<data.dimensions()[0];i++)
+            for  (int d=0;d<DIMENSIONS;d++)
+            {
+                data(i,d,t)=(uniformDistribution(randG)-0.5 )*lBox[d];
+            }
+    
+    fillHeads();
+
+}
+    
 };
 
 

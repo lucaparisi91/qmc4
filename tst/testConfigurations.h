@@ -46,7 +46,9 @@ protected:
 
     void SetUpTwoBodyInteractionHarmonicInTrap(const std::vector<std::pair<int,int> > & sets );
 
+    void SetUpTwoBodyInteractionGaussian_pairProductKernel( Real V0 , Real alpha );
 
+    
 
     void SetUpNonInteractingHarmonicAction(int order=2);
     

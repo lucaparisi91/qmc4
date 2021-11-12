@@ -41,7 +41,6 @@ class pairProductTest : public configurationsTest
 
         auto kernel =std::make_shared<propagator_t>(timeStep,radius);
         auto pairKernel = std::make_shared<pimc::pairProductKernel<propagator_t> >(kernel);
-
     
         auto S = std::make_shared<pimc::actionTwoBody>();
         S->setTimeStep(timeStep);
@@ -326,6 +325,7 @@ TEST( kernels, pairProductKernel )
 
     #endif
 }
+
 
 TEST( kernels, primitiveApproximationTwoBodyKernel )
 {   
@@ -1031,12 +1031,12 @@ TEST_F( pairProductTest ,force_caoBerne )
 #endif
 
 
-#include "../pimc/potentialKernelConstructor.h"
+#include "../pimc/kernelConstructor.h"
 #include "../pimc/pimcPotentials.h"
 
 TEST(constructor,kernels_primitiveApproximation)
 {
-    pimc::primitiveApproximationTwoBodyKernelConstructor creator;
+    pimc::kernelConstructor creator;
 
 
 
@@ -1067,12 +1067,12 @@ TEST(constructor,kernels_primitiveApproximation)
 
     auto kernel = creator.create(j );
 
+
 }
 
 #include "../pimc/actionTwoBodyConstructor.h"
 
-
-TEST(constructor,actionTwoBody)
+TEST(constructor,actionTwoBody_gaussian)
 {
     pimc::actionTwoBodyConstructor creator;
 
@@ -1105,3 +1105,38 @@ TEST(constructor,actionTwoBody)
 
 
 }
+
+
+#if DIMENSIONS == 3
+
+TEST(constructor,actionTwoBody_caoBerne)
+{
+    pimc::actionTwoBodyConstructor creator;
+
+    creator.registerGreenFunction<pimc::caoBernePropagator>("caoBerne");
+
+    auto j = R"(
+        {
+            "kind": "twoBody",
+            "groupA": 0,
+            "groupB": 0,
+            "greenFunction": {
+                "kind": "caoBerne",
+                "a": 0.1
+            }
+        }
+            )"_json;
+
+    Real timeStep = 0.1 ;
+    pimc::geometryPBC_PIMC geo(  { TRUNCATE_D(1,1,1) }   );
+
+    creator.setTimeStep(timeStep);
+    creator.setGeometry(geo);
+
+    auto S = creator.create(j );
+
+}
+
+#endif
+
+

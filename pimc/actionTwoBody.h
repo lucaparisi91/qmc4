@@ -23,6 +23,7 @@ class actionTwoBody : public action
         _kernel=kernel_;
         setGeometry(_kernel->geometry() );
     }
+    
 
     auto & kernel(){return _kernel;}
     const auto & kernel()const {return _kernel;}
@@ -59,7 +60,6 @@ class actionTwoBody : public action
                         configurations.getGroups()[setA].range()
                         );
     }
-
     
 
     virtual void addGradient(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange,  Eigen::Tensor<Real,3> & gradientBuffer);

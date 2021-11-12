@@ -597,3 +597,94 @@ TEST_F(testAction,twoBody)
 
     
 }
+
+
+#include "../pimc/primitivePropagator.h"
+#include "../pimc/pairProductKernel.h"
+
+
+
+TEST_F(testAction, pairApproximation_primitive)
+{
+    int N=2;
+    int M=10;
+    Real Beta = 1;
+
+    Real timeStep=Beta/M;
+
+    SetSeed(135);
+    pimc::geometryPBC_PIMC geo(10,10,10);
+
+    pimc::particleGroup groupA{ 0 , N-1, N - 1 , 1.0};
+    pimc::pimcConfigurations configurations(M , getDimensions() , {groupA});
+
+    configurations.dataTensor().setRandom();
+    configurations.fillHeads();
+
+
+    auto & data = configurations.dataTensor();
+    Real alpha=1;
+    Real V0=1;
+
+    auto V = pimc::makeIsotropicPotentialFunctor(
+         [V0, alpha](Real r) {return V0* exp(-alpha*r*r) ;} ,
+         [V0 , alpha ](Real r) {return -2*V0*alpha*r*exp(-alpha*r*r) ;} 
+         );    
+
+    auto kernel = std::make_shared<                         pimc::primitiveApproximationTwoBodyKernel<decltype(V) >  >(std::make_shared<decltype(V)>(V));
+
+    kernel->setTimeStep(timeStep);
+    kernel->setGeometry(geo);
+    auto sV2B=std::make_shared<pimc::actionTwoBody>();
+    sV2B->setSets({0,0});
+    sV2B->setKernel(kernel);
+    sV2B->setTimeStep(timeStep);
+    sV2B->setGeometry(geo);
+
+    using propagator_t=pimc::primitivePropagator<decltype(V)>;
+
+
+    auto G= std::make_shared< propagator_t >(timeStep,V);
+    auto pairKernel = std::make_shared< pimc::pairProductKernel<propagator_t> >( G );
+    pairKernel->setTimeStep(timeStep);
+    pairKernel->setGeometry(geo);
+    auto SPP = std::make_shared<pimc::actionTwoBody>();
+    SPP->setTimeStep(timeStep);
+    SPP->setGeometry(geo);
+    SPP->setKernel(pairKernel);
+    SPP->setSets({0,0});
+
+    auto sum = sV2B->evaluate(configurations);
+    auto sumPP = SPP->evaluate(configurations);
+
+    ASSERT_NEAR(sum,sumPP,1e-6);
+
+    Eigen::Tensor<Real,3> forces(N,DIMENSIONS,M+1);
+    Eigen::Tensor<Real,3> forces2(N,DIMENSIONS,M+1);
+
+    forces.setConstant(0);
+    forces2.setConstant(0);
+
+    sV2B->addGradient(configurations,{0,M-1},{0,N-1},forces);
+    SPP->addGradient(configurations,{0,M-1},{0,N-1},forces2);
+    
+    for ( int i=0;i<N;i++)
+    {
+        for(int d=0;d< DIMENSIONS ;d++)
+        {
+            forces(i,d,0)+=forces(i,d,M);
+            forces2(i,d,0)+=forces2(i,d,M);
+        }
+    }
+
+    for(int t=0;t<M;t++)
+        for ( int i=0;i<N;i++)
+        {
+            for(int d=0;d< DIMENSIONS ;d++)
+            {
+                ASSERT_NEAR( forces(i,d,t) , forces2(i,d,t) ,1e-6) ;
+            
+            }
+        }
+
+}

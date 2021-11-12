@@ -11,7 +11,7 @@
 #include "actionsConstructor.h"
 #include "actionOneBodyConstructor.h"
 #include "actionTwoBodyConstructor.h"
-
+#include "propagators.h"
 
 namespace fs = std::filesystem;
 
@@ -212,6 +212,11 @@ void pimcDriver::run()
     sTwoBodyCreator->registerPotential<pimc::gaussianPotential>("gaussian");
     sTwoBodyCreator->registerPotential<pimc::isotropicHarmonicPotential>("harmonic");
 
+
+    sTwoBodyCreator->registerGreenFunction<pimc::caoBernePropagator>("caoBerne");
+
+
+
     sC.addConstructor("twoBody",sTwoBodyCreator);
 
 
@@ -244,7 +249,30 @@ void pimcDriver::run()
     }
 
     // sets a random initial condition
-    configurations.dataTensor().setRandom();
+    std::cout << "Generating initial configurations" << std::endl;
+
+    
+    configurations.setRandom( { geo.getLBox(0) ,geo.getLBox(1),geo.getLBox(2) } , randG );
+
+    int iAttemptInitialCondition;
+
+    while (not S.checkConstraints(configurations) )
+    {
+        configurations.setRandom( { geo.getLBox(0) ,geo.getLBox(1),geo.getLBox(2) } , randG );
+        iAttemptInitialCondition++;
+
+        if (iAttemptInitialCondition > 100000)
+        {
+            throw std::runtime_error("Max iteration reached in generating the initial condition");
+        }
+    }
+    
+
+    
+
+    
+
+    
     configurations.fillHeads();
 
     if (loadCheckPoint )
@@ -330,9 +358,6 @@ void pimcDriver::run()
     std::ofstream ratioOut;
 
     ratioOut.open("nOpenClosed.dat");
-
-    
-
     
     if ( ! fs::exists("configurations") ) 
     { 

@@ -10,6 +10,31 @@ void harmonicTrapTest::SetUpTwoBodyInteractionHarmonicInTrap_kernel()
     SetUpTwoBodyInteractionHarmonicInTrap_kernel({ {0,0} } );
 }
 
+void harmonicTrapTest::SetUpTwoBodyInteractionHarmonicInTrap_pairProductKernel(  )
+    {
+        std::shared_ptr<pimc::action> sT= std::make_shared<pimc::kineticAction>(timeStep, configurations.nChains() , M  , geo);
+
+        auto V = pimc::makeIsotropicPotentialFunctor(
+         [](Real r) {return 0.5*r*r ;} ,
+         [](Real r) {return r  ;} );
+
+
+        using propagator_t=pimc::primitivePropagator<decltype(V)>;
+
+        auto G= std::make_shared< propagator_t >(timeStep,V);
+        auto pairKernel = std::make_shared< pimc::pairProductKernel<propagator_t> >( G );
+        pairKernel->setTimeStep(timeStep);
+        pairKernel->setGeometry(geo);
+        auto SPP = std::make_shared<pimc::actionTwoBody>();
+        SPP->setTimeStep(timeStep);
+        SPP->setGeometry(geo);
+        SPP->setKernel(pairKernel);
+        SPP->setSets({0,0});
+
+        S= pimc::firstOrderAction(sT,  SPP);
+
+    }
+
 void harmonicTrapTest::SetUpTwoBodyInteractionHarmonicInTrap_kernel(const std::vector<std::pair<int,int> > & sets )
 {
     std::shared_ptr<pimc::action> sT= std::make_shared<pimc::kineticAction>(timeStep, configurations.nChains() , M  , geo);
@@ -182,7 +207,7 @@ void twoBodyTest::SetUpCaoBernePropagatorTrapped(Real radius,Real omega)
          [omega](Real r) {return omega*(r*r) ;} ,
          [omega](Real r) {return 2*omega*r  ;} );
     
-     auto  sOneBody=std::make_shared<pimc::potentialActionOneBody<decltype(V)> >(timeStep,V ,geo,order);
+     auto  sOneBody=std::make_shared<pimc::potentialActionOneBody<decltype(V)> >(timeStep,V ,geo,0,order);
 
 
 
@@ -225,7 +250,9 @@ void twoBodyTest::sample()
     //SetUpTwoBodyInteractionHarmonic();
     SetUpTwoBodyInteractionHarmonicInTrap();
 
-    SetGrandCanonicalEnsamble( 2  );
+
+
+    SetGrandCanonicalEnsamble( 20 );
     SetSeed( time(NULL) );
     SetRandom({TRUNCATE_D(0.4,0.4,0.4)});
 
@@ -1103,7 +1130,7 @@ TEST_F( harmonicTrapTest ,mixture_twoBody)
             }
 
             n+=1;
-
+            
         }
 
        if ( nShort == nTrials  )
@@ -1172,32 +1199,43 @@ TEST_F( harmonicTrapTest ,mixture_twoBody)
 
         tab >> std::cout;
         tab.resetCounters();
-
     }
-    
+
 }
 
-
-#if DIMENSIONS == 3
 TEST_F( harmonicTrapTest, caoBernePropagator )
 {
     Real C=1e-3;
     int nBeads=10;
-
-    int N=2;
+    
+    int N=4;
     Real beta=1;
-    Real a=0.1;
+    Real a=2;
 
+    std::array<double,DIMENSIONS> lBox = {TRUNCATE_D(10,10,10) };
 
-    std::array<double,DIMENSIONS> lBox = {TRUNCATE_D(1,1,1)};
 
     SetUp(N,nBeads,beta , lBox );
 
-    //SetUpTwoBodyInteractionHarmonicInTrap();
-    //SetUpTwoBodyInteractionGaussian_kernel(10,a);
+
+    //SetUpTwoBodyInteractionHarmonicInTrap_kernel();
+
+    //SetUpTwoBodyInteractionHarmonicInTrap_pairProductKernel();
+
+    //SetUpTwoBodyInteractionGaussian(1,a);
+
+
+    //SetUpTwoBodyInteractionGaussian_pairProductKernel( 10 , a );
+
+
+    //SetUpTwoBodyInteractionGaussian_kernel(10, a);
+    //SetUpTwoBodyInteractionGaussian( 10 , a );
+
     SetUpCaoBernePropagator(a);
 
     //SetUpCaoBernePropagatorTrapped(a);
+
+    //SetUpNonInteractingHarmonicAction();
 
     //SetUpFreeParticleAction();
     //SetUpTwoBodyInteractionHarmonicInTrap_kernel();
@@ -1207,10 +1245,9 @@ TEST_F( harmonicTrapTest, caoBernePropagator )
     SetSeed( time( NULL)  ) ;
     SetRandomMinimumDistance( a, lBox );
 
-
     int t0=7;
-    int l = int( 0.6* nBeads);
-    int lShort=3;
+    int l = int( 0.4* nBeads);
+    int lShort=0.2*nBeads;
     int lOpen=lShort;
 
     pimc::translateMove translate(0.1, 2000*M , 0 );
@@ -1252,20 +1289,21 @@ TEST_F( harmonicTrapTest, caoBernePropagator )
 
 // involves levy reconstruction
     pimc::nConnectedChains nConnectedChains;
-    tab.push_back(&levy,0.8,pimc::sector_t::diagonal,"levy");
-    //tab.push_back(&translate,0.2,pimc::sector_t::diagonal,"translate");
-    //tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
+    tab.push_back(&levy,0.7,pimc::sector_t::diagonal,"levy");
+    tab.push_back(&translate,0.2,pimc::sector_t::diagonal,"translate");
+    tab.push_back(&open,0.1,pimc::sector_t::diagonal,"open");
 
     //tab.push_back(&createWorm,0.1,pimc::sector_t::diagonal,"createWorm");
-    
-    tab.push_back(&levy,0.6,pimc::sector_t::offDiagonal,"levy");
+
+    tab.push_back(&levy,0.5,pimc::sector_t::offDiagonal,"levy");
     tab.push_back(&translate,0.1,pimc::sector_t::offDiagonal,"translate");
     tab.push_back(&close,0.1,pimc::sector_t::offDiagonal,"close");
     tab.push_back(&moveHeadMove,0.1,pimc::sector_t::offDiagonal,"moveHead");
     tab.push_back(&moveTailMove,0.1,pimc::sector_t::offDiagonal,"moveTail");
     //tab.push_back(&advanceHead,0.05,pimc::sector_t::offDiagonal,"advanceHead");
     //tab.push_back(&recedeHead,0.05,pimc::sector_t::offDiagonal, "recedeHead");
-    //tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
+    tab.push_back(&swap,0.1,pimc::sector_t::offDiagonal,"swap");
+
 
     int tTail=4;
     int lWormShort=4;
@@ -1374,16 +1412,10 @@ TEST_F( harmonicTrapTest, caoBernePropagator )
 
        tab >> std::cout;
        tab.resetCounters();
-       configurations.save( "configurations" + std::to_string(i) , "csv");
+       //configurations.save( "configurations" + std::to_string(i) , "csv");
 
     }
     
 }
-
-
-
-
-#endif
-
 
 
