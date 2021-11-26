@@ -5,7 +5,6 @@
 #include "traits.h"
 #include "kernels.h"
 
-
 namespace pimc
 {
     template<class greenFunction_t>

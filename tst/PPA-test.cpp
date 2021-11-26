@@ -301,6 +301,7 @@ TEST( greenFunction , caoBerne )
     
 }
 
+
 TEST( kernels, pairProductKernel )
 {   
     int N=10;
@@ -683,6 +684,7 @@ Real minimum2BDistance(const Eigen::Tensor<Real,3> & data,const range_t & timeRa
 
 
 #if DIMENSIONS == 3
+
 
 TEST_F( configurationsTest , pairProduct )
 {   

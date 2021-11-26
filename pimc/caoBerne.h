@@ -124,3 +124,40 @@ namespace pimc
     Real a;
     };
 }
+
+
+
+
+namespace pimc
+{
+    class caoBernePropagatorIsotropic
+    {
+    public:
+
+        caoBernePropagatorIsotropic(Real timeStep, Real a_) : tau(timeStep),a(a_),D(1) {}
+
+
+        Real logEvaluate( Real r1, Real r2, Real cosTeta ) const
+        {
+
+             Real value =  
+                        1 - (a*(r1 + r2) - a*a)/(r1*r2) *
+                        exp(- 
+                            (r1*r2 + a*a -a*(r1+r2) )*(1+cosTeta)/(2*D*tau)
+                        );
+            
+
+            return -log(value);    
+
+        }
+
+
+
+
+    private:
+
+    Real D;
+    Real tau;
+    Real a;
+    };
+}

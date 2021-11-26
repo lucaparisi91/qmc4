@@ -25,6 +25,35 @@ class geometryPBC_PIMC : public geometryPBC
 
 };
 
+
+struct geometry_PBCStorage
+{
+    geometry_PBCStorage(){}
+    geometry_PBCStorage(std::array<Real,DIMENSIONS> lBox)  {
+        setLbox(lBox);
+    }
+
+    Real pbc( Real x, int d) const { if (x >= _lBoxInverseHalf[d] ) { x-=_lBox[d]; } else if( x<= -_lBoxInverseHalf[d]) {x+=_lBox[d];} ; return x; }
+
+    Real difference(Real x,int d) const  {return pbc(x,d);}
+
+    void setLbox( std::array<Real,DIMENSIONS> lBox_) {
+        _lBox=lBox_;
+        for(int d=0;d<DIMENSIONS;d++)
+        {
+            _lBoxInverseHalf[d]=0.5*1./(_lBox[d]);
+        }
+    }
+
+
+    private:
+
+    std::array<Real,DIMENSIONS> _lBox;
+    std::array<Real,DIMENSIONS> _lBoxInverseHalf;
+
+};
+
+
 };
 
 #endif
