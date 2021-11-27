@@ -3,8 +3,199 @@ namespace pimc
 {
 
 
+Real twoBodyEvaluationPolicy::evaluateTriangular(
+        const configurations_t & configurations,
+        const  std::array<int,2> & timeRange, 
+        const std::array<int,2> & rangeA, 
+        const std::array<int,2> & rangeB
+    ) const
+{
+    if (configurations.getEnsamble() == ensamble_t::canonical)
+        {
+            return _kernel->evaluateTriangular(configurations.dataTensor(),timeRange,rangeA,rangeB);
+        }
+        else
+        {
+            return _kernel->evaluateTriangular(configurations.dataTensor(),timeRange,rangeA,rangeB,configurations.getTags() );
+        }
+}
 
 
+Real twoBodyEvaluationPolicy::evaluateRectangular(
+        const configurations_t & configurations,
+        const  std::array<int,2> & timeRange, 
+        const std::array<int,2> & rangeA, 
+        const std::array<int,2> & rangeB
+    ) const
+{
+    if (configurations.getEnsamble() == ensamble_t::canonical)
+        {
+            return _kernel->evaluateRectangular(configurations.dataTensor(),timeRange,rangeA,rangeB);
+        }
+        else
+        {
+            return _kernel->evaluateRectangular(configurations.dataTensor(),timeRange,rangeA,rangeB,configurations.getTags() );
+        }
+}
+
+
+Real twoBodyEvaluationPolicy::evaluateTimeDerivativeRectangular(
+        const configurations_t & configurations,
+        const  std::array<int,2> & timeRange, 
+        const std::array<int,2> & rangeA, 
+        const std::array<int,2> & rangeB
+    ) const
+    {
+        if (configurations.getEnsamble() == ensamble_t::canonical or (not configurations.isOpen()) )
+        {
+            return _kernel->evaluateTimeDerivativeRectangular(configurations.dataTensor(),timeRange,rangeA,rangeB);
+        }
+        else
+        {
+            throw std::runtime_error("evaluateTimeDerivativeRectangular not implemented for a grandCanonical open ensamble");
+        }
+
+    }
+
+
+Real twoBodyEvaluationPolicy::evaluateTimeDerivativeTriangular(
+        const configurations_t & configurations,
+        const  std::array<int,2> & timeRange, 
+        const std::array<int,2> & rangeA, 
+        const std::array<int,2> & rangeB
+    ) const
+    {
+        if (configurations.getEnsamble() == ensamble_t::canonical or (not configurations.isOpen()) )
+        {
+            return _kernel->evaluateTimeDerivativeTriangular(configurations.dataTensor(),timeRange,rangeA,rangeB);
+        }
+        else
+        {
+            throw std::runtime_error("evaluateTimeDerivativeRectangular not implemented for a grandCanonical open ensamble");
+        }
+
+    }
+
+
+
+ Real twoBodySkippingEvaluationPolicy::evaluateTriangular(
+        const configurations_t & configurations,
+        const  std::array<int,2> & timeRange, 
+        const std::array<int,2> & rangeA, 
+        const std::array<int,2> & rangeB
+    ) const
+    {
+        Real sum=0;
+
+        if (configurations.isOpen(setA()) )
+        {
+            std::array<int,2> wormChains;
+            int nWorms=0;
+
+            wormChains[0]=configurations.getGroups()[setA()].heads[0];
+            wormChains[1]=configurations.getGroups()[setA()].tails[0];
+
+            if (wormChains[0] > wormChains[1] )
+            {
+                std::swap(wormChains[0],wormChains[1]);
+            }
+            if (wormChains[0]==wormChains[1])
+            {
+                nWorms=1;
+            }
+            else
+            {
+                nWorms=2;
+            }
+
+            int j0=rangeB[0];
+
+            for( int i=0 ;i< nWorms ;i++ )
+            {
+                int iWorm = wormChains[i];
+                auto tHead=configurations.getChain(iWorm).head;
+                auto tTail=configurations.getChain(iWorm).tail;
+                
+                auto rangeBB = intersectRanges(rangeB,{j0,iWorm-1});
+                rangeBB=intersectRanges(rangeBB,{rangeB[0],rangeA[0]-1});
+                
+
+
+
+                sum+=kernel().evaluateRectangular( configurations.dataTensor(), timeRange,rangeA, rangeBB);
+                
+
+                if (iWorm < rangeA[0])
+                {
+                    sum+=kernel().evaluateRectangular( configurations.dataTensor(), {std::max(timeRange[0],tTail+1), std::min(tHead,timeRange[1])},rangeA, {iWorm,iWorm});
+                }
+
+                j0=iWorm+1;
+            }
+
+            sum+=kernel().evaluateTriangular( configurations.dataTensor(), timeRange,rangeA, {j0,rangeB[1]});
+
+
+        }
+        else
+        {
+              sum+=kernel().evaluateTriangular( configurations.dataTensor(), timeRange,rangeA, rangeB);
+        }
+
+        
+    return sum;
+    } 
+
+/*
+Real twoBodySkippingEvaluationPolicy::evaluateRectangular(
+        const configurations_t & configurations,
+        const  std::array<int,2> & timeRange, 
+        const std::array<int,2> & rangeA, 
+        const std::array<int,2> & rangeB
+    ) const
+    {
+        Real sum=0;
+
+        if (configurations.isOpen(setA()) )
+        {
+            std::array<int,2> wormChains;
+
+            wormChains[0]=configurations.getGroups()[setA()].heads[0];
+            wormChains[1]=configurations.getGroups()[setA()].tails[0];
+
+            if (wormChains[0] > wormChains[1] )
+            {
+                std::swap(wormChains[0],wormChains[1]);
+            }
+
+            int j0=rangeB[0];
+
+            for(auto iWorm : wormChains )
+            {
+               
+                auto tHead=configurations.getChain(iWorm).head;
+                auto tTail=configurations.getChain(iWorm).tail;
+                
+                auto rangeBB = intersectRanges(rangeB,{j0,iWorm-1});
+                sum+=kernel().evaluateRectangular( configurations.dataTensor(), {timeRange[0], std::min(tTail,timeRange[1])},rangeA, rangeBB);
+                
+                sum+=kernel().evaluateRectangular( configurations.dataTensor(), {std::max(timeRange[0],tHead+1), timeRange[1]},rangeA, rangeBB);
+
+                rangeBB = intersectRanges(rangeB,{j0,iWorm});
+
+                sum+=kernel().evaluateRectangular( configurations.dataTensor(), {std::max(timeRange[0],tTail+1), std::min(tHead,timeRange[1])},rangeA, rangeBB);
+
+
+                j0=iWorm+1;
+            }
+
+        }
+
+        
+    return sum;
+    }
+
+*/
 
 Real actionTwoBody::evaluate(const configurations_t & configurations,const std::array<int,2> & timeRange_, const range_t & particleRange )
     {
@@ -22,10 +213,10 @@ Real actionTwoBody::evaluate(const configurations_t & configurations,const std::
 
         if (setA == setB)
         {
-             auto range=intersectRanges(particleRange, groupA.range());
+            auto range=intersectRanges(particleRange, groupA.range());
 
-            sum+=_kernel->evaluateTriangular(configurations , timeRange, range , groupA.range() );
-            sum+=_kernel->evaluateRectangular(configurations , timeRange, {range[1]+1,groupA.range()[1]} , range );
+            sum+=evaluationPolicy->evaluateTriangular(configurations , timeRange, range , groupA.range() );
+            sum+=evaluationPolicy->evaluateRectangular(configurations , timeRange, {range[1]+1,groupA.range()[1]} , range );
 
         }
         else
@@ -33,8 +224,9 @@ Real actionTwoBody::evaluate(const configurations_t & configurations,const std::
             auto rangeA = intersectRanges(  groupA.range(),particleRange );
             auto rangeB = intersectRanges(  groupB.range(),particleRange );
 
-            sum+=_kernel->evaluateRectangular(configurations , timeRange, rangeA , groupB.range() );
-            sum+=_kernel->evaluateRectangular(configurations , timeRange, rangeB , groupA.range() );
+            sum+=evaluationPolicy->evaluateRectangular(configurations , timeRange, rangeA , groupB.range() );
+            sum+=evaluationPolicy->evaluateRectangular(configurations , timeRange, rangeB , groupA.range() );
+
 
         }
 
@@ -60,8 +252,8 @@ Real actionTwoBody::evaluateTimeDerivative(const configurations_t & configuratio
         {
              auto range=intersectRanges(particleRange, groupA.range());
 
-            sum+=_kernel->evaluateTimeDerivativeTriangular(configurations , timeRange, range , groupA.range() );
-            sum+=_kernel->evaluateTimeDerivativeRectangular(configurations , timeRange, {range[1]+1,groupA.range()[1]} , range );
+            sum+=evaluationPolicy->evaluateTimeDerivativeTriangular(configurations , timeRange, range , groupA.range() );
+            sum+=evaluationPolicy->evaluateTimeDerivativeRectangular(configurations , timeRange, {range[1]+1,groupA.range()[1]} , range );
 
         }
         else
@@ -69,13 +261,14 @@ Real actionTwoBody::evaluateTimeDerivative(const configurations_t & configuratio
              auto rangeA = intersectRanges(  groupA.range(),particleRange );
             auto rangeB = intersectRanges(  groupB.range(),particleRange );
 
-            sum+=_kernel->evaluateTimeDerivativeRectangular(configurations , timeRange, rangeA , groupB.range() );
-            sum+=_kernel->evaluateTimeDerivativeRectangular(configurations , timeRange, rangeB , groupA.range() );
+            sum+=evaluationPolicy->evaluateTimeDerivativeRectangular(configurations , timeRange, rangeA , groupB.range() );
+            sum+=evaluationPolicy->evaluateTimeDerivativeRectangular(configurations , timeRange, rangeB , groupA.range() );
 
         }
 
         return sum;
     }
+
 
 
 

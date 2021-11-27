@@ -791,7 +791,12 @@ TEST_F( pairProductTest , evaluationSingleComponent )
 
     range_t timeRange {0,nBeads-1};
 
-    auto sum = kernel->evaluateTriangular(configurations,timeRange,particleRange,{0,N-1});
+    pimc::twoBodyEvaluationPolicy evaluationPolicy;
+    evaluationPolicy.setKernel(kernel);
+
+
+
+    auto sum = evaluationPolicy.evaluateTriangular(configurations,timeRange,particleRange,{0,N-1});
     
     const auto & data = configurations.dataTensor();
 
@@ -799,16 +804,16 @@ TEST_F( pairProductTest , evaluationSingleComponent )
 
     ASSERT_NEAR(sum,sumCheck,TOL);
 
-    sum = kernel->evaluateRectangular(configurations,timeRange,particleRange,particleRange2);
+    sum = evaluationPolicy.evaluateRectangular(configurations,timeRange,particleRange,particleRange2);
     sumCheck= evaluateRectangularKernel(G,timeRange ,particleRange, particleRange2);
 
     ASSERT_NEAR(sum,sumCheck,TOL);
 
-    sum = kernel->evaluateTimeDerivativeRectangular(configurations,timeRange,particleRange,particleRange2);
+    sum = evaluationPolicy.evaluateTimeDerivativeRectangular(configurations,timeRange,particleRange,particleRange2);
     sumCheck= evaluateTimeDerivativeRectangularKernel(G,timeRange ,particleRange, particleRange2);
     ASSERT_NEAR(sum,sumCheck,TOL);
 
-    sum = kernel->evaluateTimeDerivativeTriangular(configurations,timeRange,particleRange,{0,N-1});
+    sum = evaluationPolicy.evaluateTimeDerivativeTriangular(configurations,timeRange,particleRange,{0,N-1});
     sumCheck= evaluateTimeDerivativeTriangularKernel(G,timeRange ,particleRange, 0);
 
     ASSERT_NEAR(sum,sumCheck,TOL);

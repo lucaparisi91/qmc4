@@ -38,7 +38,6 @@ Real minimumDistance( const pimc::configurations_t & confs, const std::array<int
     return rMin;
 }
 
-
 TEST_F( configurationsTest , caoBerne_timing )
 {   
     int N=20;
@@ -160,4 +159,88 @@ TEST_F( configurationsTest , caoBerne_timing )
     std::cout << sum2 << std::endl;
 
 
+}
+
+
+
+TEST_F( configurationsTest , caoBerneGrandCanonicalTiming )
+{   
+    int N=100;
+    Real beta = 1;
+    int nBeads= 80;
+    //int seed = time(NULL);
+    int seed = 14;
+    SetUp({N},nBeads,1.0,{2,2,2});
+    SetSeed(seed);
+    SetGrandCanonicalEnsamble(0);
+    SetRandom();
+
+    Real radius=0.01;
+
+     auto G = std::make_shared<pimc::caoBernePropagator>(beta/nBeads,radius);
+
+     
+    
+     auto kernel = std::make_shared<pimc::pairProductKernel<pimc::caoBernePropagator> >(G);
+
+     kernel->setGeometry(geo);
+     kernel->setTimeStep(beta/nBeads);
+     
+    auto S2B= std::make_shared<pimc::actionTwoBody>();
+    S2B->setKernel(kernel);
+    S2B->setTimeStep(beta/M);
+    S2B->setSets( {0,0});
+    S2B->setGeometry(geo);
+    S2B->setMinimumDistance(radius);
+    
+
+    auto S2B_skipped= std::make_shared<pimc::actionTwoBody>();
+    auto policy=std::make_shared<pimc::twoBodySkippingEvaluationPolicy>();
+    S2B_skipped->setTwoBodyEvaluationPolicy(policy);
+    S2B_skipped->setKernel(kernel);
+    S2B_skipped->setTimeStep(beta/M);
+    S2B_skipped->setSets( {0,0});
+    S2B_skipped->setGeometry(geo);
+    S2B_skipped->setMinimumDistance(radius);
+    
+
+
+
+    while (not S2B->checkConstraints(configurations,{0,   nBeads-1},configurations.getGroups()[0].range() ) )
+    {
+        SetRandom();
+    } ;
+
+    int tTail=4, tHead=30;
+
+    configurations.setHeadTail(3,tHead,tTail);
+    //configurations.setHeadTail(8,tHead,-1);
+    //configurations.join(3,8);
+    configurations.fillHeads();
+
+    Real sum0=0;
+    Real dt=0;
+    int nTrials=1000;
+    int iChain=6;
+     for(int i=0;i<nTrials;i++)
+    {
+        Real t0= MPI_Wtime();
+        sum0+=S2B->evaluate(configurations,{10,30} , {iChain,iChain} );
+        Real t1= MPI_Wtime();
+        dt+=t1-t0;
+    }
+    std::cout << dt << std::endl;
+ 
+    Real sum1=0;
+    dt=0;
+    for(int i=0;i<nTrials;i++)
+    {
+        Real t0= MPI_Wtime();
+        sum1+=S2B_skipped->evaluate(configurations,{10,30} , {iChain,iChain} );
+        Real t1= MPI_Wtime();
+        dt+=t1-t0;
+    }
+    std::cout << dt << std::endl;
+
+    ASSERT_NEAR(sum0,sum1,1e-9);
 }

@@ -88,7 +88,4 @@ Real kineticAction::evaluate( const pimcConfigurations_t & configurations )
 }   
 
 
-
-
-
 }

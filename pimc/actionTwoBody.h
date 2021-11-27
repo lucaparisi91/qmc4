@@ -10,28 +10,122 @@ namespace pimc
 //using configurations_t = pimcConfigurations;
 
 
+struct twoBodyEvaluationPolicy
+{
+
+     virtual Real evaluateTriangular(
+        const configurations_t & configurations,
+        const  std::array<int,2> & timeRange, 
+        const std::array<int,2> & rangeA, 
+        const std::array<int,2> & rangeB
+    ) const ;
+
+     virtual Real evaluateRectangular(
+        const configurations_t & configurations,
+        const  std::array<int,2> & timeRange, 
+        const std::array<int,2> & rangeA, 
+        const std::array<int,2> & rangeB
+    ) const ;
+
+     virtual Real evaluateTimeDerivativeTriangular(
+        const configurations_t & configurations,
+        const  std::array<int,2> & timeRange, 
+        const std::array<int,2> & rangeA, 
+        const std::array<int,2> & rangeB
+    ) const ;
+
+     virtual Real evaluateTimeDerivativeRectangular(
+        const configurations_t & configurations,
+        const  std::array<int,2> & timeRange, 
+        const std::array<int,2> & rangeA, 
+        const std::array<int,2> & rangeB
+    ) const  ;
+
+
+    void setKernel(std::shared_ptr<kernel2B> kernel_) {_kernel=kernel_;}
+
+    const auto & kernel() const {return *_kernel;}
+
+    auto & kernel(){return *_kernel;}
+
+    auto setA() const {return _setA;}
+    auto setB() const  {return _setB;}
+    
+    void setSets(const std::array<int,2> & sets){
+        _setA=sets[0];
+        _setB=sets[0];
+
+        
+    }
+    private:
+
+    std::shared_ptr<kernel2B> _kernel;
+
+    private:
+
+    int _setA;
+    int _setB;
+
+
+};
+
+struct twoBodySkippingEvaluationPolicy : public twoBodyEvaluationPolicy
+{
+
+
+
+     virtual Real evaluateTriangular(
+        const configurations_t & configurations,
+        const  std::array<int,2> & timeRange, 
+        const std::array<int,2> & rangeA, 
+        const std::array<int,2> & rangeB
+    ) const override ;
+    
+/*
+    virtual Real evaluateRectangular(
+        const configurations_t & configurations,
+        const  std::array<int,2> & timeRange, 
+        const std::array<int,2> & rangeA, 
+        const std::array<int,2> & rangeB
+    ) const override;
+*/
+    
+};
+
+
+
 class actionTwoBody : public action
 {
     using range_t = std::array<int,2>;
 
     public:
     actionTwoBody() :
-    _distanceMinimumConstraint(false),rMin(0)  {}
+    _distanceMinimumConstraint(false),rMin(0)  {
+        evaluationPolicy=std::make_shared<twoBodyEvaluationPolicy>();
+
+    }
 
     void setKernel( std::shared_ptr<kernel2B> kernel_)
     {
         _kernel=kernel_;
         setGeometry(_kernel->geometry() );
+        evaluationPolicy->setKernel(kernel_);
     }
     
 
     auto & kernel(){return _kernel;}
     const auto & kernel()const {return _kernel;}
 
+    void setTwoBodyEvaluationPolicy(std::shared_ptr<twoBodyEvaluationPolicy> policy)
+    {
+        evaluationPolicy=policy;
+    }
+
     void setSets(const std::array<int,2> & sets)
     {
         setA=sets[0];
         setB=sets[1];
+        evaluationPolicy->setSets(sets);
     }
 
 
@@ -83,10 +177,18 @@ class actionTwoBody : public action
 
     bool _distanceMinimumConstraint;
 
+    std::shared_ptr<twoBodyEvaluationPolicy> evaluationPolicy;
+
     Real rMin;
 
 
 };
+
+
+
+
+
+
 
 }
 
