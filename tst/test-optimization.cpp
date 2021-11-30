@@ -10,6 +10,7 @@
 #include "../pimc/actionTwoBody.h"
 #include "mpi.h"
 #include "pairProductKernelOptimized.h"
+#include "geometryPMC.h"
 
 Real minimumDistance( const pimc::configurations_t & confs, const std::array<int,2> timeRange, const  std::array<int,2> particleRange, const pimc::geometryPBC_PIMC  & geo )
 {
@@ -165,7 +166,7 @@ TEST_F( configurationsTest , caoBerne_timing )
 
 TEST_F( configurationsTest , caoBerneGrandCanonicalTiming )
 {   
-    int N=100;
+    int N=10;
     Real beta = 1;
     int nBeads= 80;
     //int seed = time(NULL);
@@ -243,4 +244,88 @@ TEST_F( configurationsTest , caoBerneGrandCanonicalTiming )
     std::cout << dt << std::endl;
 
     ASSERT_NEAR(sum0,sum1,1e-9);
+}
+
+
+TEST_F( configurationsTest , caoBerne_accelerator_timing )
+{   
+    int N=10;
+    Real beta=1;
+    int nBeads=10;
+    Real a=0.01;
+    
+
+    int seed=5678;
+    std::array<Real,DIMENSIONS> lBox {1,1,1};
+
+    SetUp({N},nBeads,beta,lBox);
+    configurations.fillHeads();
+
+     auto G = std::make_shared<pimc::caoBernePropagator>(beta/nBeads,a);
+
+
+    pimc::geometry_PBCStorage kernelGeo({1,1,1});
+
+  
+    pimc::geometryPBC_PIMC geoUnrestricted({lBox[0],lBox[1],lBox[2]});
+
+    SetSeed(seed);
+
+    SetRandom();
+         while ( minimumDistance(configurations,{0,nBeads},{0,N-1},geo) < a )
+        {
+            SetRandom();
+        }
+    
+
+    auto & data = configurations.dataTensor();
+    for(int t=0;t<nBeads+1;t++)
+    {
+        for(int i=0;i<N;i++)
+        {
+            for(int d=0;d<DIMENSIONS;d++)
+            {
+                data(i,d,t)=kernelGeo.pbc(data(i,d,t),d);
+            }
+            
+        }
+    }
+
+    std::array<int,2> timeRange {0,1};
+    std::array<int,2> particleRange {6,6};
+
+
+  
+    pimc::pairProductKernelBufferedDistances<pimc::caoBernePropagator> pairKernelBuffered(G);
+    pairKernelBuffered.setGeometry(kernelGeo);
+
+
+
+    auto buffer = std::make_shared<Eigen::Tensor<Real,3> >(N*N,DIMENSIONS,nBeads+1);
+    buffer->setConstant(0.);
+    pairKernelBuffered.setDistanceBuffer(buffer);
+
+
+    SetSeed(seed);
+
+    
+    Real sum1=pairKernelBuffered.evaluateTriangular( configurations.dataTensor(), timeRange , particleRange , {0,N-1} );
+
+    std::array< int, DIMENSIONS> nCells {2,2,2};
+
+
+    pimc::cellNeighbourList acc;
+    acc.setGeometry(geo);
+    acc.setNBeads(M);
+    acc.setNCells(nCells);
+
+    acc.build();
+    
+    acc.add(configurations.dataTensor(),{0,M}, {0,N-1} );
+
+    Real sum2=pairKernelBuffered.evaluateTriangular( configurations.dataTensor(), acc, timeRange , particleRange , {0,N-1} );
+
+    ASSERT_NEAR(sum1,sum2,1e-9);
+    
+
 }

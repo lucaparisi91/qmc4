@@ -46,7 +46,7 @@ TEST_F(testAction,oneBodyGrandCanonical )
     int M=50;
     
     SetUp(N,M,1.0);
-
+    
     configurations.setEnsamble(pimc::ensamble_t::grandCanonical);
     configurations.dataTensor().setRandom();
 

@@ -46,7 +46,7 @@ class simpleCellNeighbourList
 
     std::string reportParticleDistribution(const Real * positions, int iStart, int iEnd , int N) const;
 
-
+    
 
 
     template<class V_t>

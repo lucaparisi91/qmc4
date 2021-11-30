@@ -1,6 +1,9 @@
 #ifndef PAIR_PRODUCT_KERNEL_OPTIMIZED
 #define PAIR_PRODUCT_KERNEL_OPTIMIZED
 
+#include "../pimc/accelerationStructure.h"
+
+
 namespace pimc
 {
     template<class greenFunction_t>
@@ -57,6 +60,130 @@ namespace pimc
 
                     }     
             }
+
+
+
+            return sum;
+        }
+    
+
+   Real evaluateTriangular(const Eigen::Tensor<Real,3> & tn, cellNeighbourList & cellList, const std::array<int,2> & timeRange, const std::array<int ,2 > & rangeA , const std::array<int , 2 > & rangeB )
+        {
+            throw std::runtime_error("Not implemented yet");
+            Real value=0;
+ 
+            Real sum=0;
+
+            auto & buffer = distanceBuffer();
+
+            for (int t=timeRange[0];t<=timeRange[1];t++)
+            {
+                auto & currentList = cellList.cellNeighBourList(t);
+
+                for (int i=rangeA[0]; i <= rangeA[1] ; i++)
+                {
+                    int iCell=currentList.cellIndex(i);
+
+                    for(int jjCell=0;jjCell<currentList.nCellNeighbours(iCell);jjCell++)
+                    {
+                        int jCell=currentList.neighbourCell(iCell,jjCell);
+                        for ( int jj=0;jj< currentList.nParticles(jCell);jj++)
+                        {
+                            auto j=currentList.particle(jCell,jj);
+                            //std::cout << j << " " << t << std::endl;
+
+                            if (j<i)
+                            {
+                                int k = j + i*tn.dimensions()[0] ;
+                                for(int d=0;d<getDimensions();d++)
+                                {
+                                    buffer(k,d,t)=geometry().difference( tn(i,d,t) - tn(j,d,t) ,d);
+
+                                }
+                                
+                            }
+
+                        }
+                    }
+                }
+            }
+
+
+            for (int t=timeRange[0];t<=timeRange[1];t++)
+            {
+                int k=0;
+                auto & currentList = cellList.cellNeighBourList(t);
+
+                for (int i=rangeA[0]; i <= rangeA[1] ; i++)
+                {
+                    int iCell=currentList.cellIndex(i);
+
+                    for(int jjCell=0;jjCell<currentList.nCellNeighbours(iCell);jjCell++)
+                    {
+                        int jCell=currentList.neighbourCell(iCell,jjCell);
+                        for ( int jj=0;jj< currentList.nParticles(jCell);jj++)
+                        {
+                            auto j=currentList.particle(jCell,jj);
+                            std::cout << j << " " << t << std::endl;
+
+                            if (j<i)
+                            {
+                                int k = j + i*tn.dimensions()[0] ;
+                                sum+=greenFunction->logEvaluate( {buffer(k,0,t),buffer(k,1,t),buffer(k,2,t)},{buffer(k,0,t+1),buffer(k,1,t+1),buffer(k,2,t+1)}) ;
+                                k++;
+                                k++;
+                            }
+
+                        }
+                    }
+                }
+            }
+
+
+            for (int t=timeRange[0];t<timeRange[1];t++)
+            {
+                int k=0;
+                const auto & currentList = cellList.cellNeighBourList(t);
+
+
+                for (int i=rangeA[0]; i <= rangeA[1] ; i++)
+                {
+                    int iCell=currentList.cellIndex(i);
+
+                    for(int jjCell=0;jjCell<currentList.nCellNeighbours(iCell);jjCell++)
+                    {
+                        int jCell=currentList.neighbourCell(iCell,jjCell);
+                        for ( int jj=0;jj< currentList.nParticles(jCell);jj++)
+                        {
+                            auto j=currentList.particle(jCell,jj);
+
+                            if (j<i)
+                            {
+                                
+                            }
+                            
+
+                        }
+                    }
+                }
+            }
+            
+
+            
+           /*  for (int t=timeRange[0];t<timeRange[1];t++)
+            {
+                int k=0;
+                for (int i=rangeA[0]; i <= rangeA[1] ; i++)
+                    for ( int j=rangeB[0];j<i;j++)
+                    {
+                       
+                            
+                            sum+=greenFunction->logEvaluate( {buffer(k,0,t),buffer(k,1,t),buffer(k,2,t)},{buffer(k,0,t+1),buffer(k,1,t+1),buffer(k,2,t+1)}) ;
+                        
+                        k++;
+
+                    }     
+            } */
 
 
 
@@ -152,7 +279,32 @@ namespace pimc
 
 }
 
+/* 
+ template<class greenFunction_t>
+    class pairProductKernelCellNeighbourList
+    {
+        using geometry_t = geometry_PBCStorage;
+
+        public:
+
+        pairProductKernelBufferedDistances( std::shared_ptr<const greenFunction_t> greenFunction_) : 
+        greenFunction(greenFunction_) {}
+    
+    
+    const auto & geometry() { return _geometry;}
+
+    void setGeometry ( const geometry_t & new_geometry_) { _geometry=new_geometry_ ;};
+
+    Real evaluateTriangular(const Eigen::Tensor<Real,3> & tn, const std::array<int,2> & timeRange, const std::array<int ,2 > & rangeA , const std::array<int , 2 > & rangeB )
+        {
+
+        }
+    private:
+
+    std::shared_ptr<const greenFunction_t> greenFunction;
+    geometry_t _geometry;
 
 
-
+    };
+ */
 #endif
