@@ -532,7 +532,8 @@ TEST_F( configurationsTest ,magnetization)
     pimc::magnetizationEstimator mOb(j);
     pimc::magnetizationSquaredEstimator mOb2(j);
 
-    ASSERT_EQ( mOb(configurations,S) ,std::abs(N2 - N1)/(N1+N2) );
+
+    ASSERT_EQ( mOb(configurations,S) ,std::abs(N2 - N1)*1./(N1+N2) );
     ASSERT_EQ( mOb2(configurations,S) ,std::abs( (N2 - N1)*(N2-N1)) );
 
 }
