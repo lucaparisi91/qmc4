@@ -52,7 +52,6 @@ Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderActio
             
         }  
     }
-    
 
     const auto & data = confs.dataTensor();     
 
