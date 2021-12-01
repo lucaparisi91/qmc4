@@ -10,6 +10,8 @@
 #include "../pimc/potentialKernel.h"
 #include "../pimc/actionTwoBody.h"
 #include "../pimc/pimcObservables.h"
+#include "../pimc/kernelConstructor.h"
+#include "../pimc/pimcPotentials.h"
 
 
 using range_t = std::array<int,2> ;
@@ -34,14 +36,28 @@ void assertEqualForces(const Eigen::Tensor<Real,3> & forces, const Eigen::Tensor
 class pairProductTest : public configurationsTest
 {
     public:
-    
+
     auto buildCaoBernePropagator(Real radius,const range_t & set)
     {
         using propagator_t = pimc::caoBernePropagator;
 
         auto kernel =std::make_shared<propagator_t>(timeStep,radius);
-        auto pairKernel = std::make_shared<pimc::pairProductKernel<propagator_t> >(kernel);
-    
+
+        auto G =std::make_shared<propagator_t>(timeStep,radius);
+
+        pimc::pairProductKernelConstructor<propagator_t> pairKernelCreator;
+
+        pairKernelCreator.setTimeStep(timeStep);
+        pairKernelCreator.setNBeads(configurations.nBeads());
+        pairKernelCreator.setNMaxParticles(configurations.nChains());
+        pairKernelCreator.setGeometry(geo);
+        pairKernelCreator.setGreenFunction(G);
+
+
+        auto pairKernel = pairKernelCreator.create();
+
+
+        
         auto S = std::make_shared<pimc::actionTwoBody>();
         S->setTimeStep(timeStep);
         S->setGeometry(geo);
@@ -80,7 +96,6 @@ class pairProductTest : public configurationsTest
                 }
             }
         }
-
     return sumCheck;
     }
 
@@ -110,9 +125,6 @@ class pairProductTest : public configurationsTest
 
     return sumCheck;
     }
-
-
-
 
     template<class greenFunction_t>
     Real evaluateRectangularKernel(const greenFunction_t & G,const range_t & timeRange, const range_t & particleRangeA, const range_t & particleRangeB)
@@ -172,7 +184,7 @@ class pairProductTest : public configurationsTest
     void addForceRectangular( greenFunction_t & greenFunction,Eigen::Tensor<Real,3> & forces, const range_t & timeRange, const range_t & rangeA, const range_t & rangeB)
     {
         const auto & data=configurations.dataTensor();
-        for(int t=timeRange[0];t<timeRange[1];t++){ 
+        for(int t=timeRange[0];t<=timeRange[1];t++){ 
             for(int i=rangeA[0];i<=rangeA[1];i++) { 
                 for(int j=rangeB[0];j<=rangeB[1];j++) {
                     vecReal_t x;
@@ -308,21 +320,32 @@ TEST( kernels, pairProductKernel )
     Real beta = 1;
     int nBeads= 10;
     Real a = 1; Real timeStep=0.1;
+    pimc::geometryPBC_PIMC geo({3000,3000,3000});
+
+
+    using propagator_t = pimc::caoBernePropagator;
 
     #if DIMENSIONS == 3
 
     auto G = std::make_shared<pimc::caoBernePropagator>(timeStep,a);
 
-    pimc::pairProductKernel<pimc::caoBernePropagator> pairKernel(G);
+    pimc::pairProductKernelConstructor<propagator_t> pairKernelCreator;
+
+    pairKernelCreator.setTimeStep(timeStep);
+    pairKernelCreator.setNBeads(nBeads);
+    pairKernelCreator.setNMaxParticles(N);
+    pairKernelCreator.setGeometry(geo);
+    pairKernelCreator.setGreenFunction(G);
+
+    auto pairKernel = pairKernelCreator.create();
+
 
     Eigen::Tensor<double,3> data(N,DIMENSIONS,nBeads);
-    pimc::geometryPBC_PIMC geo({3000,3000,3000});
 
     
-    pairKernel.setGeometry(geo);
     int t0=4;
     int l=3;
-    pairKernel.evaluateTriangular( data , {t0,t0+l} , { N/2 , N - 1} , {N/2, N - 1}  );
+    pairKernel->evaluateTriangular( data , {t0,t0+l} , { N/2 , N - 1} , {N/2, N - 1}  );
 
     #endif
 }
@@ -708,14 +731,21 @@ TEST_F( configurationsTest , pairProduct )
     using propagator_t = pimc::caoBernePropagator;
 
     Real radius=0.01;
-    auto kernel =std::make_shared<propagator_t>(timeStep,radius);
+    auto G =std::make_shared<propagator_t>(timeStep,radius);
+    
 
-    auto pairKernel = std::make_shared<pimc::pairProductKernel<propagator_t> >(kernel);
+    pimc::pairProductKernelConstructor<propagator_t> pairKernelCreator;
+    pairKernelCreator.setTimeStep(timeStep);
+    pairKernelCreator.setNBeads(nBeads);
+    pairKernelCreator.setNMaxParticles(N);
+    pairKernelCreator.setGeometry(geo);
+    pairKernelCreator.setGreenFunction(G);
+
+    
+    auto pairKernel = pairKernelCreator.create();
 
     
     auto S2B = std::make_shared<pimc::actionTwoBody>();
-    
-
     
     S2B->setTimeStep(timeStep);
     S2B->setGeometry(geo);
@@ -833,7 +863,6 @@ TEST_F( pairProductTest , evaluationSingleComponent )
     addForceRectangular( G, forcesCheck,timeRange,rangeA, rangeB);
 
     assertEqualForces(forces,forcesCheck,{0,nBeads},{0,N-1});
-
 
     forces.setConstant(0);
     forcesCheck.setConstant(0);
@@ -1038,8 +1067,6 @@ TEST_F( pairProductTest ,force_caoBerne )
 #endif
 
 
-#include "../pimc/kernelConstructor.h"
-#include "../pimc/pimcPotentials.h"
 
 TEST(constructor,kernels_primitiveApproximation)
 {
@@ -1070,6 +1097,9 @@ TEST(constructor,kernels_primitiveApproximation)
 
     creator.setTimeStep(timeStep);
     creator.setGeometry(geo);
+    creator.setNBeads(10);
+    creator.setNMaxParticles(10);
+    
 
 
     auto kernel = creator.create(j );
@@ -1106,6 +1136,10 @@ TEST(constructor,actionTwoBody_gaussian)
 
     creator.setTimeStep(timeStep);
     creator.setGeometry(geo);
+    creator.setNMaxParticles(10);
+    creator.setNBeads(10);
+    
+    
 
 
     auto S = creator.create(j );
@@ -1139,6 +1173,11 @@ TEST(constructor,actionTwoBody_caoBerne)
 
     creator.setTimeStep(timeStep);
     creator.setGeometry(geo);
+    creator.setTimeStep(0.1);
+    creator.setNMaxParticles(10);
+    creator.setNBeads(10);
+
+
 
     auto S = creator.create(j );
 

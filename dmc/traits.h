@@ -38,5 +38,7 @@ using potential_t = sumPotentials;
 
 namespace pimc
 {
+    class geometryPBC_PIMC;
     using Real = double;
+    using geometry_t = geometryPBC_PIMC;
 };

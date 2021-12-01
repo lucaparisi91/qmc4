@@ -588,7 +588,7 @@ void simpleCellNeighbourList::sanityCheck()
 
             }
 
-            assert(nNeighboursPerCell[i]<std::pow(3,dimensions));
+            //assert(nNeighboursPerCell[i]<std::pow(3,dimensions));
         }
 
         for (int ii=0;ii<nNeighboursPerCell[i];ii++)

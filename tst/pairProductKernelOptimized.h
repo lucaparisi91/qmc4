@@ -3,7 +3,6 @@
 
 #include "../pimc/accelerationStructure.h"
 
-
 namespace pimc
 {
     template<class greenFunction_t>
@@ -20,6 +19,7 @@ namespace pimc
     const auto & geometry() { return _geometry;}
 
     void setGeometry ( const geometry_t & new_geometry_) { _geometry=new_geometry_ ;};
+
 
     Real evaluateTriangular(const Eigen::Tensor<Real,3> & tn, const std::array<int,2> & timeRange, const std::array<int ,2 > & rangeA , const std::array<int , 2 > & rangeB )
         {
@@ -65,7 +65,6 @@ namespace pimc
 
             return sum;
         }
-    
 
    Real evaluateTriangular(const Eigen::Tensor<Real,3> & tn, cellNeighbourList & cellList, const std::array<int,2> & timeRange, const std::array<int ,2 > & rangeA , const std::array<int , 2 > & rangeB )
         {
@@ -99,15 +98,12 @@ namespace pimc
                                 {
                                     buffer(k,d,t)=geometry().difference( tn(i,d,t) - tn(j,d,t) ,d);
 
-                                }
-                                
+                                }   
                             }
-
                         }
                     }
                 }
             }
-
 
             for (int t=timeRange[0];t<=timeRange[1];t++)
             {

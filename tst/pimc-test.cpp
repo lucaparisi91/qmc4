@@ -512,6 +512,32 @@ TEST(observables, IO)
 }
 
 
+TEST_F( configurationsTest ,magnetization)
+{
+    int N1=10;
+    int N2=20;
+    int nBeads=100;
+    Real beta = 1;
+
+    SetUp({N1,N2},nBeads,beta);
+
+
+    auto j = R"(
+        {
+            "groupA": 0,
+            "groupB": 1
+        }
+            )"_json;
+    
+    pimc::magnetizationEstimator mOb(j);
+    pimc::magnetizationSquaredEstimator mOb2(j);
+
+    ASSERT_EQ( mOb(configurations,S) ,std::abs(N2 - N1) );
+    ASSERT_EQ( mOb2(configurations,S) ,std::abs( (N2 - N1)*(N2-N1)) );
+    
+}
+
+
 TEST(configurations, worms)
 {
     const int N = 10;
@@ -602,7 +628,7 @@ TEST(configurations, worms)
 
     ASSERT_EQ( configurations.getGroupByChain(0).tails.size() , 2 );
 
-    configurations.setHead(N+1,0);
+    configurations.setHeadTail(N+1,0,-1);
     
     ASSERT_EQ( configurations.getGroupByChain(0).tails[1] , N );
     ASSERT_EQ( configurations.getGroupByChain(0).tails[0] , N + 1 );
@@ -849,6 +875,8 @@ TEST(action,oneBodyGrandCanonical)
 
 TEST(run,free_harmonic_oscillator)
 {   
+        GTEST_SKIP();
+
     int N=1;
     int M=10;
     Real Beta = 1;
@@ -1033,6 +1061,8 @@ TEST(run,free_harmonic_oscillator)
 
 TEST_F(configurationsTest,openCloseGrandCanonical_distributionReconstructedChain)
 {
+    GTEST_SKIP();
+
     Real C=1;
     int t0=80;
     int l =40;
@@ -1102,6 +1132,8 @@ TEST_F(configurationsTest,openCloseGrandCanonical_distributionReconstructedChain
 
 TEST_F(configurationsTest,openChain)
 {
+    GTEST_SKIP();
+
     Real C=1;
     int nBeads=10;
 
@@ -1153,72 +1185,11 @@ TEST_F(configurationsTest,openChain)
 }
 
 
-TEST_F(configurationsTest,openChain_manipulations)
-{
-     Real C=1;
-    int nBeads=10;
 
-    SetUp(3,nBeads,1);
-    SetGrandCanonicalEnsamble(0);
-    SetUpNonInteractingHarmonicAction();
-
-    SetSeed( time( NULL));
-
-    SetRandom();
-
-    int tHead=4;
-    int l=60;
-    int lShort=5;
-
-
-    configurations.setHeadTail(2,tHead,-1);
-    configurations.setHeadTail(0,M,8);
-    configurations.join(0,1);
-    configurations.join(1,2);
-
-    auto & Spot=S.getPotentialAction();
-
-
-    Real deltaS=Spot.evaluate(configurations,{tHead,std::min(tHead + l ,M) -1},1);
-    
-
-    Real sum=0;
-    int i=1;
-
-    const auto & data = configurations.dataTensor();
-
-
-    for (int t=tHead  ; t<= M ; t++)
-    {
-        for (int d=0;d<getDimensions();d++)
-        {
-            Real prefactor = (t == tHead) or (t == M) ? 0.5 : 1;
-            sum+=prefactor*0.5*data(i,d,t)*data(i,d,t);
-        }
-    }
-
-    ASSERT_NEAR(deltaS,sum*timeStep,1e-6);
-
-    int iPartner=2;
-
-    deltaS=Spot.evaluate(configurations,{0,tHead + l - M  - 1},iPartner);
-
-    sum=0;
-    for (int t=0 ; t<=1 ; t++)
-    {
-        for (int d=0;d<getDimensions();d++)
-        {
-            Real prefactor = 0.5;
-            sum+=prefactor*0.5*data(iPartner,d,t)*data(iPartner,d,t);
-        }
-    }
-
-    ASSERT_NEAR(deltaS,sum*timeStep,1e-6);
-
-}
 
 TEST_F(configurationsTest,openChain_swap)
 {
+    GTEST_SKIP();
     Real C=1;
     int nBeads=10;
     SetUp(3,nBeads,1,{ DLIST(3000 , 3000 , 3000) });
@@ -1342,6 +1313,8 @@ TEST_F(configurationsTest,openChain_swap)
 
 TEST_F(configurationsTest,openChain_advanceRecedeHead)
 {
+        GTEST_SKIP();
+
     Real C=1;
     int nBeads=10;
     SetUp(2,nBeads,1);
@@ -1478,6 +1451,9 @@ TEST_F(configurationsTest,openChain_advanceRecedeHead)
 
 TEST_F(configurationsTest,openChain_freeAdvanceRecede)
 {
+
+        GTEST_SKIP();
+
     Real C=1;
     int nBeads=10;
     SetUp(1,nBeads,1);
@@ -1587,6 +1563,8 @@ TEST_F(configurationsTest,openChain_freeAdvanceRecede)
 
 TEST_F(configurationsTest,levyReconstructor)
 {
+    GTEST_SKIP();
+
     int nBeads=10;
     int l = 5;
     int t0=0;
@@ -1664,6 +1642,7 @@ TEST_F(configurationsTest,levyReconstructor)
 
 TEST_F(configurationsTest,closedChains)
 {
+        GTEST_SKIP();
     Real C=1e-3;
     int nBeads=10;
     SetUp(12,nBeads,1);
@@ -1818,6 +1797,8 @@ TEST_F(configurationsTest,closedChains)
 
 TEST_F(configurationsTest, openCloseSemiGrandCanonical)
 {
+        GTEST_SKIP();
+
     Real C=1e-3;
     int nBeads=10;
     SetUp( {1,1} ,nBeads,1);
@@ -2006,6 +1987,7 @@ TEST_F(configurationsTest, openCloseSemiGrandCanonical)
 
 TEST_F(configurationsTest, harmonicOscillatorMixture)
 {
+    GTEST_SKIP();
     Real C=1e-5;
     int nBeads=10;
     int N [] = {2 , 2};
@@ -2214,6 +2196,7 @@ TEST_F(configurationsTest, harmonicOscillatorMixture)
 
 TEST_F(configurationsTest, advanceRecedeSemiGrandCanonical)
 {
+        GTEST_SKIP();
     Real C=1e-3;
     int nBeads=10;
     SetUp( {2,2} ,nBeads,1);
@@ -2382,6 +2365,7 @@ TEST_F(configurationsTest, advanceRecedeSemiGrandCanonical)
 
 TEST_F(configurationsTest,closedChain_twoBody)
 {
+    GTEST_SKIP();
     Real C=1e-1;
     int nBeads=10;
     int N=1;
@@ -2691,6 +2675,8 @@ TEST_F(configurationsTest,closedChain_twoBody)
 
 TEST_F(configurationsTest,createRemoveWorm)
 {
+        GTEST_SKIP();
+
     Real C=1;
     int nBeads=10;
     int N=1;
@@ -2978,6 +2964,8 @@ TEST_F(configurationsTest,createRemoveWorm)
 
 TEST_F(configurationsTest,swap_twoBody)
 {
+        GTEST_SKIP();
+
     Real C=1e-3;
     int nBeads=10;
     int N=2;
@@ -3186,6 +3174,8 @@ TEST_F(configurationsTest,swap_twoBody)
 
 TEST_F(configurationsTest,driver)
 {
+        GTEST_SKIP();
+
     Real C=1e-3;
     int nBeads=10;
     SetUp(12,nBeads,1);
@@ -3615,6 +3605,8 @@ TEST_F(configurationsTest,driver)
 
 TEST_F(configurationsTest,closedChain_free)
 {
+        GTEST_SKIP();
+
     Real C=1;
     int nBeads=10;
 
@@ -3668,6 +3660,8 @@ TEST_F(configurationsTest,closedChain_free)
 
 TEST_F(configurationsTest,closedChain_harmonic)
 {
+        GTEST_SKIP();
+
     Real C=1;
     int nBeads=10;
 
@@ -3740,6 +3734,8 @@ TEST_F(configurationsTest,closedChain_harmonic)
 
 TEST_F(configurationsTest,openClosedChain_harmonic)
 {
+        GTEST_SKIP();
+
     Real C=1;
     int nBeads=10;
     int order =2;
@@ -3931,6 +3927,8 @@ TEST_F(configurationsTest,openClosedChain_harmonic)
 
 TEST_F(configurationsTest,createRemove_harmonic)
 {
+        GTEST_SKIP();
+
     Real C=1;
     int nBeads=10;
     int order =2;
@@ -4066,6 +4064,8 @@ TEST_F(configurationsTest,createRemove_harmonic)
 
 TEST_F(configurationsTest,openClosedChain_free)
 {
+        GTEST_SKIP();
+
     Real C=1e-1;
     int nBeads=10;
 
@@ -4184,6 +4184,8 @@ TEST_F(configurationsTest,openClosedChain_free)
 
 TEST_F(configurationsTest,openChain_harmonic)
 {
+        GTEST_SKIP();
+
     Real C=1;
     int nBeads=10;
 
@@ -4283,6 +4285,8 @@ TEST_F(configurationsTest,openChain_harmonic)
 
 TEST_F(configurationsTest,openClosedChain)
 {
+        GTEST_SKIP();
+
     Real C=1;
     int nBeads=10;
 
@@ -4366,6 +4370,8 @@ TEST_F(configurationsTest,openClosedChain)
 
 TEST_F(configurationsTest,advanceRecedeGrandCanonical_distributionReconstructedChain)
 {
+        GTEST_SKIP();
+
     Real C=1;
     int l =40;
     int nBeads= 100;
@@ -4431,6 +4437,8 @@ TEST_F(configurationsTest,advanceRecedeGrandCanonical_distributionReconstructedC
 
 TEST_F(configurationsTest,swapGrandCanonical_distributionReconstructedChain)
 {
+        GTEST_SKIP();
+
     Real C=1;
     int l =40;
     int nBeads= 100;
@@ -4524,6 +4532,7 @@ TEST_F(configurationsTest,swapGrandCanonical_distributionReconstructedChain)
 
 TEST(moves,openCloseGrandCanonical)
 {   
+    GTEST_SKIP();
     int N=1;
     int M=100;
     Real Beta = 1;
@@ -4674,6 +4683,8 @@ TEST(moves,openCloseGrandCanonical)
 
 TEST(run,free_harmonic_oscillator_grandCanonical)
 {   
+        GTEST_SKIP();
+
     int N=1;
     int M=20;
     Real Beta = 1;
@@ -4947,6 +4958,7 @@ TEST(run,free_harmonic_oscillator_grandCanonical)
 
 TEST(run,free)
 {   
+    GTEST_SKIP();
 
     Real density=0.15884256651199277;
     int N=10;
@@ -5219,69 +5231,6 @@ TEST(configurations, forces)
 
 #include "../pimc/potentials.h"
 
-
-TEST(configurations, potentials_canonical)
-{
-    const int N = 10;
-    const int M = 50;
-
-    pimc::particleGroup groupA{ 0 , N-1, N + 1 , 1.0};
-
-    pimc::pimcConfigurations configurations(M , getDimensions() , {groupA});
-
-    auto & data = configurations.dataTensor();
-    const auto & tags = configurations.getTags();
-
-    data.setRandom();
-
-    configurations.fillHeads();
-
-    auto V = pimc::makeIsotropicPotentialFunctor(
-         [](Real r) {return 0.5*(r*r) ;} ,
-         [](Real r) {return r  ;} );
-
-    pimc::potentials totalPotential;
-
-    auto oneBodyPotential = 
-    std::make_shared<pimc::oneBodyIsotropicPotentialSecondOrder<decltype(V) > >( V , 0) ;
-
-    totalPotential.add(oneBodyPotential);
-
-    Real sum=totalPotential.evaluate(configurations,{0,M-1},{0,N-1});
-
-    Real sumCheck=0;
-
-    for (int t=0;t<M;t++)
-    {
-        Real prefactor = ( ( t== 0) or (t==M) ) ? 0.5 : 1 ;
-        for (int i=0; i<N ;i++)
-        {
-            Real r2=0;
-            for( int d=0 ; d<getDimensions(); d++)
-            {
-                r2+=data(i,d,t)*data(i,d,t);
-            }    
-            Real r = std::sqrt(r2);
-            sumCheck+=prefactor*V(r);
-        }
-    }
-
-
-    ASSERT_NEAR(  sumCheck , sum , 1e-6 );
-
-
-    // chin action potential
-
-    std::array<Real,2> coeff = {1,2};
-
-
-    auto oneBodyPotentialChin = 
-    std::make_shared<pimc::oneBodyIsotropicPotentialChin<decltype(V) > >( V , 0, coeff) ;
-
-
-
-
-}
 
 
 

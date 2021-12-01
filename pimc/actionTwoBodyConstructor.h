@@ -12,9 +12,10 @@ namespace pimc{
 
         using geometry_t = pimc::geometryPBC_PIMC;
 
+        actionTwoBodyConstructor() : _timeStep(0),_nBeads(0),_nMaxParticles(0) {}
 
         void setTimeStep( Real timeStep) { _timeStep = timeStep;
-        kernelC.setTimeStep(timeStep); }
+         }
 
 
         template<class V_t>
@@ -29,12 +30,22 @@ namespace pimc{
             kernelC.registerGreenFunction<G_t>(name);
         }
 
-        void setGeometry( const geometry_t & geo ) { _geo=geo;
-        kernelC.setGeometry(geo); }
+        void setGeometry( const geometry_t & geo ) { _geo=geo;}
 
+
+        void setNMaxParticles( int n ) { _nMaxParticles=n; }
+
+        void setNBeads(int n) { _nBeads=n;}
+        
 
         std::shared_ptr<action> create( const json_t & j )
         {
+            kernelC.setTimeStep(_timeStep);
+            kernelC.setNBeads(_nBeads);
+            kernelC.setGeometry(_geo);
+            kernelC.setNMaxParticles(_nMaxParticles);
+
+
             auto kernel = kernelC.create(j);
 
             auto S = std::make_shared<actionTwoBody>() ;
@@ -68,6 +79,8 @@ namespace pimc{
 
         Real _timeStep;
         geometry_t _geo;
+        int _nMaxParticles;
+        int _nBeads;
 
         kernelConstructor kernelC;
 

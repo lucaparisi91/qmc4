@@ -8,7 +8,7 @@ Real twoBodyEvaluationPolicy::evaluateTriangular(
         const  std::array<int,2> & timeRange, 
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB
-    ) const
+    ) 
 {
     if (configurations.getEnsamble() == ensamble_t::canonical)
         {
@@ -26,7 +26,7 @@ Real twoBodyEvaluationPolicy::evaluateRectangular(
         const  std::array<int,2> & timeRange, 
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB
-    ) const
+    ) 
 {
     if (configurations.getEnsamble() == ensamble_t::canonical)
         {
@@ -44,7 +44,7 @@ Real twoBodyEvaluationPolicy::evaluateTimeDerivativeRectangular(
         const  std::array<int,2> & timeRange, 
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB
-    ) const
+    ) 
     {
         if (configurations.getEnsamble() == ensamble_t::canonical or (not configurations.isOpen()) )
         {
@@ -63,7 +63,7 @@ Real twoBodyEvaluationPolicy::evaluateTimeDerivativeTriangular(
         const  std::array<int,2> & timeRange, 
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB
-    ) const
+    ) 
     {
         if (configurations.getEnsamble() == ensamble_t::canonical or (not configurations.isOpen()) )
         {
@@ -83,7 +83,7 @@ Real twoBodyEvaluationPolicy::evaluateTimeDerivativeTriangular(
         const  std::array<int,2> & timeRange, 
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB
-    ) const
+    ) 
     {
         Real sum=0;
 

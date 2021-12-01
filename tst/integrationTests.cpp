@@ -673,6 +673,10 @@ void twoBodyTest::accumulate()
 
 TEST_F(twoBodyTest,pbc)
 {
+        GTEST_SKIP();
+
+
+    GTEST_SKIP();
     Real C=1e-2;
     int nBeads=10;
     int N=2;
@@ -772,6 +776,8 @@ TEST_F(twoBodyTest,pbc)
 
 TEST_F(harmonicTrapTest, twoBodyActionKernel2_grandCanonical )
 {
+        GTEST_SKIP();
+
     Real C=1;
     int nBeads=10;
     int N=2;
@@ -868,6 +874,8 @@ TEST_F(harmonicTrapTest, twoBodyActionKernel2_grandCanonical )
 
 TEST_F( harmonicTrapTest ,mixture_twoBody)
 {
+        GTEST_SKIP();
+
     Real C=1e-3;
     int nBeads=10;
     int N1=2;
@@ -1205,6 +1213,8 @@ TEST_F( harmonicTrapTest ,mixture_twoBody)
 
 TEST_F( harmonicTrapTest, caoBernePropagator )
 {
+        GTEST_SKIP();
+
     Real C=1e-3;
     int nBeads=10;
     

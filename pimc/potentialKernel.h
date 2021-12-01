@@ -27,7 +27,7 @@ class primitiveApproximationTwoBodyKernel : public kernel2B
         const  std::array<int,2> & timeRange, 
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB
-    ) const
+    ) 
     {
 
     Real sum2b=0;
@@ -57,7 +57,7 @@ class primitiveApproximationTwoBodyKernel : public kernel2B
         const  std::array<int,2> & timeRange, 
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB
-    )  const
+    )  
     {
         return evaluateRectangular(tn,timeRange,rangeA,rangeB)/timeStep();
     }
@@ -69,7 +69,7 @@ class primitiveApproximationTwoBodyKernel : public kernel2B
         const  std::array<int,2> & timeRange, 
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB
-    )  const
+    )  
     {
         return evaluateTriangular(tn,timeRange,rangeA,rangeB)/timeStep();
     }
@@ -79,7 +79,7 @@ class primitiveApproximationTwoBodyKernel : public kernel2B
         const  std::array<int,2> & timeRange,
         const std::array<int,2> & rangeA,
         const std::array<int,2> & rangeB,
-        const mask_t & mask) const
+        const mask_t & mask)
     {
 
     Real sum2b=0;
@@ -117,7 +117,7 @@ class primitiveApproximationTwoBodyKernel : public kernel2B
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB,
         const mask_t & mask
-    ) const 
+    ) 
     {
 
     Real sum2b=0;
@@ -153,7 +153,7 @@ class primitiveApproximationTwoBodyKernel : public kernel2B
         const  std::array<int,2> & timeRange, 
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB
-    ) const 
+    ) 
     {
 
     Real sum2b=0;
@@ -177,7 +177,7 @@ class primitiveApproximationTwoBodyKernel : public kernel2B
         return sum2b*timeStep();
     }
 
-   virtual void addForceRectangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces) const
+   virtual void addForceRectangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces) 
      {
 //#pragma omp parallel for schedule(static) collapse(3)
         for (int t=timeRange[0];t<=timeRange[1];t++)
@@ -209,7 +209,7 @@ class primitiveApproximationTwoBodyKernel : public kernel2B
             }
     }
 
-     virtual void addForceTriangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces) const
+     virtual void addForceTriangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces) 
      {
 //#pragma omp parallel for schedule(static) collapse(3)
         for (int t=timeRange[0];t<=timeRange[1];t++)

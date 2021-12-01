@@ -1,14 +1,24 @@
 
+#include "traits.h"
+
 namespace pimc
 {
-
     template<class V_t>
     class primitivePropagator
     {
     public:
 
-        primitivePropagator(Real timeStep, V_t V) : tau(timeStep), _V(V) {}
+        primitivePropagator(Real timeStep, V_t V) : tau(timeStep)
+        {
+            _V=std::make_unique<V_t>(V);
 
+        }
+
+        primitivePropagator(const json_t & j) {
+            throw std::runtime_error("Constructor from json file not implemented");
+        }
+
+        
 
         Real logEvaluate( const std::array<Real,DIMENSIONS> & x1 , const std::array<Real,DIMENSIONS > & x2 ) const
         {
@@ -20,9 +30,8 @@ namespace pimc
             }
             Real r1=std::sqrt(r2_1);
             Real r2=std::sqrt(r2_2);
-
             
-            return tau*0.5*( _V(r1) + _V(r2) );
+            return tau*0.5*( (*_V)(r1) + (*_V)(r2) );
         }
 
         inline Real logTimeDerivative( const std::array<Real,DIMENSIONS> & x1 , const std::array<Real,DIMENSIONS> & x2 ) const
@@ -36,7 +45,7 @@ namespace pimc
             Real r1=std::sqrt(r2_1);
             Real r2=std::sqrt(r2_2);
 
-            return 0.5 * ( _V(r1) + _V(r2) );
+            return 0.5 * ( (*_V)(r1) + (*_V)(r2) );
         }
         
         Real logGradientLeft(const std::array<Real,DIMENSIONS> & x1, const std::array<Real,DIMENSIONS> & x2, int d) const
@@ -49,7 +58,7 @@ namespace pimc
             }
             Real r1=std::sqrt(r2_1);
             
-            return 0.5 * tau *  (_V.radialDerivative(r1) ) * x1[d]/r1; 
+            return 0.5 * tau *  (_V->radialDerivative(r1) ) * x1[d]/r1; 
         }
 
 
@@ -61,7 +70,7 @@ namespace pimc
 
     private:
 
-    V_t _V;
+    std::unique_ptr<V_t> _V;
     Real tau;
     };
 }

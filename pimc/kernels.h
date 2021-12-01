@@ -32,7 +32,7 @@ class kernel2B
         const  std::array<int,2> & timeRange, 
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB
-    ) const =0;
+    )  =0;
 
 
     virtual Real evaluateTimeDerivativeRectangular(
@@ -41,7 +41,7 @@ class kernel2B
         const  std::array<int,2> & timeRange, 
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB
-    ) const {throw std::runtime_error("evaluateTimeDerivativeRectangular not implemented");}
+    )  {throw std::runtime_error("evaluateTimeDerivativeRectangular not implemented");}
 
     virtual Real evaluateTimeDerivativeTriangular(
         const Eigen::Tensor<Real,3> & tn
@@ -49,7 +49,7 @@ class kernel2B
         const  std::array<int,2> & timeRange, 
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB
-    ) const {throw std::runtime_error("evaluateTimeDerivativeRectangular not implemented");}
+    ) {throw std::runtime_error("evaluateTimeDerivativeRectangular not implemented");}
 
 
 
@@ -59,7 +59,7 @@ class kernel2B
         const  std::array<int,2> & timeRange,
         const std::array<int,2> & rangeA,
         const std::array<int,2> & rangeB,
-        const mask_t & mask) const = 0;
+        const mask_t & mask) = 0;
 
 
     virtual Real evaluateTriangular(
@@ -68,7 +68,7 @@ class kernel2B
         const  std::array<int,2> & timeRange, 
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB
-    ) const = 0;
+    )  = 0;
 
      virtual Real evaluateTriangular(
         const Eigen::Tensor<Real,3> & tn
@@ -77,11 +77,11 @@ class kernel2B
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB,
         const mask_t & mask
-    ) const { throw std::runtime_error("evaluateTriangular masked is not implemented"); };
+    ) { throw std::runtime_error("evaluateTriangular masked is not implemented"); };
 
-     virtual void addForceRectangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces) const = 0 ;
+     virtual void addForceRectangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces)  = 0 ;
 
-     virtual void addForceTriangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces) const = 0;
+     virtual void addForceTriangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces)  = 0;
 
     virtual bool checkMinimumDistanceConstraintRectangular(const configurations_t & configurations , const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Real minDistance)
     {
@@ -108,6 +108,8 @@ class kernel2B
         }
 
     }
+
+    
 
 
     virtual bool checkMinimumDistanceConstraintRectangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Real minDistance);    

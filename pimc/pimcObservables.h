@@ -239,6 +239,31 @@ class magnetizationSquaredEstimator : public scalarEstimator
 
 };
 
+class magnetizationEstimator : public scalarEstimator 
+{
+    
+    public:
+    
+    magnetizationEstimator(int setA,int setB) : _setA(setA), _setB(setB) {}
+    
+    magnetizationEstimator(const json_t & j) :  magnetizationEstimator( j["groupA"].get<int>() , j["groupB"].get<int>()  ) {}
+    
+    virtual Real operator()(configurations_t & configurations, firstOrderAction & S) {
+
+        int NA = configurations.nParticles(_setA) ;
+        int NB = configurations.nParticles(_setB) ;
+        
+        return std::abs(NA - NB);
+        }
+            
+    private: 
+
+    int _setA;
+    int _setB;
+
+};
+
+
 
 class virialEnergyEstimator : public scalarEstimator
 {

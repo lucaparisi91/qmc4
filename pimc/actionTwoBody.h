@@ -18,28 +18,28 @@ struct twoBodyEvaluationPolicy
         const  std::array<int,2> & timeRange, 
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB
-    ) const ;
+    )  ;
 
      virtual Real evaluateRectangular(
         const configurations_t & configurations,
         const  std::array<int,2> & timeRange, 
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB
-    ) const ;
+    )  ;
 
      virtual Real evaluateTimeDerivativeTriangular(
         const configurations_t & configurations,
         const  std::array<int,2> & timeRange, 
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB
-    ) const ;
+    )  ;
 
      virtual Real evaluateTimeDerivativeRectangular(
         const configurations_t & configurations,
         const  std::array<int,2> & timeRange, 
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB
-    ) const  ;
+    )   ;
 
 
     void setKernel(std::shared_ptr<kernel2B> kernel_) {_kernel=kernel_;}
@@ -79,7 +79,7 @@ struct twoBodySkippingEvaluationPolicy : public twoBodyEvaluationPolicy
         const  std::array<int,2> & timeRange, 
         const std::array<int,2> & rangeA, 
         const std::array<int,2> & rangeB
-    ) const override ;
+    )  override ;
     
 /*
     virtual Real evaluateRectangular(

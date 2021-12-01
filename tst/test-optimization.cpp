@@ -12,6 +12,8 @@
 #include "pairProductKernelOptimized.h"
 #include "geometryPMC.h"
 
+
+
 Real minimumDistance( const pimc::configurations_t & confs, const std::array<int,2> timeRange, const  std::array<int,2> particleRange, const pimc::geometryPBC_PIMC  & geo )
 {
     Real rMin=1e+29;
@@ -39,7 +41,7 @@ Real minimumDistance( const pimc::configurations_t & confs, const std::array<int
     return rMin;
 }
 
-TEST_F( configurationsTest , caoBerne_timing )
+/* TEST_F( configurationsTest , caoBerne_timing )
 {   
     int N=20;
     Real beta=1;
@@ -253,7 +255,6 @@ TEST_F( configurationsTest , caoBerne_accelerator_timing )
     Real beta=1;
     int nBeads=10;
     Real a=0.01;
-    
 
     int seed=5678;
     std::array<Real,DIMENSIONS> lBox {1,1,1};
@@ -326,6 +327,4 @@ TEST_F( configurationsTest , caoBerne_accelerator_timing )
     Real sum2=pairKernelBuffered.evaluateTriangular( configurations.dataTensor(), acc, timeRange , particleRange , {0,N-1} );
 
     ASSERT_NEAR(sum1,sum2,1e-9);
-    
-
-}
+} */

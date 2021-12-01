@@ -207,6 +207,12 @@ void pimcDriver::run()
 
     sTwoBodyCreator->setTimeStep(timeStep);
     sTwoBodyCreator->setGeometry(geo);
+    sTwoBodyCreator->setNBeads(nBeads);
+    sTwoBodyCreator->setNMaxParticles(nChains);
+
+
+    
+    
     
 
     sTwoBodyCreator->registerPotential<pimc::gaussianPotential>("gaussian");
@@ -242,6 +248,7 @@ void pimcDriver::run()
     }
 
     pimc::pimcConfigurations configurations(nBeads, getDimensions() , groups );
+
 
     if (currentEnsamble == ensamble_t::grandCanonical)
     {
@@ -289,7 +296,7 @@ void pimcDriver::run()
     obFactory.registerObservable<thermodynamicEnergyEstimator>("thermalEnergy");
     obFactory.registerObservable<particleNumberEstimator>("nParticles");
     obFactory.registerObservable<magnetizationSquaredEstimator>("magnetizationSquared");
-
+    obFactory.registerObservable<magnetizationEstimator>("magnetization");
 
     obFactory.registerObservable<pairCorrelation>("pairCorrelation");
 

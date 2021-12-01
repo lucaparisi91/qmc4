@@ -2,6 +2,8 @@
 namespace pimc
 {
 
+
+
 Real thermodynamicEnergyEstimator::operator()(configurations_t & confs, firstOrderAction & S)
 {
     auto & geo = S.getGeometry();
@@ -18,6 +20,7 @@ Real thermodynamicEnergyEstimator::operator()(configurations_t & confs, firstOrd
 
     return sV - sA +  getDimensions()/(2.*kA.getTimeStep())*confs.nParticles();
 }
+
 
 Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderAction & S)
 {
@@ -346,6 +349,11 @@ void pairCorrelation::accumulateDistinguishable(configurations_t & confs, firstO
 
     acc.weight()+=confs.nBeads();
 }
+
+
+
+
+
 
 };
 

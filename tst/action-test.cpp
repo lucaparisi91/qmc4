@@ -18,7 +18,6 @@ class testAction : public configurationsTest
 {
     public:
 
-
     Real evaluateHarmonicOnChain( const Eigen::Tensor<Real,3> & data ,  const pimc::geometryPBC_PIMC & geo, const  std::array<int,2> & timeRange, int iChain )
     {
         Real sum=0;
@@ -601,7 +600,7 @@ TEST_F(testAction,twoBody)
 
 #include "../pimc/primitivePropagator.h"
 #include "../pimc/pairProductKernel.h"
-
+#include "../pimc/kernelConstructor.h"
 
 
 TEST_F(testAction, pairApproximation_primitive)
@@ -645,9 +644,19 @@ TEST_F(testAction, pairApproximation_primitive)
 
 
     auto G= std::make_shared< propagator_t >(timeStep,V);
-    auto pairKernel = std::make_shared< pimc::pairProductKernel<propagator_t> >( G );
-    pairKernel->setTimeStep(timeStep);
-    pairKernel->setGeometry(geo);
+
+    pimc::pairProductKernelConstructor<propagator_t> pairKernelCreator;
+
+    pairKernelCreator.setTimeStep(timeStep);
+    pairKernelCreator.setNBeads(M);
+    pairKernelCreator.setNMaxParticles(N);
+    pairKernelCreator.setGeometry(geo);
+    pairKernelCreator.setGreenFunction(G);
+
+
+    auto pairKernel = pairKernelCreator.create();
+
+
     auto SPP = std::make_shared<pimc::actionTwoBody>();
     SPP->setTimeStep(timeStep);
     SPP->setGeometry(geo);
@@ -678,6 +687,7 @@ TEST_F(testAction, pairApproximation_primitive)
     }
 
     for(int t=0;t<M;t++)
+    {
         for ( int i=0;i<N;i++)
         {
             for(int d=0;d< DIMENSIONS ;d++)
@@ -686,5 +696,5 @@ TEST_F(testAction, pairApproximation_primitive)
             
             }
         }
-
+    }
 }

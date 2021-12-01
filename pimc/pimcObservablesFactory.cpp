@@ -10,7 +10,6 @@ namespace pimc
     _nChains = std::accumulate(_nParticles.begin(),_nParticles.end(),0);
  }
 
- 
  std::shared_ptr<observable>  pimcObservablesFactory::createObservable(const json_t & jOuter)
     {
         // creates a copy of the json input and supplement with additional essential information
@@ -18,8 +17,7 @@ namespace pimc
         j["nChains"]=_nChains;
         j["nBeads"]=_nBeadsMax;
         j["particles"]=_nParticles;
-
-
+        
         std::string key=j["kind"].get<std::string>();
 
         creatorMap_t::const_iterator i;
