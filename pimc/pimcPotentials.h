@@ -5,7 +5,6 @@
 #include <cmath>
 #include "qmcExceptions.h"
 namespace pimc
-
 {
 
 using Real = double;
@@ -191,7 +190,9 @@ class gaussianPotential
 
     #if DIMENSIONS == 3
 
-    Real operator()(Real r) const { Real r2= r*r; return _V0*exp(-_alpha*r2);}
+    Real operator()(Real r) const {
+         Real r2= r*r; 
+         return _V0*exp(-_alpha*r2);}
 
 
     Real operator()(Real x, Real y,Real z) const { Real r2= x*x + y*y + z*z; return _V0*exp(-_alpha*r2);}

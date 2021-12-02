@@ -248,14 +248,16 @@ class magnetizationEstimator : public scalarEstimator
     
     magnetizationEstimator(const json_t & j) :  magnetizationEstimator( j["groupA"].get<int>() , j["groupB"].get<int>()  ) {}
     
+
     virtual Real operator()(configurations_t & configurations, firstOrderAction & S) {
 
         int NA = configurations.nParticles(_setA) ;
         int NB = configurations.nParticles(_setB) ;
         
-        return std::abs(NA - NB)*1./(NA+NB);
+        return std::abs(NA - NB);
         }
 
+    
     private: 
 
     int _setA;
