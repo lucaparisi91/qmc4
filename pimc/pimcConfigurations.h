@@ -117,7 +117,6 @@ struct particleGroup
     auto size() const {return iEnd - iStart + 1;}
     std::vector<int> heads;
     std::vector<int> tails;
-    
 };
 
 
@@ -211,10 +210,11 @@ public:
          {
              pimcConfigurations::copyData(*this,timeRange,{iParticleFrom,iParticleFrom},(*this),timeRange[0],iParticleTo);
          }
+         
 
           void translateData(const std::array<int,2> & timeRange, const std::array<int,2> & particleRange,const std::array<Real,getDimensions() > & delta);
 
-          
+
 
           void copyData(const std::array<int,2> & timeRange, int iParticleFrom, int timeOffset, int iParticleTo)
          {

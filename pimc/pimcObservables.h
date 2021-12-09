@@ -253,10 +253,10 @@ class magnetizationEstimator : public scalarEstimator
 
         int NA = configurations.nParticles(_setA) ;
         int NB = configurations.nParticles(_setB) ;
-        
+
         return std::abs(NA - NB);
         }
-
+    
     
     private: 
 

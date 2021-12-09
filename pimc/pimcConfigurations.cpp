@@ -988,135 +988,300 @@ int configurationsSampler::sampleGroup(const configurations_t & confs,randomGene
 {
      return  std::floor(uniformRealNumber(randG)*confs.getGroups().size());
 }
-    
-
 
 
 void pimcConfigurations::saveHDF5(const std::string & filename)
 {
-    int rank = 1;
-    const auto & data = dataTensor();
+    hid_t status;
+    hid_t file = H5Fcreate (filename.c_str() , H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 
-    size_t dims[rank];
+    hsize_t dims[3];
 
-    dims[0]=data.dimensions()[0]*data.dimensions()[1] * data.dimensions()[2] ;
-
-
-    const auto & groups =getGroups();
-    int chunkSize=6;
-    std::vector<int> groupData(groups.size() * chunkSize );
-
-    int groupDims[1]={groups.size()*chunkSize};
-
-    std::vector<double> masses;
-    masses.resize(groups.size());
-
-    for(int i=0;i<groups.size();i++)
+    for(int d=0;d<3;d++)
     {
-        groupData[i*chunkSize]=groups[i].iStart;
-        groupData[i*chunkSize+1]=groups[i].iEnd;
-        groupData[i*chunkSize+2]=groups[i].iEndExtended;
-        
-        if ( groups[i].isOpen() )
+        dims[2 - d]=dataTensor().dimensions()[d];
+    }
+
+    hsize_t scalarDim {1} ;
+     hid_t scalarSpace = H5Screate_simple (1 , &scalarDim, NULL);
+
+    int M = nBeads();
+    auto nBeads_id= H5Acreate (file,"nBeads", H5T_NATIVE_INT, scalarSpace, H5P_DEFAULT, H5P_DEFAULT);
+    status = H5Awrite ( nBeads_id , H5T_NATIVE_INT, & M );
+
+
+    H5Aclose(nBeads_id);
+    
+    
+    hid_t tensorSpace  = H5Screate_simple (3, dims, NULL);
+
+    
+    for (int iGroup=0;iGroup<getGroups().size() ; iGroup++  )
+    {
+        const auto & group = getGroups()[iGroup];
+
+        std::string groupName = "/set" + std::to_string(iGroup);
+        hid_t group_id = H5Gcreate(file, groupName.c_str() , H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+        auto nGroup = group.iEnd - group.iStart + 1;
+
+        hsize_t dimsGroup[3];
+        dimsGroup[2]=nGroup;
+        dimsGroup[1]=DIMENSIONS;
+        dimsGroup[0]=nBeads();
+
+        hsize_t offset[3], count[3];
+
+        offset[0] = 0;
+        offset[1] = 0;
+        offset[2] = group.iStart;
+
+        count[0]=nBeads();
+        count[1]=DIMENSIONS;
+        count[2] = nGroup;
+
+        status = H5Sselect_hyperslab( tensorSpace, H5S_SELECT_SET, offset, NULL, count, NULL);
+
+        hid_t groupSpace  = H5Screate_simple (3, dimsGroup, NULL);
+
+        hid_t dset = H5Dcreate(group_id, "particles", H5T_NATIVE_DOUBLE, groupSpace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+        status = H5Dwrite (dset, H5T_NATIVE_DOUBLE, tensorSpace, groupSpace,H5P_DEFAULT,  data() );
+
+        hid_t iStart_id= H5Acreate (group_id,"iStart", H5T_NATIVE_INT, scalarSpace, H5P_DEFAULT, H5P_DEFAULT);
+        hid_t iEnd_id= H5Acreate (group_id,"iEnd", H5T_NATIVE_INT, scalarSpace, H5P_DEFAULT, H5P_DEFAULT);
+        hid_t iEndExtended_id= H5Acreate (group_id,"iEndExtended", H5T_NATIVE_INT, scalarSpace, H5P_DEFAULT, H5P_DEFAULT);
+
+        status = H5Awrite (iStart_id, H5T_NATIVE_INT, &group.iStart );
+        status = H5Awrite (iEnd_id, H5T_NATIVE_INT, &group.iEnd );
+        status = H5Awrite (iEndExtended_id, H5T_NATIVE_INT, &group.iEndExtended );
+
+        std::vector<int> tails(nGroup,0);
+        std::vector<int> heads(nGroup,0);
+        std::vector<int> nexts(nGroup,0);
+        std::vector<int> prevs(nGroup,0);
+
+
+        for(int i=group.iStart;i<=group.iEnd;i++)
         {
-            groupData[i*chunkSize+4]=groups[i].heads[0];
-            groupData[i*chunkSize+5]=groups[i].tails[0];
+            tails[i]=getChain(i).tail;
+            heads[i]=getChain(i).head;
+            nexts[i]=getChain(i).next;
+            prevs[i]=getChain(i).prev;
         }
-        else
-        {
-            groupData[i*chunkSize+4]=-1;
-            groupData[i*chunkSize+5]=-1;
-        }
+
+        hsize_t particleDims{nGroup};
+        auto particleSpace  = H5Screate_simple(1,&particleDims, NULL);
+
+
+        hid_t heads_id = H5Dcreate(group_id, "heads", H5T_NATIVE_INT, particleSpace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite (heads_id, H5T_NATIVE_INT, particleSpace, particleSpace,H5P_DEFAULT,  heads.data() );
+        H5Dclose(heads_id);
+
+        hid_t tails_id = H5Dcreate(group_id, "tails", H5T_NATIVE_INT, particleSpace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite (tails_id, H5T_NATIVE_INT, particleSpace, particleSpace,H5P_DEFAULT,  tails.data() );
+        H5Dclose(tails_id);
+
+        hid_t nexts_id = H5Dcreate(group_id, "nexts", H5T_NATIVE_INT, particleSpace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite ( nexts_id , H5T_NATIVE_INT, particleSpace, particleSpace,H5P_DEFAULT,  nexts.data() );
+        H5Dclose(nexts_id);
+
+        hid_t prevs_id = H5Dcreate(group_id, "prevs", H5T_NATIVE_INT, particleSpace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite ( prevs_id , H5T_NATIVE_INT, particleSpace, particleSpace,H5P_DEFAULT,  prevs.data() );
+        H5Dclose(prevs_id);
+
+        status = H5Sclose (particleSpace);
         
-        
-        masses[i]=groups[i].mass;
+        status = H5Aclose (iStart_id);
+        status = H5Aclose (iEnd_id);
+        status = H5Aclose (iEndExtended_id);
+
+
+        status = H5Dclose (dset);
+        status = H5Sclose (groupSpace);
+
+
+        status = H5Gclose ( group_id);
+
     }
 
 
-    std::vector<int> chainData;
-    int chainChunkSize=4;
 
-    chainData.resize(_chains.size()*chainChunkSize);
-    for(int i=0;i<_chains.size();i++)
-    {
-        chainData[chainChunkSize*i ]=_chains[i].prev;
-        chainData[chainChunkSize*i + 1 ]=_chains[i].next;
-        chainData[chainChunkSize*i + 2]=_chains[i].head;
-        chainData[chainChunkSize*i + 3]=_chains[i].tail;
-    }
-
-    hdf5IO ioInterface(filename, std::ios::out  );
-
-    ioInterface.write(data.data(),"configurations",& dims[0],rank);
-    ioInterface.write(groupData,"groupings");
-    ioInterface.write(chainData,"chains");
-
-    ioInterface.write(masses,"mass");
-    ioInterface.annotate("nBeads",M,"configurations");
-    ioInterface.close();
-
+    status = H5Sclose (tensorSpace);
+    status = H5Sclose ( scalarSpace);
+        
+    status = H5Fclose (file);
 }
+
+
+herr_t listGroups(hid_t loc_id, const char *name, const H5L_info_t *info, void * data)
+    {
+        auto vec= (std::vector<std::string > *) (data);
+
+        vec->push_back( std::string( name ));
+
+        return 0;
+
+        
+    }
+    
+
 
 pimcConfigurations pimcConfigurations::loadHDF5(const std::string & filename)
 {
-    hdf5IO ioInterface2(filename,std::ios::in | std::ios::out );
-
-    auto groupData2=ioInterface2.get<std::vector<int> >("groupings");
-    auto masses2=ioInterface2.get<std::vector<double> >("mass");
-    int M2[1];
-    ioInterface2.readNote("nBeads",M2,"configurations");
-
-    std::cout << "Open file " << filename << std::endl;
-
-    std::vector<pimc::particleGroup> groups2;
-    int chunkSize=6;
-    for(int i=0;i<masses2.size();i++)
-    {
-        pimc::particleGroup currentGroup ( 
-            groupData2[i*chunkSize], 
-            groupData2[i*chunkSize + 1],
-            groupData2[i*chunkSize + 2],
-            masses2[i]
-        );  
-
-        int iHead =groupData2[i*chunkSize + 4] ;
-        int iTail = groupData2[i*chunkSize + 5] ;
-
-        if ( ( iTail != -1 ) or ( iHead != -1 ) )
-        {
-            currentGroup.pushHead(iHead);
-            currentGroup.pushTail(iTail);
-        } 
-        else 
-        {
-            // check that both tail and head are missing
-            assert(iTail == -1);
-            assert(iHead == -1);
-        }
-
-        groups2.push_back(currentGroup);
-    }
+    hid_t file_id = H5Fopen(filename.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
 
     
-    pimc::pimcConfigurations configurations2(M2[0] , getDimensions() , groups2); 
-    //pimc::pimcConfigurations configurations2(50 , getDimensions() , {{0,999,999,1}});
+    std::vector<std::string> groupNames;
+    
 
-    ioInterface2.read(configurations2.data(), "configurations"  );
+    std::vector<particleGroup> groups;
 
 
-    auto chainData=ioInterface2.get<std::vector<int> >("chains");
+    
+    auto status=H5Literate (file_id, H5_INDEX_NAME, H5_ITER_INC, NULL, listGroups ,(void *) &groupNames);
 
-    int chainChunkSize=4;
-    for(int i=0;i<configurations2._chains.size() ;i++ )
+
+    int nBeads;
+    auto nBeads_id =H5Aopen( file_id, "nBeads", H5P_DEFAULT );
+    H5Aread(nBeads_id, H5T_NATIVE_INT, &nBeads);
+    H5Aclose(nBeads_id);
+
+    for ( const auto &  groupName : groupNames)
     {
-        configurations2._chains[i].prev=chainData[i*chainChunkSize];
-        configurations2._chains[i].next=chainData[i*chainChunkSize+1];
-        configurations2._chains[i].head=chainData[i*chainChunkSize+2];
-        configurations2._chains[i].tail=chainData[i*chainChunkSize+3];
+        auto group_id=H5Gopen( file_id, groupName.c_str() ,H5P_DEFAULT);
+
+        auto iStart_id =H5Aopen( group_id, "iStart", H5P_DEFAULT );
+        auto iEnd_id =H5Aopen( group_id, "iEnd", H5P_DEFAULT );
+        auto iEndExtended_id =H5Aopen( group_id, "iEndExtended", H5P_DEFAULT );
+
+        int iStart,iEnd,iEndExtended;
+        auto status = H5Aread(iStart_id, H5T_NATIVE_INT, &iStart);
+        status = H5Aread(iEnd_id, H5T_NATIVE_INT, &iEnd);
+        status = H5Aread(iEndExtended_id, H5T_NATIVE_INT, &iEndExtended);
+
+        groups.emplace_back( iStart,iEnd,iEndExtended   );
+
+        H5Aclose(iStart_id);
+        H5Aclose(iEnd_id);
+        H5Aclose(iEndExtended_id);
+
+        /* auto dataSet_id=H5Dopen(group_id,"particles", H5P_DEFAULT );
+        auto space_id=H5Dget_space( dataSet_id );
+
+        hsize_t dims[3];
+
+        int rank= H5Sget_simple_extent_dims( space_id, dims, NULL ); 
+
+        assert(rank==3);
+        
+
+        H5Dclose( dataSet_id);
+        H5Dclose(space_id);
+        */
+
+       H5Gclose(group_id);
     }
 
-    ioInterface2.close(); 
-    return configurations2;
+    pimc::pimcConfigurations configurations(nBeads,DIMENSIONS,groups);
+
+    hsize_t dims[3];
+    for(int d=0;d<3;d++)
+    {
+        dims[2 - d]=configurations.dataTensor().dimensions()[d];
+    }
+    hid_t tensorSpace  = H5Screate_simple (3, dims, NULL);
+
+
+
+    for(int iGroup=0;iGroup<groups.size();iGroup++)
+    {
+        const auto & group = configurations.getGroups()[iGroup];
+
+        auto group_id=H5Gopen( file_id,groupNames[iGroup].c_str() ,H5P_DEFAULT);
+
+        auto dataSet_id=H5Dopen(group_id,"particles", H5P_DEFAULT );
+        auto space_id=H5Dget_space( dataSet_id );
+
+
+      
+        hsize_t offset[3], count[3];
+        auto nGroup = group.iEnd - group.iStart + 1;
+
+        offset[0] = 0;
+        offset[1] = 0;
+        offset[2] = group.iStart;
+        count[0]=configurations.nBeads();
+        count[1]=DIMENSIONS;
+        count[2] = nGroup;
+        status = H5Sselect_hyperslab( tensorSpace, H5S_SELECT_SET, offset, NULL, count, NULL );
+
+        auto status=H5Dread( dataSet_id, H5T_NATIVE_DOUBLE, tensorSpace, space_id, H5P_DEFAULT, configurations.data() );
+
+
+    /*     hsize_t dims[3];
+        int rank= H5Sget_simple_extent_dims( space_id, dims, NULL ); 
+        assert(rank==3); */
+
+       
+        std::vector<int> heads(nGroup,0);
+        std::vector<int> tails(nGroup,0);
+        std::vector<int> nexts(nGroup,0);
+        std::vector<int> prevs(nGroup,0);
+
+        
+        
+
+        auto heads_id=H5Dopen(group_id,"heads", H5P_DEFAULT );
+        auto particleSpace = H5Dget_space( heads_id );
+        status=H5Dread( heads_id, H5T_NATIVE_INT, particleSpace,particleSpace, H5P_DEFAULT, heads.data() );
+        H5Dclose(heads_id);
+
+        auto tails_id=H5Dopen(group_id,"tails", H5P_DEFAULT );
+        status=H5Dread( tails_id, H5T_NATIVE_INT, particleSpace,particleSpace, H5P_DEFAULT, tails.data() );
+        H5Dclose(tails_id);
+
+        auto nexts_id=H5Dopen(group_id,"nexts", H5P_DEFAULT );
+        status=H5Dread( nexts_id, H5T_NATIVE_INT, particleSpace,particleSpace, H5P_DEFAULT, nexts.data() );
+        H5Dclose(nexts_id);
+
+        auto prevs_id=H5Dopen(group_id,"prevs", H5P_DEFAULT );
+        status=H5Dread( prevs_id, H5T_NATIVE_INT, particleSpace,particleSpace, H5P_DEFAULT, prevs.data() );
+        H5Dclose(prevs_id);
+
+        for(int i=group.iStart;i<=group.iEnd;i++)
+        {
+                
+            configurations.setHeadTail(i,heads[i],tails[i]);
+            if (nexts[i] >=0 )
+            {
+                configurations.join(i,nexts[i]);
+            }
+            
+        }
+
+
+
+
+
+
+        H5Sclose(particleSpace);
+        H5Dclose( dataSet_id);
+        
+        H5Sclose(space_id);
+        H5Gclose(group_id);
+
+
+    }
+
+    H5Sclose(tensorSpace);
+    H5Fclose(file_id);
+
+    configurations.fillHeads();
+
+
+    return configurations;
+
 }
 
 int nParticlesOnClose(const pimcConfigurations & configurations, int set)

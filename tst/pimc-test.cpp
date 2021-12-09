@@ -14,7 +14,6 @@
 
 namespace fs = std::filesystem;
 
-
 TEST(distances,updateSingleParticleDistances)
 {
     pimc::geometryPBC_PIMC geo(10,10,10);
@@ -387,10 +386,15 @@ TEST(moves,levy)
  }
 
 
+
+
 TEST(configurations, IO)
 {
-    const int N = 1000;
-    const int M = 50;
+    //const int N = 1000;
+    //const int M = 50;
+
+    const int N = 10;
+    const int M = 5;
 
     pimc::particleGroup groupA{ 0 , N-1, N , 1.0};
 
@@ -402,45 +406,61 @@ TEST(configurations, IO)
 
     configurations.fillHeads();
 
-    configurations.join(100,120);
-    configurations.join(120,100);
+    //configurations.join(100,120);
+    //configurations.join(120,100);
 
-    configurations.setHead(10,M+1);
+    //configurations.setHead(10,M+1);
 
-    std::string filename {"testConf.h5"} ;
-
+    std::string filename {"testConf.hdf5"} ;
     configurations.saveHDF5(filename);
 
+    auto configurations2= pimc::pimcConfigurations::loadHDF5(filename);
 
 
-     auto configurations2 = pimc::pimcConfigurations::loadHDF5(filename); 
-    
-    auto & data2 = configurations2.dataTensor();
+    ASSERT_EQ(configurations2.nBeads(),configurations.nBeads());
+    int nGroups=configurations2.getGroups().size();
+
+    ASSERT_EQ(nGroups,configurations.getGroups().size() );
+
+    for(int iGroup=0;iGroup<configurations.getGroups().size();iGroup++)
+    {
+        const auto & group = configurations.getGroups()[iGroup];
+        const auto & group2 = configurations2.getGroups()[iGroup];
+
+        ASSERT_EQ(group.iStart,group2.iStart);
+        ASSERT_EQ(group.iEnd,group2.iEnd);
+        ASSERT_EQ(group.iEndExtended,group2.iEndExtended); 
+    }
+    const auto & data2 = configurations2.dataTensor();
+
+    for (const auto & group: configurations.getGroups())
+    {
+        for(int t=0;t<configurations.nBeads();t++){ 
+        for(int i=group.iStart;i<=group.iEnd;i++) { 
+            for(int d=0;d<DIMENSIONS;d++) {
+                ASSERT_NEAR( data(i,d,t) , data2(i,d,t) , 1e-7 ); 
+                }
+            }
+        }
 
 
-    ASSERT_EQ(configurations.nBeads() , configurations2.nBeads() );
-    ASSERT_EQ(configurations.nParticles() , configurations2.nParticles() );
-
-    for(int t=0;t<M+1;t++)
-        for (int i=0;i<N;i++)
-            for(int d=0;d<getDimensions();d++)
-                {
-                   ASSERT_NEAR( data(i,d,t) , data2(i,d,t), 1e-5);
-                } 
-
+           
                 
-    for(int i=0;i<N;i++)
+    for(int i=group.iStart;i<=group.iEnd;i++)
     {
         ASSERT_EQ( configurations2.getChain(i).prev , configurations.getChain(i).prev ); 
         ASSERT_EQ( configurations2.getChain(i).next , configurations.getChain(i).next ); 
         ASSERT_EQ( configurations2.getChain(i).head , configurations.getChain(i).head ); 
         ASSERT_EQ( configurations2.getChain(i).tail , configurations.getChain(i).tail );
         ASSERT_EQ( configurations2.getGroups()[0].tails[0] , configurations2.getGroups()[0].tails[0] );
-    } 
+    }
 
-    configurations.saveHDF5(filename);
+
+    }    
 
 }
+
+
 
 TEST(observables, IO)
 {
@@ -532,8 +552,7 @@ TEST_F( configurationsTest ,magnetization)
     pimc::magnetizationEstimator mOb(j);
     pimc::magnetizationSquaredEstimator mOb2(j);
 
-
-    ASSERT_EQ( mOb(configurations,S) ,std::abs(N2 - N1)*1./(N1+N2) );
+    ASSERT_EQ( mOb(configurations,S) ,std::abs(N2 - N1) );
     ASSERT_EQ( mOb2(configurations,S) ,std::abs( (N2 - N1)*(N2-N1)) );
 
 }

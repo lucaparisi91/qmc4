@@ -147,7 +147,6 @@ currentEnsamble(ensamble_t::canonical)
     doCheckPoint=false;
 
 
-
     if ( j.find("checkPointFile") != j.end() )
     {
         doCheckPoint=true;
@@ -274,9 +273,6 @@ void pimcDriver::run()
         }
     }
     
-
-    
-
     
 
     
@@ -372,9 +368,9 @@ void pimcDriver::run()
     }
 
     
-    configurations.save("configurations/sample"+std::to_string(0));
+    //configurations.save("configurations/sample"+std::to_string(0));
 
-    configurations.save("configurations/sample"+std::to_string(0));
+    //configurations.save("configurations/sample"+std::to_string(0));
     int success = 0;
 
     // print the moves distribution
@@ -457,15 +453,15 @@ void pimcDriver::run()
         tab >> std::cout;
 
         ratioOut << i << " " << nOpen<< " " << nClosed <<std::endl;
-
-       
-        //configurations.save("configurations/sample"+std::to_string(i+1));
         
+
+        configurations.saveHDF5("configurations/sample"+std::to_string(i+1) + ".hdf5" );
 
         if (doCheckPoint)
         {
             configurations.saveHDF5(checkPointFile);
         }
+
 
     }
 
