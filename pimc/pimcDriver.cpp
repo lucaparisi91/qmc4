@@ -12,11 +12,29 @@
 #include "actionOneBodyConstructor.h"
 #include "actionTwoBodyConstructor.h"
 #include "propagators.h"
+#include <csignal>
 
 namespace fs = std::filesystem;
 
+
+
+
+
 namespace pimc
 {
+
+    bool pimc_main_is_interrupted=false;
+
+    void interceptSignal(int signal)
+    {
+        if (signal=2)
+        {
+            pimc_main_is_interrupted=true;
+        }
+    }
+
+
+
 
 Real getTimeStep(json_t & j)
 {
@@ -136,7 +154,6 @@ currentEnsamble(ensamble_t::canonical)
         pimcMoveConstructor.registerMove<pimc::deleteWorm>("deleteWorm");
     }
 
-
     tab = pimcMoveConstructor.createTable( j["movesTable"] );
 
     //------ loading information on I/O  --------------
@@ -145,7 +162,6 @@ currentEnsamble(ensamble_t::canonical)
     correlationSteps = j["correlationSteps"].get<int>();
     loadCheckPoint=false;
     doCheckPoint=false;
-
 
     if ( j.find("checkPointFile") != j.end() )
     {
@@ -272,8 +288,6 @@ void pimcDriver::run()
             throw std::runtime_error("Max iteration reached in generating the initial condition");
         }
     }
-    
-    
 
     
     configurations.fillHeads();
@@ -392,17 +406,17 @@ void pimcDriver::run()
 
     std::cout << "Start." << std::endl << std::flush;
 
-    for (int i=0;i< nBlocks ; i++)
+    for (int i=0;(i< nBlocks) & (!pimc_main_is_interrupted); i++)
     {
         Real eStep=0;
         Real nClosed=0;
         Real nOpen=0;
 
         
-        while ( nClosed < stepsPerBlock )
+        while ( nClosed < stepsPerBlock & (!pimc_main_is_interrupted) )
         {
             
-            for (int j=0;j<correlationSteps;j++)
+            for (int j=0;(j<correlationSteps) & (!pimc_main_is_interrupted) ;j++)
             {
                 bool accepted=tab.attemptMove(configurations, S, randG);
 

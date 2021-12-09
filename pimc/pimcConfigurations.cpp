@@ -1008,10 +1008,29 @@ void pimcConfigurations::saveHDF5(const std::string & filename)
     int M = nBeads();
     auto nBeads_id= H5Acreate (file,"nBeads", H5T_NATIVE_INT, scalarSpace, H5P_DEFAULT, H5P_DEFAULT);
     status = H5Awrite ( nBeads_id , H5T_NATIVE_INT, & M );
-
-
     H5Aclose(nBeads_id);
     
+
+
+    int ensamble = getEnsamble();
+
+    auto ensamble_id= H5Acreate (file,"ensamble", H5T_NATIVE_INT, scalarSpace, H5P_DEFAULT, H5P_DEFAULT);
+    status = H5Awrite ( ensamble_id , H5T_NATIVE_INT, & ensamble );
+    H5Aclose( ensamble_id );
+
+    setEnsamble( (ensamble_t)ensamble);
+    if (getEnsamble() == ensamble_t::grandCanonical)
+    {
+        hsize_t muDims { getGroups().size() } ;
+        hid_t muSpace = H5Screate_simple ( 1 , &muDims, NULL);
+        auto mu_id= H5Acreate (file,"mu", H5T_NATIVE_DOUBLE, muSpace, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Awrite ( mu_id , H5T_NATIVE_DOUBLE, mu.data() );
+        H5Aclose( mu_id );
+        H5Sclose(muSpace);
+
+    }
+
+
     
     hid_t tensorSpace  = H5Screate_simple (3, dims, NULL);
 
@@ -1062,12 +1081,12 @@ void pimcConfigurations::saveHDF5(const std::string & filename)
         std::vector<int> prevs(nGroup,0);
 
 
-        for(int i=group.iStart;i<=group.iEnd;i++)
+        for(int i=0;i<nGroup;i++)
         {
-            tails[i]=getChain(i).tail;
-            heads[i]=getChain(i).head;
-            nexts[i]=getChain(i).next;
-            prevs[i]=getChain(i).prev;
+            tails[i]=getChain(i+group.iStart).tail;
+            heads[i]=getChain(i+group.iStart).head;
+            nexts[i]=getChain(i + group.iStart).next;
+            prevs[i]=getChain(i+group.iStart).prev;
         }
 
         hsize_t particleDims{nGroup};
@@ -1147,6 +1166,7 @@ pimcConfigurations pimcConfigurations::loadHDF5(const std::string & filename)
     H5Aread(nBeads_id, H5T_NATIVE_INT, &nBeads);
     H5Aclose(nBeads_id);
 
+
     for ( const auto &  groupName : groupNames)
     {
         auto group_id=H5Gopen( file_id, groupName.c_str() ,H5P_DEFAULT);
@@ -1184,6 +1204,24 @@ pimcConfigurations pimcConfigurations::loadHDF5(const std::string & filename)
     }
 
     pimc::pimcConfigurations configurations(nBeads,DIMENSIONS,groups);
+
+     int ensamble;
+    auto ensamble_id =H5Aopen( file_id, "ensamble", H5P_DEFAULT );
+    H5Aread(ensamble_id, H5T_NATIVE_INT, &ensamble);
+    H5Aclose(ensamble_id);
+    
+     if (ensamble == ensamble_t::grandCanonical)
+    {
+        std::vector<Real> mu(groups.size(),0);
+        auto mu_id =H5Aopen( file_id, "mu", H5P_DEFAULT );
+        H5Aread(mu_id, H5T_NATIVE_DOUBLE, mu.data() );
+        H5Aclose(mu_id);
+
+        configurations.setChemicalPotential(mu);
+    }
+
+
+    
 
     hsize_t dims[3];
     for(int d=0;d<3;d++)
@@ -1229,9 +1267,6 @@ pimcConfigurations pimcConfigurations::loadHDF5(const std::string & filename)
         std::vector<int> nexts(nGroup,0);
         std::vector<int> prevs(nGroup,0);
 
-        
-        
-
         auto heads_id=H5Dopen(group_id,"heads", H5P_DEFAULT );
         auto particleSpace = H5Dget_space( heads_id );
         status=H5Dread( heads_id, H5T_NATIVE_INT, particleSpace,particleSpace, H5P_DEFAULT, heads.data() );
@@ -1249,17 +1284,24 @@ pimcConfigurations pimcConfigurations::loadHDF5(const std::string & filename)
         status=H5Dread( prevs_id, H5T_NATIVE_INT, particleSpace,particleSpace, H5P_DEFAULT, prevs.data() );
         H5Dclose(prevs_id);
 
-        for(int i=group.iStart;i<=group.iEnd;i++)
+        for(int i=0;i<nGroup;i++)
         {
-                
-            configurations.setHeadTail(i,heads[i],tails[i]);
-            if (nexts[i] >=0 )
-            {
-                configurations.join(i,nexts[i]);
-            }
-            
+            int iChain=i + group.iStart;
+            configurations.setHeadTail(iChain,heads[i],tails[i]);
+
         }
 
+        for(int i=0;i<nGroup;i++)
+        {
+            int iChain=i + group.iStart;
+
+            if (nexts[i] >=0 )
+            {
+                configurations.join(iChain,nexts[i]);
+                
+            }
+        }
+        
 
 
 

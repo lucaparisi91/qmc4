@@ -393,12 +393,20 @@ TEST(configurations, IO)
     //const int N = 1000;
     //const int M = 50;
 
-    const int N = 10;
-    const int M = 5;
+    const int NA = 10;
+    const int NB = 20;
+    Real muA=0.5;
+    Real muB=1.34;
 
-    pimc::particleGroup groupA{ 0 , N-1, N , 1.0};
 
-    pimc::pimcConfigurations configurations(M , getDimensions() , {groupA});
+    const int M = 10;
+
+    pimc::particleGroup groupA{ 0 , NA-1, NA , 1.0};
+    pimc::particleGroup groupB{ NA+1 , NA+NB , NA + NB + 1 , 1.0};
+
+
+    pimc::pimcConfigurations configurations(M , getDimensions() , {groupA,groupB});
+    configurations.setChemicalPotential({muA,muB});
 
     auto & data = configurations.dataTensor();
 
@@ -406,10 +414,12 @@ TEST(configurations, IO)
 
     configurations.fillHeads();
 
-    //configurations.join(100,120);
-    //configurations.join(120,100);
+    configurations.join(5,6);
+    configurations.join(6,5);
 
-    //configurations.setHead(10,M+1);
+    configurations.setHead(2,4);
+    configurations.setTail(8,7);
+    
 
     std::string filename {"testConf.hdf5"} ;
     configurations.saveHDF5(filename);
@@ -433,8 +443,9 @@ TEST(configurations, IO)
     }
     const auto & data2 = configurations2.dataTensor();
 
-    for (const auto & group: configurations.getGroups())
+    for (int iGroup=0;iGroup<configurations.getGroups().size();iGroup++)
     {
+        const auto & group=configurations.getGroups()[iGroup];
         for(int t=0;t<configurations.nBeads();t++){ 
         for(int i=group.iStart;i<=group.iEnd;i++) { 
             for(int d=0;d<DIMENSIONS;d++) {
@@ -443,18 +454,21 @@ TEST(configurations, IO)
             }
         }
 
-
-           
-                
     for(int i=group.iStart;i<=group.iEnd;i++)
     {
-        ASSERT_EQ( configurations2.getChain(i).prev , configurations.getChain(i).prev ); 
+       
+
+         ASSERT_EQ( configurations2.getChain(i).prev , configurations.getChain(i).prev ); 
         ASSERT_EQ( configurations2.getChain(i).next , configurations.getChain(i).next ); 
         ASSERT_EQ( configurations2.getChain(i).head , configurations.getChain(i).head ); 
         ASSERT_EQ( configurations2.getChain(i).tail , configurations.getChain(i).tail );
         ASSERT_EQ( configurations2.getGroups()[0].tails[0] , configurations2.getGroups()[0].tails[0] );
+
     }
 
+    ASSERT_EQ(  configurations.getChemicalPotential(iGroup) , configurations2.getChemicalPotential(iGroup)   );
+
+    ASSERT_EQ(configurations.getEnsamble(),configurations2.getEnsamble() );
 
     }    
 
