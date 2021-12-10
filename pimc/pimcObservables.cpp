@@ -18,7 +18,9 @@ Real thermodynamicEnergyEstimator::operator()(configurations_t & confs, firstOrd
     sA/=beta;
     sV/=confs.nBeads();
 
-    return sV - sA +  getDimensions()/(2.*kA.getTimeStep())*confs.nParticles();
+    Real e= sV - sA +  getDimensions()/(2.*kA.getTimeStep())*confs.nParticles();
+
+    return e;
 }
 
 

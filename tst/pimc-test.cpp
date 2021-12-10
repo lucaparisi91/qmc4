@@ -404,6 +404,15 @@ TEST(configurations, IO)
     pimc::particleGroup groupA{ 0 , NA-1, NA , 1.0};
     pimc::particleGroup groupB{ NA+1 , NA+NB , NA + NB + 1 , 1.0};
 
+    std::srand ( 567);
+
+
+  
+
+    
+
+    
+
 
     pimc::pimcConfigurations configurations(M , getDimensions() , {groupA,groupB});
     configurations.setChemicalPotential({muA,muB});
@@ -412,10 +421,37 @@ TEST(configurations, IO)
 
     data.setRandom();
 
+
+    {
+        std::vector<int> nextsA(NA,0);
+        std::vector<int> nextsB(NB,0);
+
+        for(int i=0;i<NA;i++)
+        {
+            nextsA[i]=i + groupA.iStart;
+        }
+        std::random_shuffle ( nextsA.begin(), nextsA.end() );
+
+        for(int i=0;i<NB;i++)
+        {
+            nextsB[i]=i + groupB.iStart;
+        }
+        std::random_shuffle ( nextsB.begin(), nextsB.end() );
+
+        for(int i=0;i<NA;i++)
+        {
+            configurations.join( groupA.iStart + i ,nextsA[i]);
+        }
+        for(int i=0;i<NB;i++)
+        {
+            configurations.join( groupB.iStart + i ,nextsB[i]);
+        }
+        
+
+    }
+
     configurations.fillHeads();
 
-    configurations.join(5,6);
-    configurations.join(6,5);
 
     configurations.setHead(2,4);
     configurations.setTail(8,7);
@@ -469,11 +505,45 @@ TEST(configurations, IO)
     ASSERT_EQ(  configurations.getChemicalPotential(iGroup) , configurations2.getChemicalPotential(iGroup)   );
 
     ASSERT_EQ(configurations.getEnsamble(),configurations2.getEnsamble() );
-
     }    
 
 }
 
+TEST_F(configurationsTest, io_configurations_check_observables)
+{
+
+    int NA,NB;
+    Real C=1;
+    int nBeads=10;
+    SetUp( {NA,NB},nBeads,1,{ DLIST(3000 , 3000 , 3000) });
+    SetGrandCanonicalEnsamble({3.5,8.9});
+    SetUpNonInteractingHarmonicAction();
+    
+    SetSeed( 6789);
+    SetRandom();
+
+
+    pimc::thermodynamicEnergyEstimator est;
+
+    configurations.fillHeads();
+
+    configurations.saveHDF5("io_configurations_check_observables.hdf5");
+
+    Real e=est(configurations,S);
+
+
+    configurations= pimc::pimcConfigurations::loadHDF5("io_configurations_check_observables.hdf5");
+
+
+   
+    Real e2=est(configurations,S);
+    ASSERT_NEAR(e,e2,1e-9);
+    
+
+
+    
+
+}
 
 
 TEST(observables, IO)
@@ -1085,11 +1155,6 @@ TEST(run,free_harmonic_oscillator)
     ASSERT_TRUE( (success*1./nTimes )> 0);
     std::cout << "END." << std::endl;
 }
-
-
-
-
-
 
 
 
@@ -2146,7 +2211,7 @@ TEST_F(configurationsTest, harmonicOscillatorMixture)
     fN.open("N.dat");
     ratioOut.open("ratio.dat");
 
-    
+
 
     resetCounters();
 

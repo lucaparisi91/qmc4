@@ -2004,13 +2004,7 @@ bool closeMove::attemptCanonicalMove(configurations_t & confs , firstOrderAction
     if ( accept)
     {
         confs.join(iChainHead,iChainTail);
-        //confs.fillHead(iChainHead);
-
-        /* for(int d=0;d<getDimensions();d++)
-        {
-            std::cout<< - data(iChainHead,d,iHead) + data(iChainTail,d,iTail) << " ";
-        }
-        std::cout << std::endl; */
+ 
         
     }
     else
@@ -2189,7 +2183,6 @@ bool closeMove::attemptGrandCanonicalMove(configurations_t & confs , firstOrderA
         confs.join(iChainHead,iChainTail);
     }
 
-    //confs.fillHeads();
 
     bool accept = sPot.checkConstraints(confs,timeRange , {iChainHead,iChainHead});
     accept = accept and  sPot.checkConstraints(confs,timeRange2 , {iChainTail,iChainTail});

@@ -226,8 +226,7 @@ Real actionTwoBody::evaluate(const configurations_t & configurations,const std::
 
             sum+=evaluationPolicy->evaluateRectangular(configurations , timeRange, rangeA , groupB.range() );
             sum+=evaluationPolicy->evaluateRectangular(configurations , timeRange, rangeB , groupA.range() );
-
-
+            
         }
 
         return sum;

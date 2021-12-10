@@ -18,7 +18,6 @@ Real kineticAction::evaluate( const pimcConfigurations_t & configurations , std:
     assert(particleRange[1] <= configurations.nChains() );
 #ifndef DEBUG
 #endif
-
    
     for (int i=particleRange[0];i<=particleRange[1];i++ )
         for(int t=timeRange[0];t<=timeRange[1] ; t++ )

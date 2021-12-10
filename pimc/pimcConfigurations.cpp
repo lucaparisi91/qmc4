@@ -1019,7 +1019,7 @@ void pimcConfigurations::saveHDF5(const std::string & filename)
     H5Aclose( ensamble_id );
 
     setEnsamble( (ensamble_t)ensamble);
-    if (getEnsamble() == ensamble_t::grandCanonical)
+     if (getEnsamble() == ensamble_t::grandCanonical)
     {
         hsize_t muDims { getGroups().size() } ;
         hid_t muSpace = H5Screate_simple ( 1 , &muDims, NULL);
@@ -1030,8 +1030,6 @@ void pimcConfigurations::saveHDF5(const std::string & filename)
 
     }
 
-
-    
     hid_t tensorSpace  = H5Screate_simple (3, dims, NULL);
 
     
@@ -1047,7 +1045,7 @@ void pimcConfigurations::saveHDF5(const std::string & filename)
         hsize_t dimsGroup[3];
         dimsGroup[2]=nGroup;
         dimsGroup[1]=DIMENSIONS;
-        dimsGroup[0]=nBeads();
+        dimsGroup[0]=nBeads()+1;
 
         hsize_t offset[3], count[3];
 
@@ -1055,7 +1053,7 @@ void pimcConfigurations::saveHDF5(const std::string & filename)
         offset[1] = 0;
         offset[2] = group.iStart;
 
-        count[0]=nBeads();
+        count[0]=nBeads()+1;
         count[1]=DIMENSIONS;
         count[2] = nGroup;
 
@@ -1205,6 +1203,8 @@ pimcConfigurations pimcConfigurations::loadHDF5(const std::string & filename)
 
     pimc::pimcConfigurations configurations(nBeads,DIMENSIONS,groups);
 
+    configurations.dataTensor().setConstant(0);
+
      int ensamble;
     auto ensamble_id =H5Aopen( file_id, "ensamble", H5P_DEFAULT );
     H5Aread(ensamble_id, H5T_NATIVE_INT, &ensamble);
@@ -1249,7 +1249,7 @@ pimcConfigurations pimcConfigurations::loadHDF5(const std::string & filename)
         offset[0] = 0;
         offset[1] = 0;
         offset[2] = group.iStart;
-        count[0]=configurations.nBeads();
+        count[0]=configurations.nBeads()+1;
         count[1]=DIMENSIONS;
         count[2] = nGroup;
         status = H5Sselect_hyperslab( tensorSpace, H5S_SELECT_SET, offset, NULL, count, NULL );
@@ -1318,9 +1318,7 @@ pimcConfigurations pimcConfigurations::loadHDF5(const std::string & filename)
 
     H5Sclose(tensorSpace);
     H5Fclose(file_id);
-
-    configurations.fillHeads();
-
+    
 
     return configurations;
 

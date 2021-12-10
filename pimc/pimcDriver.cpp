@@ -289,13 +289,15 @@ void pimcDriver::run()
         }
     }
 
-    
+
+
     configurations.fillHeads();
 
     if (loadCheckPoint )
     {
         configurations=pimc::pimcConfigurations::loadHDF5(checkPointFile);
     }
+
 
 
     std::vector<std::shared_ptr<observable> > observables;
@@ -321,9 +323,10 @@ void pimcDriver::run()
     }
     
     auto eO=obFactory.getEnergyObservable();
+    auto & eEst=*(eO->getEstimator());
 
+    std::cout << "Energy initial: " << eEst(configurations,S) << std::endl;
 
-    
 
 
    /*  pimc::levyMove freeMoves(5);
@@ -403,7 +406,6 @@ void pimcDriver::run()
     }
 
     // start the simulation
-
     std::cout << "Start." << std::endl << std::flush;
 
     for (int i=0;(i< nBlocks) & (!pimc_main_is_interrupted); i++)
@@ -411,7 +413,6 @@ void pimcDriver::run()
         Real eStep=0;
         Real nClosed=0;
         Real nOpen=0;
-
         
         while ( nClosed < stepsPerBlock & (!pimc_main_is_interrupted) )
         {
@@ -466,14 +467,16 @@ void pimcDriver::run()
         
         tab >> std::cout;
 
-        ratioOut << i << " " << nOpen<< " " << nClosed <<std::endl;
-        
+        ratioOut << i << " " << nOpen<< " " << nClosed <<std::endl;        
 
         configurations.saveHDF5("configurations/sample"+std::to_string(i+1) + ".hdf5" );
 
         if (doCheckPoint)
         {
-            configurations.saveHDF5(checkPointFile);
+            if (!configurations.isOpen() )
+            {
+                configurations.saveHDF5(checkPointFile);
+            }
         }
 
 

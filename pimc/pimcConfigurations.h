@@ -311,7 +311,7 @@ public:
 
         int next(int iChain);
         int prev(int iChain);
-
+        
         int getHead(int iChain) {return _chains[iChain].head;};
         int getTail(int iChain){return _chains[iChain].tail; };
 

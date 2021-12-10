@@ -20,6 +20,7 @@ class scalarEstimator
 
     virtual Real operator()(configurations_t & configurations, firstOrderAction & S) = 0;
 
+
 };
 
 class histogramObservable;
@@ -102,6 +103,8 @@ public:
         return acc.getWeight();
     }
 
+    auto getEstimator() { return ob;}
+
 
     private:
 
@@ -182,7 +185,6 @@ public:
     std::shared_ptr<histogramEstimator> ob;
     
 };
-
 
 
 class thermodynamicEnergyEstimator : public scalarEstimator 
