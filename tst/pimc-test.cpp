@@ -505,14 +505,14 @@ TEST(configurations, IO)
     ASSERT_EQ(  configurations.getChemicalPotential(iGroup) , configurations2.getChemicalPotential(iGroup)   );
 
     ASSERT_EQ(configurations.getEnsamble(),configurations2.getEnsamble() );
-    }    
-
+    }
 }
+
 
 TEST_F(configurationsTest, io_configurations_check_observables)
 {
 
-    int NA,NB;
+    int NA=10,NB=7;
     Real C=1;
     int nBeads=10;
     SetUp( {NA,NB},nBeads,1,{ DLIST(3000 , 3000 , 3000) });
@@ -524,7 +524,7 @@ TEST_F(configurationsTest, io_configurations_check_observables)
 
 
     pimc::thermodynamicEnergyEstimator est;
-
+    
     configurations.fillHeads();
 
     configurations.saveHDF5("io_configurations_check_observables.hdf5");
@@ -534,13 +534,8 @@ TEST_F(configurationsTest, io_configurations_check_observables)
 
     configurations= pimc::pimcConfigurations::loadHDF5("io_configurations_check_observables.hdf5");
 
-
-   
     Real e2=est(configurations,S);
     ASSERT_NEAR(e,e2,1e-9);
-    
-
-
     
 
 }

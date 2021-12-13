@@ -238,7 +238,6 @@ class openMoveTest : public singleSetMove
 
     void setOrder(int order_){order=order_;}
 
-
     private:
 
 
