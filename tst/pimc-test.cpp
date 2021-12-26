@@ -92,7 +92,7 @@ TEST(configurations, init)
 
     configurations.fillHeads();
 
-    
+
 
 
 
@@ -220,11 +220,14 @@ TEST(moves,levy_reconstructor)
 
     configurations2=configurations;
 
-
+    
     levy.apply(configurations,timeSlice,iChain,sT,randG);
+
 
     auto &  data = configurations.dataTensor();
     auto &  data2 = configurations2.dataTensor();
+
+
 
      for (int i=0;i<N;i++)
     {
@@ -253,6 +256,7 @@ TEST(moves,levy_reconstructor)
     }
 
     // test if gaussian distribution is sampled for a 3 point time slice
+
 
     int iSampled=29;
     iChain=3;
@@ -1287,7 +1291,7 @@ TEST_F(configurationsTest,openChain_swap)
     Real C=1;
     int nBeads=10;
     SetUp(3,nBeads,1,{ DLIST(3000 , 3000 , 3000) });
-
+    
     SetGrandCanonicalEnsamble(0);
     SetUpNonInteractingHarmonicAction();
     //SetUpFreeParticleAction();
@@ -1295,17 +1299,15 @@ TEST_F(configurationsTest,openChain_swap)
     SetRandom();
 
     int l = 3;
-    
+
     pimc::levyMove levy(l,0);
     pimc::swapMove swap( 5 , 3 , 0);
     //swap.setFixedLength();
-
 
     pimc::moveHead moveHeadMove(l,0);
     pimc::moveTail moveTailMove(l,0);
 
     pimc::translateMove translate(0.3, 6*M , 0 );
-
     
     tab.push_back(&levy,0.4,pimc::sector_t::offDiagonal,"levy");
     tab.push_back(&moveHeadMove,0.2,pimc::sector_t::offDiagonal,"moveHead");

@@ -1164,7 +1164,6 @@ pimcConfigurations pimcConfigurations::loadHDF5(const std::string & filename)
     H5Aread(nBeads_id, H5T_NATIVE_INT, &nBeads);
     H5Aclose(nBeads_id);
 
-
     for ( const auto &  groupName : groupNames)
     {
         auto group_id=H5Gopen( file_id, groupName.c_str() ,H5P_DEFAULT);

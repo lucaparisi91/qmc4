@@ -19,7 +19,7 @@ link_qmc_external_libraries(tst_dmc)
 include_qmc_external_directories(tst_dmc)
 
 
-set(SOURCES_PIMC PPA-test.cpp  pimc-test.cpp action-test.cpp testConfigurations.cpp integrationTests.cpp test-optimization.cpp acceleretorTest.cpp )
+set(SOURCES_PIMC PPA-test.cpp  pimc-test.cpp action-test.cpp testConfigurations.cpp integrationTests.cpp test-optimization.cpp acceleretorTest.cpp test-moves.cpp )
 
 add_executable(tst_pimc main.cpp ${SOURCES_PIMC})
 target_include_directories(tst_pimc PUBLIC

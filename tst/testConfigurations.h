@@ -10,8 +10,11 @@
 #include "../pimc/pimcConfigurations.h"
 #include "../pimc/moves.h"
 #include "../pimc/action.h"
-
 #define TOL 1e-7
+namespace arguments
+{
+    extern std::string testInputFile;
+};
 
 class configurationsTest : public ::testing::Test {
 protected:

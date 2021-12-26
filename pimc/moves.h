@@ -59,6 +59,30 @@ class singleSetMove : public move
     configurationsSampler _chainSampler;
 };
 
+class twoSetMove : public move
+{
+    public:
+    twoSetMove(int setA, int setB) : move({setA,setB}){}
+    twoSetMove(const json_t & j) : twoSetMove::twoSetMove(j["setA"].get<int>() ,j["setB"].get<int>() ){}
+    
+
+    virtual bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG)=0;
+
+
+    int getSetA(){return getSets()[0];}
+
+    int getSetB(){return getSets()[1];}
+
+    auto & getChainSampler() {return _chainSampler;}
+
+    private:
+    configurationsSampler _chainSampler;
+};
+
+
+
+
+
 class sectorTableMoves
 {
     public:
@@ -156,6 +180,7 @@ class levyMove : public singleSetMove
     {}
 
 
+
     bool attemptMove(configurations_t & confs , firstOrderAction & S, randomGenerator_t & randG);
 
     private:
@@ -224,6 +249,187 @@ class openMove : public singleSetMove
     bool setStartingChainRandom;
     int lengthCut;
     int startingChain;
+};
+
+
+class semiOpenMove : public singleSetMove
+{
+    public:
+    // splits a chain in two morms with one overlapping bead
+    semiOpenMove(Real C , int setA ,int maxLength_=1 ) ;
+
+    semiOpenMove(const json_t & j) : semiOpenMove(j["C"].get<Real>() ,j["group"].get<int>() ,j["reconstructionMaxLength"].get<int>() ) {}
+
+    void setStartingBead(int m){setStartingBeadRandom=false; startingBead=m;assert(m>=0);};
+    void setLength( int l1){setLengthCutRandom=false;lengthCut=l1;}
+
+    void setStartingChain(int m){setStartingChainRandom=false; startingChain=m;assert(m>=0);};
+
+    bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG);
+
+    
+    private:
+
+    Real openCloseRatioCoefficient(int N,int M);
+
+    Real C;
+    std::array<Real, 3> tmp;
+
+    const Real D = 0.5;
+    configurationsSampler confsSampler;
+    std::normal_distribution<Real> gauss;
+    std::uniform_real_distribution<float> uniformRealNumber;
+    levyReconstructor _levy;
+    metropolis sampler;
+    int length;
+
+    Eigen::Tensor<Real,2> buffer;
+
+
+    int startingBead;
+    int startingChain;
+    bool setStartingBeadRandom;
+    bool setLengthCutRandom;
+    bool setStartingChainRandom;
+    int lengthCut;
+    int _maxLength;
+};
+
+class fullSemiCanonicalOpenMove : public twoSetMove
+{
+    public:
+
+    fullSemiCanonicalOpenMove(Real CA , int setA , int setB, int maxLength_=1 );
+
+    fullSemiCanonicalOpenMove( const json_t & j) : fullSemiCanonicalOpenMove(j["C"].get<Real>() ,j["groupA"].get<int>() ,j["groupB"].get<int>() ,j["reconstructionMaxLength"].get<int>() ) {}
+
+
+
+    void setStartingBead(int m){setStartingBeadRandom=false; startingBead=m;assert(m>=0);};
+
+    void setLength( int l1){setLengthCutRandom=false;lengthCut=l1;}
+
+    void setStartingChain(int m){setStartingChainRandom=false; startingChain=m;assert(m>=0);};
+
+    bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG);
+
+    
+    private:
+
+    Real openCloseRatioCoefficient(int N,int M);
+
+    Real C;
+    std::array<Real, 3> tmp;
+
+    const Real D = 0.5;
+    configurationsSampler confsSampler;
+    std::normal_distribution<Real> gauss;
+    std::uniform_real_distribution<float> uniformRealNumber;
+    levyReconstructor _levy;
+    metropolis sampler;
+    int length;
+
+    Eigen::Tensor<Real,2> buffer;
+
+
+    int startingBead;
+    int startingChain;
+    bool setStartingBeadRandom;
+    bool setLengthCutRandom;
+    bool setStartingChainRandom;
+    int lengthCut;
+    int _maxLength;
+};
+
+
+
+class fullSemiCanonicalCloseMove : public twoSetMove
+{
+    public:
+
+    fullSemiCanonicalCloseMove(Real CA , int setA , int setB, int maxLength_=1 );
+
+    fullSemiCanonicalCloseMove( const json_t & j) : fullSemiCanonicalCloseMove(j["C"].get<Real>() ,j["groupA"].get<int>() ,j["groupB"].get<int>() ,j["reconstructionMaxLength"].get<int>() ) {}
+
+
+    void setStartingBead(int m){setStartingBeadRandom=false; startingBead=m;assert(m>=0);};
+
+    void setLength( int l1){setLengthCutRandom=false;lengthCut=l1;}
+
+    void setStartingChain(int m){setStartingChainRandom=false; startingChain=m;assert(m>=0);};
+
+    bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG);
+
+    
+    private:
+
+    Real openCloseRatioCoefficient(int N,int M);
+
+    Real C;
+    std::array<Real, 3> tmp;
+
+    const Real D = 0.5;
+    configurationsSampler confsSampler;
+    std::normal_distribution<Real> gauss;
+    std::uniform_real_distribution<float> uniformRealNumber;
+    levyReconstructor _levy;
+    metropolis sampler;
+    int length;
+
+    Eigen::Tensor<Real,2> buffer;
+
+    int startingBead;
+    int startingChain;
+    bool setStartingBeadRandom;
+    bool setLengthCutRandom;
+    bool setStartingChainRandom;
+    int lengthCut;
+    int _maxLength;
+};
+
+
+
+class semiCloseMove : public singleSetMove
+{
+    public:
+    // splits a chain in two morms with one overlapping bead
+    semiCloseMove(Real C , int setA ,int maxLength_=1 ) ;
+
+    semiCloseMove(const json_t & j) : semiCloseMove(j["C"].get<Real>() ,j["group"].get<int>() ,j["reconstructionMaxLength"].get<int>() ) {}
+
+    void setLength( int l1){setLengthRandom=false;length=l1;}
+
+    bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG);
+
+     void setStartingBead(int m){setStartingBeadRandom=false; startingBead=m;assert(m>=0);};
+
+
+    void setStartingChain(int m){setStartingChainRandom=false; startingChain=m;assert(m>=0);};
+    
+    
+    private:
+
+    Real openCloseRatioCoefficient(int N,int M);
+
+    Real C;
+
+    const Real D = 0.5;
+    configurationsSampler confsSampler;
+    std::normal_distribution<Real> gauss;
+    std::uniform_real_distribution<float> uniformRealNumber;
+    levyReconstructor _levy;
+    metropolis sampler;
+    int length;
+
+    Eigen::Tensor<Real,2> buffer;
+
+
+    int startingBead;
+    int startingChain;
+    bool setStartingBeadRandom;
+    bool setLengthRandom;
+    bool setStartingChainRandom;
+    int _maxLength;
 
 };
 
@@ -661,7 +867,6 @@ class moveHead : public singleSetMove
     Eigen::Tensor<Real,2> buffer;
 };
 
-
 class advanceHead : public singleSetMove
 {
     public:
@@ -695,11 +900,91 @@ class advanceHead : public singleSetMove
     levyReconstructor _levy;
     metropolis sampler;
     bool _setRandomLength;
+    int _nMax;
+    bool enforceMaxParticleNumber;
+    
+};
+
+class advanceHeadTail : public twoSetMove
+{
+    public:
+
+    advanceHeadTail(int maxAdvanceLength_,int setA, int setB );
+
+    advanceHeadTail(const json_t & j) : advanceHeadTail::advanceHeadTail(j["reconstructionMaxLength"].get<int>() ,j["setA"].get<int>(), j["setB"].get<int>() ) {}
+
+    bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG);
+
+    void setRandomLength() {_setRandomLength=true;}
+    void setFixedLength() {_setRandomLength=false;}
+
+    void setMaximumParticleNumber(int nMax) {_nMax=nMax;enforceMaxParticleNumber=true;}
+
+    private:
+
+    int sampleLength(randomGenerator_t & randG);
+
+
+    int _maxAdvanceLength;
+    std::array<Real, 3> tmp;
+
+
+    const Real D = 0.5;
+    configurationsSampler confsSampler;
+    std::normal_distribution<Real> gauss;
+    std::uniform_real_distribution<float> uniformRealNumber;
+    levyReconstructor _levy;
+    metropolis sampler;
+    bool _setRandomLength;
 
     int _nMax;
     bool enforceMaxParticleNumber;
 
 };
+
+
+
+class recedeHeadTail : public twoSetMove
+{
+    public:
+
+    recedeHeadTail(int maxAdvanceLength_,int setA, int setB );
+
+    recedeHeadTail(const json_t & j) : recedeHeadTail::recedeHeadTail(j["reconstructionMaxLength"].get<int>() ,j["setA"].get<int>(), j["setB"].get<int>() ) {}
+
+
+    bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG);
+
+
+    void setRandomLength() {_setRandomLength=true;}
+    void setFixedLength() {_setRandomLength=false;}
+    
+    void setMaximumParticleNumber(int nMax) {_nMax=nMax;enforceMaxParticleNumber=true;}
+
+
+    private:
+
+    int sampleLength(randomGenerator_t & randG);
+
+
+    int _maxAdvanceLength;
+    std::array<Real, 3> tmp;
+
+
+    const Real D = 0.5;
+    configurationsSampler confsSampler;
+    std::normal_distribution<Real> gauss;
+    std::uniform_real_distribution<float> uniformRealNumber;
+    levyReconstructor _levy;
+    metropolis sampler;
+    bool _setRandomLength;
+
+    int _nMax;
+    bool enforceMaxParticleNumber;
+
+};
+
+
 
 class recedeTail : public singleSetMove
 {

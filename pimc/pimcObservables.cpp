@@ -3,7 +3,6 @@ namespace pimc
 {
 
 
-
 Real thermodynamicEnergyEstimator::operator()(configurations_t & confs, firstOrderAction & S)
 {
     auto & geo = S.getGeometry();
@@ -310,16 +309,13 @@ void pairCorrelation::accumulateUnDistinguishable(configurations_t & confs, firs
     acc.weight()+=confs.nBeads();
 }
 
-
 void pairCorrelation::accumulateDistinguishable(configurations_t & confs, firstOrderAction & S,  accumulator_t & acc)
 {    
     const auto & groupA = confs.getGroups()[setA];
     const auto & groupB = confs.getGroups()[setB];
 
-    
     const auto & data = confs.dataTensor();
     const auto & geo = S.getGeometry();
-
 
     auto norm = getNormalizationFactor(confs,S,acc);
 
@@ -347,9 +343,126 @@ void pairCorrelation::accumulateDistinguishable(configurations_t & confs, firstO
 
             }
     }
-
+    
     acc.weight()+=confs.nBeads();
 }
+
+
+lengthEstimator::lengthEstimator( int l) : 
+_l(l),_startFromHeadOrTail(false),_t0(-1),_iChain(-1)
+{
+
+}
+
+void lengthEstimator::setStartFromHeadOrTail(int iGroup)
+{
+    _iGroup=iGroup;
+    _startFromHeadOrTail=true;
+}
+
+
+int lengthEstimator::initialChain( const configurations_t & configurations) const
+    {
+        if (not _startFromHeadOrTail)
+        {
+            return _iChain;
+        }
+        else
+        {
+            if (_l >= 0)
+            {
+                return configurations.getGroups()[_iGroup ].tails[0];
+            }
+            else
+            {
+                return configurations.getGroups()[_iGroup ].heads[0];
+            }
+
+        }
+    } 
+
+int lengthEstimator::initialTime( const configurations_t & configurations) const
+    {
+        if (not _startFromHeadOrTail)
+        {
+            return _t0;
+        }
+        else
+        {
+            int iChain=initialChain(configurations);
+            if (_l >= 0)
+            {
+                return configurations.getChain(iChain).tail + 1;
+            }
+            else
+            {
+                return configurations.getChain(iChain).head;
+            }
+
+        }
+    } 
+
+Real lengthEstimator::operator()(configurations_t & configurations, firstOrderAction & S) {
+
+    const auto & data = configurations.dataTensor();
+    auto M=configurations.nBeads();
+
+    int currentChain=initialChain(configurations);
+    int l= _l;
+    int t0= initialTime(configurations);
+
+
+    std::array<int,2> timeRange;
+
+    
+    
+
+    Real sum=0;
+    while(currentChain !=-1)
+    {
+        if (l>0)
+        {
+            timeRange[0]=t0;
+            timeRange[1]=std::min(t0+l,M);
+        }
+        else
+        {
+            timeRange[1]=t0;
+            timeRange[0]=std::max(t0+l,0);
+        }
+
+
+        for(int t=timeRange[0];t<timeRange[1];t++ )
+        {
+            for(int d=0;d<getDimensions(); d++)
+            {
+                Real tmp=data(currentChain,d,t+1) - data(currentChain,d,t);
+                sum+=tmp*tmp;
+            }
+        }
+
+        if( (t0+ l) > M )
+        {
+            currentChain=configurations.getChain(currentChain).next;
+            l-=( M - t0);
+            t0=0;
+        }
+        else if (t0 + l < 0 )
+        {
+            l+=t0;
+            t0=M;
+            currentChain=configurations.getChain(currentChain).prev;            
+        } 
+        else
+        {
+            currentChain=-1;
+        }
+
+    }
+
+    return sum;
+}
+
 
 
 

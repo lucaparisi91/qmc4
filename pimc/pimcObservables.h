@@ -55,9 +55,16 @@ class scalarObservable : public observable
 public:
     using estimator_t = scalarEstimator;
     
-    scalarObservable(std::shared_ptr<scalarEstimator> ob_ , std::string label_) : label(label_),filename(label_ + ".dat"),delim(" "){
+    scalarObservable(std::shared_ptr<scalarEstimator> ob_ , std::string label_,bool append=true) : label(label_),filename(label_ + ".dat"),delim(" "){
         ob=ob_;
-        f.open(filename,std::fstream::app);
+        if (append)
+        {
+            f.open(filename,std::fstream::app);
+        }
+        else
+        {
+            f.open(filename);
+        }
     }
 
 
@@ -268,6 +275,40 @@ class magnetizationEstimator : public scalarEstimator
 };
 
 
+class lengthEstimator : public scalarEstimator 
+{
+    
+    public:
+    
+    lengthEstimator( int l);
+    
+    lengthEstimator(const json_t & j) :  lengthEstimator( j["chain"].get<int>()   ) { }
+    
+    virtual Real operator()(configurations_t & configurations, firstOrderAction & S);
+
+    void setStartFromHeadOrTail(int iGroup);
+
+    void setStartingBead(int iChain,int t0) {_iChain=iChain;_startFromHeadOrTail=false;_t0=t0;}
+
+
+    private:
+
+    int  initialChain( const configurations_t & configurations) const ;
+
+    int initialTime( const configurations_t & configurations) const ;
+
+    private: 
+
+    int _iChain;
+    int _t0;
+    int _l;
+    bool _startFromHeadOrTail;
+    int _iGroup;
+};
+
+
+
+
 
 class virialEnergyEstimator : public scalarEstimator
 {
@@ -319,7 +360,7 @@ class pairCorrelation : public histogramEstimator
 };
 
 
-}
+};
 
 
 #endif
