@@ -1158,6 +1158,18 @@ setStartingChainRandom(true),
 twoSetMove(setA,setB)
 {}
 
+fullSemiCanonicalCloseMove::fullSemiCanonicalCloseMove(Real C_ , int setA , int setB , int maxLength_ ) : C(C_), _levy(maxLength_+2 )  ,buffer( maxLength_+ 2,getDimensions() ), _maxLength(maxLength_),
+gauss(0,1),uniformRealNumber(0,1),
+setStartingBeadRandom(true),
+setLengthCutRandom(true),
+startingBead(-1),
+length(-1),
+startingChain(-1),
+setStartingChainRandom(true),
+twoSetMove(setA,setB)
+{}
+
+
 Real fullSemiCanonicalOpenMove::openCloseRatioCoefficient(int N, int M){
         Real coeff=C;
         if (setStartingChainRandom)
@@ -1173,12 +1185,15 @@ Real fullSemiCanonicalOpenMove::openCloseRatioCoefficient(int N, int M){
         return coeff;
     }
 
+
+
+
  bool fullSemiCanonicalOpenMove::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG)
  {
 
     if( confs.isOpen( getSetA() ) )
     {
-        throw invalidState("fullSemiCanonicalOpenMove: The A set is already open.");
+        return false;
     }
 
     if (not confs.isOpen(getSetB()) )
@@ -1237,7 +1252,7 @@ Real fullSemiCanonicalOpenMove::openCloseRatioCoefficient(int N, int M){
 
 
     Real deltaS=0;
-    std::array<int,2> timeRange={ tHeadA  , std::max(tHeadA + l,M) - 1 };
+    std::array<int,2> timeRange={ tHeadA  , std::min(tHeadA + l,M) - 1 };
     auto & data = confs.dataTensor();
     auto & sPot = S.getPotentialAction();
 
@@ -1259,7 +1274,7 @@ Real fullSemiCanonicalOpenMove::openCloseRatioCoefficient(int N, int M){
     }
     else 
     {
-        tTailA=timeRange[1] + 1;
+        tTailA=timeRange[1];
         iChainTailA=iChainHeadA;
     }
 
@@ -1273,7 +1288,7 @@ Real fullSemiCanonicalOpenMove::openCloseRatioCoefficient(int N, int M){
     
         // difference along the ring (no pbc)
         difference[d]=
-                data(iChainTailA,d,tTailA)-data(iChainHeadA,d,tHeadA);
+                data(iChainTailA,d,tTailA+1)-data(iChainHeadA,d,tHeadA);
          
         if ( tHeadA + l >= M)
         {
@@ -1292,17 +1307,27 @@ Real fullSemiCanonicalOpenMove::openCloseRatioCoefficient(int N, int M){
     _levy.apply( confs,{tHeadB,tHeadB + l}, iChainHeadB,S,randG);
 
     confs.setHead(iChainHeadA,tHeadA);
-    if(tHeadA + l>=M )
+
+    if (tHeadA + l >=M)
     {
-        confs.setTail(iChainTailA,tTailA);
+        confs.setTail(iChainANext,tTailA);
     }
+
 
     int iChainHeadB2=iChainHeadB;
     if (tHeadB +l >= M )
     {
-        int iChainHeadB2=confs.pushChain(getSetB());
-        configurations_t::copyData(confs, {M, tHeadB + l }, { iChainHeadB,iChainHeadB } , confs, iChainHeadB2 , 0   );
+        iChainHeadB2=confs.pushChain(getSetB());
+        configurations_t::copyData(confs, {M, tHeadB + l }, { iChainHeadB,iChainHeadB } , confs , 0 , iChainHeadB2  );
+        confs.setHead(iChainHeadB2,timeRange2[1] + 1);
+        confs.setHead(iChainHeadB,M);
+        confs.join( iChainHeadB,iChainHeadB2);
         deltaS+=sPot.evaluate(confs,timeRange2,iChainHeadB2);
+
+    }
+    else
+    {
+        confs.setHead(iChainHeadB,timeRange[1] + 1);
     }
 
     deltaS+=sPot.evaluate(confs,timeRange,iChainHeadB);
@@ -1315,20 +1340,20 @@ Real fullSemiCanonicalOpenMove::openCloseRatioCoefficient(int N, int M){
 
     if ( accept)
     {
-        if (tHeadA + l >= M)
+        if (tHeadA + l < M)
         {
             int iChainTailA=confs.pushChain( getSetA() );
 
             confs.copyData({tTailA+1,M}  , iChainHeadA, iChainTailA  );
+            confs.setHeadTail(iChainTailA,M,tTailA);
             confs.join(iChainTailA,iChainANext);
-            confs.join(iChainAPrev,iChainTailA);
-
             confs.setHead(iChainHeadA,tHeadA);
-
+            
         }
         else
         {
 
+            
         }
 
     }
@@ -1342,7 +1367,6 @@ Real fullSemiCanonicalOpenMove::openCloseRatioCoefficient(int N, int M){
 
         if ( tHeadA + l >=M )
         {
-            confs.removeChain(iChainTailA);
             confs.removeChain(iChainHeadB2);
         }
     }
@@ -1372,14 +1396,13 @@ Real fullSemiCanonicalCloseMove::openCloseRatioCoefficient(int N, int M){
 
     if( not confs.isOpen( getSetA() ) )
     {
-        throw invalidState("fullSemiCanonicalOpenMove: The A set is already closed.");
+        return false;
     }
 
     if (not confs.isOpen(getSetB()) )
     {
         return false;
     }
-
 
     _levy.setReconstructorBoundaries(chainBoundary::fixed,chainBoundary::fixed);
 
@@ -1388,6 +1411,8 @@ Real fullSemiCanonicalCloseMove::openCloseRatioCoefficient(int N, int M){
     const auto & geo = S.getGeometry();
 
     int M = confs.nBeads();
+
+    int NA = confs.nParticles( getSetA()  ) ;
 
     const auto & groupA = confs.getGroups()[ getSetA() ];
     const auto & groupB = confs.getGroups()[ getSetB() ];
@@ -1408,30 +1433,32 @@ Real fullSemiCanonicalCloseMove::openCloseRatioCoefficient(int N, int M){
     assert( tTailA == tHeadB - 1);
     assert( tTailB == tHeadA - 1);
 
-    int l = tTailA - tHeadB;
+    int l = tTailA + 1 - tHeadA;
     if (l < 0)
     {
         l+=M;
     }
 
-    int iChainTailBNext= confs.getChain(iChainTailBNext).next;
+    int iChainHeadBPrev= confs.getChain(iChainHeadB).prev;
+
+
     int iChainHeadAPrev=confs.getChain(iChainHeadA).prev;
+    int iChainTailANext=confs.getChain(iChainTailA).next;
 
-
-    if ( tHeadA + l < M)
+    if ( tHeadB -  l >= 0 )
     {
-        if ( (tTailB + l + 1) >= confs.getChain(iChainTailB).head )
+        if ( (tHeadB - l ) <=  confs.getChain(iChainHeadB).tail + 1 )
         {
             return false;
         }
     }
     else
     {
-        if (iChainTailBNext <0)
+        if (iChainHeadBPrev <0)
         {
             return false;
         }
-        if ( (tTailB + l + 1 -M ) >= confs.getChain(iChainTailBNext).head )
+        if ( (tHeadB - l  + M ) <= confs.getChain(iChainHeadBPrev).tail + 1 )
         {
             return false;
         }
@@ -1440,16 +1467,20 @@ Real fullSemiCanonicalCloseMove::openCloseRatioCoefficient(int N, int M){
 
 
     Real deltaS=0;
-    std::array<int,2> timeRange={ tTailB + 1  , std::min(tTailB + 1 +  l,M) - 1 };
+    std::array<int,2> timeRangeB={ std::max(tHeadB - l,0)  , tHeadB -1 };
     auto & data = confs.dataTensor();
     auto & sPot = S.getPotentialAction();
 
-    deltaS-=sPot.evaluate(confs,timeRange,iChainTailB);
+    deltaS-=sPot.evaluate(confs,timeRangeB,iChainHeadB);
 
 
-    std::array<int,2> timeRange2={ 0, (tTailB + 1 + l  - M) - 1 };
-    
-    deltaS-=sPot.evaluate(confs,timeRange2,iChainTailBNext);
+    std::array<int,2> timeRangeB2={ tHeadB -  l  +  M, M - 1 };
+
+
+    deltaS-=sPot.evaluate(confs,timeRangeB2,iChainHeadBPrev);
+
+
+
     
     Real mass = confs.getGroupByChain(iChainHeadA).mass;
 
@@ -1461,38 +1492,49 @@ Real fullSemiCanonicalCloseMove::openCloseRatioCoefficient(int N, int M){
     {
     
         // difference along the ring (no pbc)
-        difference[d]= geo.difference( data(iChainTailA,d,tTailA)-data(iChainHeadA,d,tHeadA) ,d );    
-        data(iChainTailA,d,tHeadA + l)=data(iChainTailA,d,tHeadA) + difference[d];
-        winding[d]=data(iChainTailA,d,tTailA+1) - data(iChainHeadA,d,tHeadA);
+        difference[d]= geo.difference( data(iChainTailA,d,tTailA+1)-data(iChainHeadA,d,tHeadA) ,d );    
+        data(iChainHeadA,d,tHeadA + l)=data(iChainHeadA,d,tHeadA) + difference[d];
+        winding[d]=data(iChainTailA,d,tTailA+1) - data(iChainHeadA,d,tHeadA+l);
     }
 
 
     _levy.apply( confs,{tHeadA,tHeadA + l}, iChainHeadA,S,randG);
 
-    confs.setTail(iChainTailB, std::min(tTailB + l,M) - 1   );
-
+    
     
     if(tHeadA + l>=M )
     {
-      configurations_t::copyData(confs, {M, tHeadA + l }, { iChainHeadA,iChainHeadA } , confs, iChainTailA , 0   );  
-    confs.translateData({0 ,tTailA + 1},{iChainTailA,iChainTailA},winding);
-    confs.setTail(iChainTailBNext, (tTailB + l - M) -1   );
-    
+      configurations_t::copyData(confs, {M, tHeadA + l }, { iChainHeadA,iChainHeadA } , confs,  0, iChainTailA   );  
+      confs.translateData({0 ,tTailA + 1},{iChainTailA,iChainTailA},winding);
+      confs.setHead(iChainHeadBPrev, (tHeadB - l + M)   );
+      confs.setHead(iChainHeadB,0);
+      confs.setHead(iChainHeadA,M);
+      confs.setTail(iChainTailA,-1);
+      confs.join(iChainHeadA,iChainTailA);
+
+    }
+    else
+    {
+        confs.setHead(iChainHeadA,tHeadA + l);
+        confs.setHead(iChainHeadB,tHeadB - l);
     }
 
+    std::array<int,2> timeRangeA={ tHeadA, std::min(tHeadA + l,M)   - 1 };
+    std::array<int,2> timeRange2A={ 0, tHeadA + l - M - 1 };
 
-    deltaS+=sPot.evaluate(confs,timeRange,iChainHeadA);
+
+
+    deltaS+=sPot.evaluate(confs,timeRangeA,iChainHeadA);
     if (tHeadA + l >= M)
     {
-        deltaS+=sPot.evaluate(confs,timeRange2,iChainTailA);
+        deltaS+=sPot.evaluate(confs,timeRange2A,iChainTailA);
     }
-    
+
 
     Real deltamu=confs.getChemicalPotential(getSetB() ) - confs.getChemicalPotential(getSetA() );
 
 
-    int NA = confs.nParticles( getSetA()  ) ;
-    if ( tHeadA + l >=M)
+    if ( tHeadA + l >=M and (iChainHeadA != iChainTailA) )
     {
         NA+=2;
     }
@@ -1511,21 +1553,29 @@ Real fullSemiCanonicalCloseMove::openCloseRatioCoefficient(int N, int M){
     {
         if (tHeadA + l < M)
         {
-            confs.copyData({0,tTailA + 1}  , iChainHeadA, iChainTailA  );
-            confs.translateData({0 ,tTailA + 1},{iChainTailA,iChainTailA},winding);
-
-            confs.join(iChainHeadAPrev,iChainTailA);
+            confs.copyData({0,tHeadA + l}  , iChainHeadA, iChainTailA  );
+            confs.translateData({0 ,tHeadA + l },{iChainTailA,iChainTailA},winding);
+            confs.setTail(iChainTailA,-1);
+            confs.join(iChainHeadAPrev,iChainTailA);            
             confs.removeChain(iChainHeadA);
+
         }
         else
         {
-            confs.removeChain(iChainTailB);
+            confs.removeChain(iChainHeadB);
         }
     }
     else
     {
         confs.setHead(iChainHeadA,tHeadA);
-        confs.setTail(iChainTailB, tTailB);
+        confs.setTail(iChainTailA,tTailA);
+        confs.setHead(iChainHeadB, tHeadB);
+
+        if (tHeadB - l < 0)
+        {
+            confs.setHead(iChainHeadBPrev,M);
+            confs.join(iChainHeadBPrev,iChainHeadB);
+        }
     }
 
     return accept;
@@ -2348,9 +2398,6 @@ bool openMove::attemptSemiGrandCanonicalMove(configurations_t & confs , firstOrd
     std::array<int,2> timeRangeA2={t0_2,t1_2-1};
     int iChainANext=confs.getChain(iChainA).next;
     deltaS-=sPot.evaluate(confs,timeRangeA2,iChainANext);
-    
-    
-
     
     confs.deleteBeads(   timeRangeA, iChainA );
     confs.deleteBeads(   timeRangeA2, iChainANext );

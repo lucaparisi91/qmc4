@@ -360,7 +360,6 @@ void lengthEstimator::setStartFromHeadOrTail(int iGroup)
     _startFromHeadOrTail=true;
 }
 
-
 int lengthEstimator::initialChain( const configurations_t & configurations) const
     {
         if (not _startFromHeadOrTail)

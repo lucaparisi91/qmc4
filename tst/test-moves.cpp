@@ -432,10 +432,6 @@ TEST_F( configurationsTest, advanceRecedeHeadTail_run )
     lengthEstimatorBShort->setStartFromHeadOrTail(1);
     lengthEstimatorALong->setStartFromHeadOrTail(0);
     lengthEstimatorBLong->setStartFromHeadOrTail(1);
-
-    
-
-
    
    
 
@@ -532,4 +528,243 @@ TEST_F( configurationsTest, advanceRecedeHeadTail_run )
     }
 
 }
+
+TEST_F( configurationsTest, semiFullOpenClose_run )
+{
+
+    auto j= R"(
+        {
+        "CA": 1e-1,
+        "l" : 4,
+        "t0" : 6,
+        "nBlocks" : 10000,
+        "stepsPerBlock" : 100000
+        }
+    )"_json;
+
+
+    if (arguments::testInputFile != "" )
+    {
+        std::ifstream ifs(arguments::testInputFile);
+        j = pimc::json_t::parse(ifs);
+    }
+
+    Real CA=j["CA"].get<Real>();
+    int l=j["l"].get<int>();
+    int t0=j["t0"].get<int>();
+     int nBlocks=j["nBlocks"].get<int>();
+    int nStepsPerBlock=j["stepsPerBlock"].get<int>();
+
+    auto jFullSemiCanonicalOpenSettings = R"(
+        {
+            "setA": 0,
+            "setB": 1,
+            "reconstructionMaxLength": 4,
+            "C" : 1
+        }
+            )"_json;
+    
+    jFullSemiCanonicalOpenSettings["reconstructionMaxLength"]=l;
+    jFullSemiCanonicalOpenSettings["C"]=CA;
+
+
+    int nBeads=10;
+    int NA=1;
+    int NB=3;
+
+    Real beta=0.1* nBeads;
+    std::array<Real,3> lBox{ TRUNCATE_D(1,1,1)};
+    SetUp( {NA,NB}, nBeads,beta , {30000,300000,300000} );
+    SetUpNonInteractingHarmonicAction();
+    //SetUpFreeParticleAction();
+    SetGrandCanonicalEnsamble( {0,0});
+
+
+    const auto & groupA=configurations.getGroups()[0];
+    const auto & groupB=configurations.getGroups()[1];
+
+
+   // SetSeed(456);
+
+    SetRandom(lBox);
+
+    configurations.fillHeads();
+    
+    int lLong=int(M*0.6);
+    int lShort=int(M*0.3);
+
+    int iChain=0;    
+
+
+    int nBurnsIn=10000;
+    
+    pimc::fullSemiCanonicalOpenMove openMove(jFullSemiCanonicalOpenSettings);
+    pimc::fullSemiCanonicalCloseMove closeMove(jFullSemiCanonicalOpenSettings);
+
+    openMove.setLength(l);
+    closeMove.setLength(l);
+
+
+    pimc::levyMove levyMoveA(lLong,0);
+    pimc::moveHead moveHeadMoveA(lShort,0);
+    pimc::moveHead moveTailMoveA(lShort,0);
+
+    pimc::levyMove levyMoveB(lLong,1);
+    pimc::moveHead moveHeadMoveB(lShort,1);
+    pimc::moveHead moveTailMoveB(lShort,1);
+
+    Real delta=0.5;
+    pimc::translateMove translMoveA(delta,(M+1)*configurations.nChains()*2,0);
+    pimc::translateMove translMoveB(delta,(M+1)*configurations.nChains()*2,1);    
+
+    tab.push_back(&levyMoveA,0.8,pimc::sector_t::offDiagonal,"levyA");
+    tab.push_back(&moveHeadMoveA,0.05,pimc::sector_t::offDiagonal,"moveHeadA");
+    tab.push_back(&moveTailMoveA,0.05,pimc::sector_t::offDiagonal,"moveTailA");
+    tab.push_back(&translMoveA,0.1,pimc::sector_t::offDiagonal,"translateA");
+
+    tab.push_back(&levyMoveB,0.8,pimc::sector_t::offDiagonal,"levyB");
+    tab.push_back(&moveHeadMoveB,0.05,pimc::sector_t::offDiagonal,"moveHeadB");
+    tab.push_back(&moveTailMoveB,0.05,pimc::sector_t::offDiagonal,"moveTailB");
+    tab.push_back(&translMoveB,0.1,pimc::sector_t::offDiagonal,"translateB");
+
+
+    tab.push_back(&levyMoveA,0.9,pimc::sector_t::diagonal,"levyA");
+    tab.push_back(&translMoveA,0.1,pimc::sector_t::diagonal,"translateA");
+
+    tab.push_back(&levyMoveB,0.9,pimc::sector_t::diagonal,"levyB");
+    tab.push_back(&translMoveB,0.1,pimc::sector_t::diagonal,"translateB");
+
+    //configurations.setHeadTail(0 ,  M-1 , t0-1);
+
+    configurations.setHeadTail(0 + groupB.iStart,  M , t0-1);
+    configurations.setHeadTail(1 + groupB.iStart,  t0  , -1);
+    configurations.join(0 + groupB.iStart,1 + groupB.iStart);
+
+
+    /* configurations.setHeadTail(0 + groupA.iStart,  t0 , t0 + l - M -1);
+
+    configurations.setHeadTail(0 + groupB.iStart,  M , t0 -1);
+    configurations.setHeadTail(2 + groupB.iStart,  t0 + l - M , - 1);
+    
+    configurations.join(groupB.iStart + 0 ,groupB.iStart + 1);
+    configurations.join(groupB.iStart + 1 ,groupB.iStart + 2); */
+
+    /* configurations.setHeadTail(0 + groupB.iStart,  M , t0-1);
+    configurations.setHeadTail(1 + groupB.iStart,  t0 + l  , -1);
+    configurations.join(0 + groupB.iStart,1 + groupB.iStart);
+
+    configurations.setHeadTail(0 + groupA.iStart,  M , t0 + l-1);
+    configurations.setHeadTail(1 + groupA.iStart,  t0  , -1);
+    configurations.join(0 + groupA.iStart,1 + groupA.iStart); */
+
+
+   configurations.fillHeads();
+
+   
+   auto lengthEstimatorBShort=std::make_shared< pimc::lengthEstimator >( M );
+   auto lengthEstimatorBLong=std::make_shared< pimc::lengthEstimator >( M + l );
+   auto lengthEstimatorAShort=std::make_shared< pimc::lengthEstimator >( M );
+   auto lengthEstimatorALong=std::make_shared< pimc::lengthEstimator >( M - l );
+
+    lengthEstimatorBShort->setStartFromHeadOrTail(1);
+    lengthEstimatorAShort->setStartingBead(groupA.iStart + 0,t0);
+    lengthEstimatorBLong->setStartFromHeadOrTail(1);
+    lengthEstimatorALong->setStartFromHeadOrTail(0);
+   
+
+
+    auto lengthAObShort = std::make_shared<pimc::scalarObservable>(lengthEstimatorAShort,std::string("lengthAShort"),false);
+    auto lengthAObLong = std::make_shared<pimc::scalarObservable>(lengthEstimatorALong,std::string("lengthALong"),false);
+
+    auto lengthBObShort = std::make_shared<pimc::scalarObservable>(lengthEstimatorBShort,std::string("lengthBShort"),false);
+    auto lengthBObLong = std::make_shared<pimc::scalarObservable>(lengthEstimatorBLong,std::string("lengthBLong"),false);
+
+    std::cout << "Equilibrating..." << std::endl;
+
+    for(int n=0;n<nBurnsIn;n++)
+    {
+        tab.attemptMove(configurations,S,randG);
+    }
+
+    const auto & data = configurations.dataTensor();
+
+    Real nShort=0;
+    Real nLong=0;
+    Real ratio=0;
+    Real n=0;
+
+    std::ofstream openRatioOut("openRatio.dat");
+
+    std::cout << "Start sampling..." << std::endl;
+    for(int t=0;t<nBlocks;t++)
+    {
+       while ( (nShort < nStepsPerBlock) and (nLong < nStepsPerBlock) and ( n < nStepsPerBlock ) )
+        {
+            n+=1;
+            bool accept=tab.attemptMove(configurations,S,randG);
+
+            if ( not configurations.isOpen(0) )
+            {
+                openMove.attemptMove(configurations,S,randG);
+            }
+            else 
+            {
+                closeMove.attemptMove(configurations,S,randG);
+            }
+
+
+            if ( not configurations.isOpen(0) )
+            {
+                nShort++;
+                ratio+=1;
+                lengthAObShort->accumulate(configurations,S);
+                lengthBObShort->accumulate(configurations,S);
+            }
+            else
+            {
+                lengthAObLong->accumulate(configurations,S);
+                lengthBObLong->accumulate(configurations,S);
+                nLong++;
+            }
+        }
+
+    std::cout << "Short length fraction: "<< nShort*1./n << std::endl;
+
+    tab >> std::cout ;
+
+    if (nShort == nStepsPerBlock)
+        {
+            lengthBObShort->out(t);
+            lengthBObShort->clear();
+
+            lengthAObShort->out(t);
+            lengthAObShort->clear();
+
+            nShort=0;
+        }
+    
+    if ( nLong== nStepsPerBlock)
+        {
+            lengthBObLong->out(t);
+            lengthBObLong->clear();
+
+            lengthAObLong->out(t);
+            lengthAObLong->clear();
+
+            nLong=0;
+        }
+
+    if ( n == nStepsPerBlock)
+        {
+            ratio/=1.*n;
+            openRatioOut << t << " " << ratio << std::endl;
+            ratio=0;
+            n=0;
+        }
+
+
+    }
+
+}
+
 

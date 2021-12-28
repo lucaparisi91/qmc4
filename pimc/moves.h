@@ -301,8 +301,7 @@ class fullSemiCanonicalOpenMove : public twoSetMove
 
     fullSemiCanonicalOpenMove(Real CA , int setA , int setB, int maxLength_=1 );
 
-    fullSemiCanonicalOpenMove( const json_t & j) : fullSemiCanonicalOpenMove(j["C"].get<Real>() ,j["groupA"].get<int>() ,j["groupB"].get<int>() ,j["reconstructionMaxLength"].get<int>() ) {}
-
+    fullSemiCanonicalOpenMove( const json_t & j) : fullSemiCanonicalOpenMove(j["C"].get<Real>() ,j["setA"].get<int>() ,j["setB"].get<int>() ,j["reconstructionMaxLength"].get<int>() ) {}
 
 
     void setStartingBead(int m){setStartingBeadRandom=false; startingBead=m;assert(m>=0);};
@@ -341,15 +340,13 @@ class fullSemiCanonicalOpenMove : public twoSetMove
     int _maxLength;
 };
 
-
-
 class fullSemiCanonicalCloseMove : public twoSetMove
 {
     public:
-
+    
     fullSemiCanonicalCloseMove(Real CA , int setA , int setB, int maxLength_=1 );
 
-    fullSemiCanonicalCloseMove( const json_t & j) : fullSemiCanonicalCloseMove(j["C"].get<Real>() ,j["groupA"].get<int>() ,j["groupB"].get<int>() ,j["reconstructionMaxLength"].get<int>() ) {}
+    fullSemiCanonicalCloseMove( const json_t & j) : fullSemiCanonicalCloseMove(j["C"].get<Real>() ,j["setA"].get<int>() ,j["setB"].get<int>() ,j["reconstructionMaxLength"].get<int>() ) {}
 
 
     void setStartingBead(int m){setStartingBeadRandom=false; startingBead=m;assert(m>=0);};
