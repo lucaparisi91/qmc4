@@ -348,8 +348,15 @@ void pairCorrelation::accumulateDistinguishable(configurations_t & confs, firstO
 }
 
 
-lengthEstimator::lengthEstimator( int l) : 
-_l(l),_startFromHeadOrTail(false),_t0(-1),_iChain(-1)
+lengthEstimator::lengthEstimator( int l) : lengthEstimator::lengthEstimator()
+{
+    _setMaxLength=true;
+    _l=l;
+
+}
+
+lengthEstimator::lengthEstimator( ) : 
+_l(0),_startFromHeadOrTail(false),_t0(-1),_iChain(0),_setMaxLength(false) 
 {
 
 }
@@ -401,6 +408,7 @@ int lengthEstimator::initialTime( const configurations_t & configurations) const
         }
     } 
 
+
 Real lengthEstimator::operator()(configurations_t & configurations, firstOrderAction & S) {
 
     const auto & data = configurations.dataTensor();
@@ -410,24 +418,35 @@ Real lengthEstimator::operator()(configurations_t & configurations, firstOrderAc
     int l= _l;
     int t0= initialTime(configurations);
 
+    if ( not _setMaxLength)
+    {
+        l=configurations.nChains()* configurations.nBeads();
+    }
 
-    std::array<int,2> timeRange;
 
-    
+
+
+    std::array<int,2> timeRange;    
     
 
     Real sum=0;
-    while(currentChain !=-1)
+    while(currentChain !=-1 )
     {
+        
+
+        auto tHead=configurations.getChain( currentChain ).head;
+        auto tTail=configurations.getChain( currentChain ).tail ;
+
+
         if (l>0)
         {
-            timeRange[0]=t0;
-            timeRange[1]=std::min(t0+l,M);
+            timeRange[0]=std::max(t0,tTail+1);
+            timeRange[1]=std::min( t0+l,tHead );    
         }
         else
         {
-            timeRange[1]=t0;
-            timeRange[0]=std::max(t0+l,0);
+            timeRange[1]=std::min( t0 , tHead);
+            timeRange[0]=std::max(t0+l,tTail + 1);
         }
 
 
@@ -440,19 +459,25 @@ Real lengthEstimator::operator()(configurations_t & configurations, firstOrderAc
             }
         }
 
-        if( (t0+ l) > M )
+
+        if( ( timeRange[0]+ l) > M )
         {
             currentChain=configurations.getChain(currentChain).next;
-            l-=( M - t0);
+            l-=( timeRange[1] - timeRange[0]  );
             t0=0;
         }
-        else if (t0 + l < 0 )
+        else if ( timeRange[1] + l < 0 )
         {
-            l+=t0;
+            l+=timeRange[1]-timeRange[0];
             t0=M;
             currentChain=configurations.getChain(currentChain).prev;            
         } 
         else
+        {
+            currentChain=-1;
+        }
+
+        if ( ( not _setMaxLength) and ( currentChain == _iChain  ) )
         {
             currentChain=-1;
         }
@@ -462,8 +487,33 @@ Real lengthEstimator::operator()(configurations_t & configurations, firstOrderAc
     return sum;
 }
 
+Real nBeadsInWormEstimator::operator()(configurations_t & configurations, firstOrderAction & S) {
+
+    auto currentChain=configurations.getGroups()[_iGroup].tails[0];
+    int l=0;
+
+    while(currentChain !=-1 )
+    {
+        
+
+        auto tHead=configurations.getChain( currentChain ).head;
+        auto tTail=configurations.getChain( currentChain ).tail ;
+        l+=tHead  - (tTail + 1);
+
+        currentChain=configurations.getChain(currentChain).next;
+        
+    }
+    
+    return l;
+}
 
 
+
+Real nConnectedChainsEstimator::operator()(configurations_t & configurations, firstOrderAction & S) {
+
+
+    return chainCounter.count(configurations,_set);
+}
 
 
 

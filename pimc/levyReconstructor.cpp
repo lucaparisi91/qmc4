@@ -40,8 +40,7 @@ namespace pimc
             for(int d=0;d<getDimensions() ;d++)
             {
                 data(iChain,d,timeRange[0])=firstParticleX[d];
-           }
-            
+            }
                applyFixedFreeBoundaries(configurations,timeRange,iChain,S,{chainBoundary::fixed,chainBoundary::free},randG);
            }
         
@@ -133,7 +132,7 @@ namespace pimc
             int tFixedBoundary=-1,tFreeBoundary=-1;
 
             // figure out which boundary is fixed and which is free
-            if (chainBoundaries[0]== chainBoundary::fixed)
+            if (currentChainBoundary[0]== chainBoundary::fixed)
             {
                 tFixedBoundary=timeRange[0];
                 tFreeBoundary=timeRange[1];
@@ -169,6 +168,7 @@ namespace pimc
         Reconstruct between timeRange[1] -1 and timeRange[0] + 1
         timeRange[0] and timeRange[1] are used as boundary conditions
         */
+
 
         Real timeStep=S.getTimeStep();
         const auto & geo = S.getGeometry();

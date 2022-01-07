@@ -2,7 +2,6 @@
 #include "action.h"
 #include "qmcExceptions.h"
 #include "toolsPimcTest.h"
-
 namespace pimc
 {      
     std::array<int,2> timeSliceGenerator::operator()(randomGenerator_t & randG, int nBeads , int maxBeadLength)
@@ -14,9 +13,19 @@ namespace pimc
 
         return {t0,t1};
     }
+
+
+
+
+
+
+
+    
+
+
+
     
 levyMove::levyMove(int maxBeadLength_,int set) : _levy(maxBeadLength_) , uniformRealNumber(0,1),maxBeadLength(maxBeadLength_) , buffer(( maxBeadLength_+1)*2,getDimensions() ) ,singleSetMove::singleSetMove(set){}
-
 
 bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,randomGenerator_t & randG)
 {
@@ -33,7 +42,6 @@ bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,rand
     {
         return false;
     }
-
 
     auto timeRange = tGen(randG,nBeads,maxBeadLength);
 
@@ -653,7 +661,6 @@ bool sectorTableMoves::attemptMove(configurations_t & confs, firstOrderAction & 
     return success;
 };
 
-
 void sectorTableMoves::resetCounters()
 {
    
@@ -732,6 +739,31 @@ singleSetMove(set)
 {}
 
 
+createWormSemiCanonicalMove::createWormSemiCanonicalMove(Real CA_ , Real CB_,  int setA,int setB,int maxReconstructedLength_) : CA(CA_),CB(CB_), _levy(maxReconstructedLength_+2) ,  _maxLength(maxReconstructedLength_) ,buffer(2*(maxReconstructedLength_+2),getDimensions()),
+gauss(0,1),uniformRealNumber(0,1),
+setStartingBeadRandom(true),
+setLengthCutRandom(true),
+startingBead(-1),
+lengthCut(-1),
+startingChain(-1),
+setStartingChainRandom(true),
+twoSetMove(setA,setB)
+{}
+
+removeWormSemiCanonicalMove::removeWormSemiCanonicalMove(Real CA_ , Real CB_,  int setA,int setB,int maxReconstructedLength_) : CA(CA_),CB(CB_), _levy(maxReconstructedLength_+2) ,  _maxLength(maxReconstructedLength_) ,buffer(2*(maxReconstructedLength_+2),getDimensions()),
+gauss(0,1),uniformRealNumber(0,1),
+setStartingBeadRandom(true),
+setLengthCutRandom(true),
+startingBead(-1),
+lengthCut(-1),
+startingChain(-1),
+setStartingChainRandom(true),
+twoSetMove(setA,setB)
+{}
+
+
+
+
 openMoveTest::openMoveTest(Real C_ , int set,int maxLength, int startingBead_) : C(C_), _levy(maxLength+2) ,
 gauss(0,1),uniformRealNumber(0,1),
 startingBead(startingBead_),
@@ -750,7 +782,7 @@ singleSetMove(set)
 
 
 
-semiOpenMove::semiOpenMove(Real C_ , int set , int maxLength_ ) : C(C_), _levy(maxLength_+2 )  ,buffer( maxLength_+ 2,getDimensions() ), _maxLength(maxLength_),
+semiOpenMove::semiOpenMove(Real C_ , int setA , int setB, int maxLength_ ) : C(C_), _levy(maxLength_+2 )  ,buffer( maxLength_+ 2,getDimensions() ), _maxLength(maxLength_),
 gauss(0,1),uniformRealNumber(0,1),
 setStartingBeadRandom(true),
 setLengthCutRandom(true),
@@ -758,7 +790,7 @@ startingBead(-1),
 lengthCut(-1),
 startingChain(-1),
 setStartingChainRandom(true),
-singleSetMove(set)
+twoSetMove(setA,setB)
 {}
 
 
@@ -767,22 +799,30 @@ bool semiOpenMove::attemptMove(configurations_t & confs , firstOrderAction & S,r
 
     _levy.setReconstructorBoundaries(chainBoundary::fixed,chainBoundary::free);
 
+    if (confs.isOpen( getSetA()    ) or confs.isOpen( getSetB()    )     )
+    {
+        return false;
+    }
+
+
+
+
     Real timeStep = S.getTimeStep();
 
-    int N = confs.nParticles(getSet());
+    int N = confs.nParticles(getSetA());
 
     const auto & geo = S.getGeometry();
 
-    if ( confs.isOpen(getSet()) )
+    if ( confs.isOpen(getSetA()) )
     {
         throw invalidState("The configuration is already open.");
     }
 
     int iChain=startingChain;
 
-    if (setStartingBeadRandom)
+    if (setStartingChainRandom)
     {
-        iChain = confsSampler.sampleChain(confs,getSet(),randG);
+        iChain = confsSampler.sampleChain(confs,getSetA(),randG);
     }
 
     if (iChain < 0)
@@ -808,7 +848,6 @@ bool semiOpenMove::attemptMove(configurations_t & confs , firstOrderAction & S,r
 
     if (setStartingBeadRandom)
     {
-        
 
         tHead =  std::floor(  uniformRealNumber( randG )*confs.nBeads() );
     }
@@ -913,7 +952,7 @@ bool semiOpenMove::attemptMove(configurations_t & confs , firstOrderAction & S,r
 
     if ( accept)
     {
-        int iChainHead=confs.pushChain(getSet() );
+        int iChainHead=confs.pushChain(getSetA() );
         
         confs.setHeadTail(iChainHead,tHead,-1);
 
@@ -961,7 +1000,57 @@ Real semiOpenMove::openCloseRatioCoefficient(int N,int M)
     }
 
 
-semiCloseMove::semiCloseMove(Real C_ , int set , int maxLength_ ) : C(C_), _levy(maxLength_+2 )  ,buffer( maxLength_+ 2,getDimensions() ), _maxLength(maxLength_),
+Real createWormSemiCanonicalMove::openCloseRatioCoefficient(int N,int M)
+    {
+        Real coeff=CA*CB;
+
+        if (setStartingChainRandom)
+        {
+            coeff*=N;
+        }
+        
+
+        if (setStartingBeadRandom)
+        {
+            coeff*=M;
+        }
+
+        if ( setLengthCutRandom)
+        {
+            coeff*=_maxLength;
+        }
+        
+        return coeff;
+    }
+
+Real removeWormSemiCanonicalMove::openCloseRatioCoefficient(int N,int M)
+    {
+        Real coeff=CA*CB;
+
+        if (setStartingChainRandom)
+        {
+            coeff*=N;
+        }
+        
+
+        if (setStartingBeadRandom)
+        {
+            coeff*=M;
+        }
+
+          if ( setLengthCutRandom)
+        {
+            coeff*=_maxLength;
+        }
+        
+
+        return coeff;
+    }
+
+
+
+
+semiCloseMove::semiCloseMove(Real C_ , int setA , int setB, int maxLength_ ) : C(C_), _levy(maxLength_+2 )  ,buffer( maxLength_+ 2,getDimensions() ), _maxLength(maxLength_),
 gauss(0,1),uniformRealNumber(0,1),
 setStartingBeadRandom(true),
 setLengthRandom(true),
@@ -969,7 +1058,7 @@ startingBead(-1),
 length(-1),
 startingChain(-1),
 setStartingChainRandom(true),
-singleSetMove(set)
+twoSetMove(setA,setB)
 {}
 
 bool semiCloseMove::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG)
@@ -977,19 +1066,26 @@ bool semiCloseMove::attemptMove(configurations_t & confs , firstOrderAction & S,
 
     _levy.setReconstructorBoundaries(chainBoundary::fixed,chainBoundary::fixed);
 
+
     Real timeStep = S.getTimeStep();
 
-    int N = confs.nParticles(getSet());
+    int NA = confs.nParticles(getSetA());
 
 
     const auto & geo = S.getGeometry();
 
-    if ( not confs.isOpen(getSet()) )
+    if ( not confs.isOpen(getSetA()) )
     {
         throw invalidState("The configuration is already closed.");
     }
 
-    const auto & group =confs.getGroups()[ getSet() ];
+    if ( confs.isOpen(getSetB()) )
+    {
+        return false;
+    }
+
+
+    const auto & group =confs.getGroups()[ getSetA() ];
     auto iChainHead=group.heads[0];
     auto iChainTail=group.tails[0];
 
@@ -1100,10 +1196,10 @@ bool semiCloseMove::attemptMove(configurations_t & confs , firstOrderAction & S,
 
     deltaS+=sPot.evaluate(confs,timeRange,iChainHead);
     
-    N =nParticlesOnClose(confs,getSet());
 
-    auto propRatio = -deltaS + freeParticleLogProbability(difference,S.getTimeStep()*l,mass)  - log( openCloseRatioCoefficient(N,M) );
-
+    auto freeProbLog=freeParticleLogProbability(difference,S.getTimeStep()*l,mass);
+    auto propRatio = -deltaS + freeProbLog  - log( openCloseRatioCoefficient(NA + 1,M) );
+    
     bool accept = sampler.acceptLog(propRatio,randG);
 
     if ( accept)
@@ -1149,7 +1245,6 @@ Real semiCloseMove::openCloseRatioCoefficient(int N,int M)
 
 fullSemiCanonicalOpenMove::fullSemiCanonicalOpenMove(Real C_ , int setA , int setB , int maxLength_ ) : C(C_), _levy(maxLength_+2 )  ,buffer( maxLength_+ 2,getDimensions() ), _maxLength(maxLength_),
 gauss(0,1),uniformRealNumber(0,1),
-setStartingBeadRandom(true),
 setLengthCutRandom(true),
 startingBead(-1),
 length(-1),
@@ -1160,7 +1255,6 @@ twoSetMove(setA,setB)
 
 fullSemiCanonicalCloseMove::fullSemiCanonicalCloseMove(Real C_ , int setA , int setB , int maxLength_ ) : C(C_), _levy(maxLength_+2 )  ,buffer( maxLength_+ 2,getDimensions() ), _maxLength(maxLength_),
 gauss(0,1),uniformRealNumber(0,1),
-setStartingBeadRandom(true),
 setLengthCutRandom(true),
 startingBead(-1),
 length(-1),
@@ -1168,7 +1262,6 @@ startingChain(-1),
 setStartingChainRandom(true),
 twoSetMove(setA,setB)
 {}
-
 
 Real fullSemiCanonicalOpenMove::openCloseRatioCoefficient(int N, int M){
         Real coeff=C;
@@ -1184,9 +1277,6 @@ Real fullSemiCanonicalOpenMove::openCloseRatioCoefficient(int N, int M){
 
         return coeff;
     }
-
-
-
 
  bool fullSemiCanonicalOpenMove::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG)
  {
@@ -1211,7 +1301,7 @@ Real fullSemiCanonicalOpenMove::openCloseRatioCoefficient(int N, int M){
 
     int iChainHeadA=startingChain;
 
-    if (setStartingBeadRandom)
+    if (setStartingChainRandom)
     {
         iChainHeadA = confsSampler.sampleChain(confs,getSetA(),randG);
     }
@@ -1221,15 +1311,12 @@ Real fullSemiCanonicalOpenMove::openCloseRatioCoefficient(int N, int M){
         return false;
     }
 
-
     int l = _maxLength;
-
 
     if (setLengthCutRandom)
     {
         l = std::floor(uniformRealNumber(randG) * (_maxLength   ) ) + 1;
     }
-    
 
     int M = confs.nBeads();
 
@@ -1319,7 +1406,7 @@ Real fullSemiCanonicalOpenMove::openCloseRatioCoefficient(int N, int M){
     {
         iChainHeadB2=confs.pushChain(getSetB());
         configurations_t::copyData(confs, {M, tHeadB + l }, { iChainHeadB,iChainHeadB } , confs , 0 , iChainHeadB2  );
-        confs.setHead(iChainHeadB2,timeRange2[1] + 1);
+        confs.setHeadTail(iChainHeadB2,timeRange2[1] + 1,-1);
         confs.setHead(iChainHeadB,M);
         confs.join( iChainHeadB,iChainHeadB2);
         deltaS+=sPot.evaluate(confs,timeRange2,iChainHeadB2);
@@ -1369,6 +1456,8 @@ Real fullSemiCanonicalOpenMove::openCloseRatioCoefficient(int N, int M){
         {
             confs.removeChain(iChainHeadB2);
         }
+
+
     }
 
     return accept;
@@ -1434,10 +1523,17 @@ Real fullSemiCanonicalCloseMove::openCloseRatioCoefficient(int N, int M){
     assert( tTailB == tHeadA - 1);
 
     int l = tTailA + 1 - tHeadA;
-    if (l < 0)
+    if (l <= 0)
     {
         l+=M;
     }
+
+    if (l > _maxLength)
+    {
+        return false;
+    }
+    
+
 
     int iChainHeadBPrev= confs.getChain(iChainHeadB).prev;
 
@@ -1445,7 +1541,7 @@ Real fullSemiCanonicalCloseMove::openCloseRatioCoefficient(int N, int M){
     int iChainHeadAPrev=confs.getChain(iChainHeadA).prev;
     int iChainTailANext=confs.getChain(iChainTailA).next;
 
-    if ( tHeadB -  l >= 0 )
+    if ( tHeadB -  l > 0 )
     {
         if ( (tHeadB - l ) <=  confs.getChain(iChainHeadB).tail + 1 )
         {
@@ -1466,6 +1562,8 @@ Real fullSemiCanonicalCloseMove::openCloseRatioCoefficient(int N, int M){
     }
 
 
+   
+
     Real deltaS=0;
     std::array<int,2> timeRangeB={ std::max(tHeadB - l,0)  , tHeadB -1 };
     auto & data = confs.dataTensor();
@@ -1473,13 +1571,9 @@ Real fullSemiCanonicalCloseMove::openCloseRatioCoefficient(int N, int M){
 
     deltaS-=sPot.evaluate(confs,timeRangeB,iChainHeadB);
 
-
     std::array<int,2> timeRangeB2={ tHeadB -  l  +  M, M - 1 };
 
-
     deltaS-=sPot.evaluate(confs,timeRangeB2,iChainHeadBPrev);
-
-
 
     
     Real mass = confs.getGroupByChain(iChainHeadA).mass;
@@ -1564,6 +1658,7 @@ Real fullSemiCanonicalCloseMove::openCloseRatioCoefficient(int N, int M){
         {
             confs.removeChain(iChainHeadB);
         }
+
     }
     else
     {
@@ -1576,7 +1671,16 @@ Real fullSemiCanonicalCloseMove::openCloseRatioCoefficient(int N, int M){
             confs.setHead(iChainHeadBPrev,M);
             confs.join(iChainHeadBPrev,iChainHeadB);
         }
+
     }
+
+   /*  bool valid=checkTimePeriodicBoundaryConditions( confs, geo  );
+
+    if (not valid)
+    {
+        std::cout << "invalid" << std::endl;
+        checkTimePeriodicBoundaryConditions( confs, geo  );
+    } */
 
     return accept;
  }
@@ -2149,9 +2253,6 @@ Real openMove::openCloseRatioCoefficient(int N,int M)
     }
 
 
-
-
-
 bool openMove::attemptGrandCanonicalMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG )
 {
     Real timeStep = S.getTimeStep();
@@ -2528,6 +2629,217 @@ bool openMove::attemptSemiGrandCanonicalMove(configurations_t & confs , firstOrd
 
     return accept;
 };
+
+
+bool createWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG )
+{
+    /* deleting from the setA and creating a worm in another set */
+
+    Real timeStep = S.getTimeStep();
+    _levy.setReconstructorBoundaries(pimc::chainBoundary::free,pimc::chainBoundary::free);
+    _levy.setSigma(1);
+    _levy.setGaussianParticleSampling();
+    int setB=getSetB();
+    int setA=getSetA();
+
+    int NA = confs.nParticles(setA);
+    int NB = confs.nParticles(setB);
+
+    const auto & geo = S.getGeometry();
+
+    if ( confs.isOpen(getSetA() ) or confs.isOpen( getSetB() ) )
+    {
+        return false;
+    }
+
+    int iChainA=startingChain;
+
+    if (setStartingChainRandom)
+    {
+        iChainA = confsSampler.sampleChain(confs,getSetA(),randG);
+    }
+
+    if (iChainA < 0)
+    {
+        return false;
+    }
+    
+
+    int l = lengthCut;
+
+
+    if (setLengthCutRandom)
+    {
+        l = std::floor(uniformRealNumber(randG) * (_maxLength   ) ) + 1;
+    }
+    
+    int M = confs.nBeads();
+
+
+    int tHeadA = startingBead;
+
+
+    if (setStartingBeadRandom)
+    {
+        
+
+        tHeadA =  std::floor(  uniformRealNumber( randG )*confs.nBeads() );
+    }
+    
+    // evaluate action on segment to delete in setA
+    
+    Real deltaS=0;
+    std::array<int,2> timeRangeA={tHeadA , std::min(tHeadA+l,M) - 1 };
+
+    auto & data = confs.dataTensor();
+
+    auto & sPot = S.getPotentialAction();
+
+    deltaS-=sPot.evaluate(confs,timeRangeA,iChainA);
+
+    // comput deltaS on the next chain ( if tTail overflows to the next chain)
+    int t0_2=0;
+    int t1_2=(tHeadA + l - M  );
+    std::array<int,2> timeRangeA2={t0_2,t1_2-1};
+    int iChainANext=confs.getChain(iChainA).next;
+    deltaS-=sPot.evaluate(confs,timeRangeA2,iChainANext);
+    
+    confs.deleteBeads(   timeRangeA, iChainA );
+    confs.deleteBeads(   timeRangeA2, iChainANext );
+
+
+    // creates the worm
+    int tTailB=tHeadA - 1;
+    int t0B = tTailB + 1;
+
+    int iChainTailB=confs.pushChain(setB);
+    int iChainHeadB=iChainTailB;
+    confs.setHeadTail(iChainTailB,std::min(t0B + l,M),tTailB);
+    if (t0B + l  >= M)
+    {
+        iChainHeadB=confs.pushChain( setB );
+        confs.setHeadTail(iChainHeadB,t0B + l - M ,-1);
+        confs.join(iChainTailB,iChainHeadB);
+    }
+
+
+    _levy.apply(confs,{t0B,t0B + l},iChainTailB,S,randG);
+    if (t0B + l >= M)
+    {
+        confs.copyData( { M , t0B + l } , iChainTailB, 0,iChainHeadB ); 
+    }
+
+    std::array<int,2> timeRangeB{t0B, std::min(t0B + l,M) - 1  };
+    std::array<int,2> timeRangeB2{0,t0B + l - M -1};
+
+    // evaluate the action due to the presence of the worm
+    deltaS+=sPot.evaluate(confs,timeRangeB,iChainTailB);
+    deltaS+=sPot.evaluate(confs,timeRangeB2,iChainHeadB);
+
+    
+    // compute the distance between the head and the tail
+
+    Real mass = confs.getGroupByChain(iChainA).mass;
+
+    int tTailA = -1000;
+    int iChainTailA=-100;
+
+
+    if (tHeadA+l < M)
+    {
+        tTailA=timeRangeA[1];
+        iChainTailA=iChainA;
+    }
+    else 
+    {
+        tTailA=timeRangeA2[1];
+        iChainTailA=iChainANext;
+    }
+
+    std::array<Real,getDimensions()> difference; 
+    for (int d=0;d<getDimensions();d++)
+    {
+        difference[d]=
+               geo.difference( 
+                data(iChainTailA,d,tTailA+1)-data(iChainA,d,tHeadA),d
+            );
+        
+           if (    
+            std::abs(data(iChainTailA,d,tTailA + 1)-data(iChainA,d,tHeadA) ) > geo.getLBox(d)*0.5 )
+            {
+                //std::cout <<  "Warning: l too long for open/close"<<std::endl;
+
+                return false;
+            } 
+    }
+
+
+    std::array<Real, getDimensions()> x0;
+    for (int d=0;d<getDimensions();d++)
+    {
+        x0[d]=data(iChainTailB,d,t0B);
+    }
+    
+    auto deltaMu=(confs.getChemicalPotential(setA) - confs.getChemicalPotential(setB) ) ;
+
+    auto propRatio = -deltaS - freeParticleLogProbability(difference,S.getTimeStep()*l,mass) - deltaMu*l*timeStep + log( openCloseRatioCoefficient(NA,M) ) - _levy.probabilityInitialPosition(geo,x0);
+
+
+
+    bool accept = sampler.acceptLog(propRatio,randG);
+
+    confs.createBeads(   timeRangeA, iChainA );
+    confs.createBeads(   timeRangeA2, iChainANext );
+
+    
+    if ( accept)
+    {
+        if ( tHeadA + l >=M)
+        {
+            confs.setHead(iChainA,tHeadA);
+            confs.setTail(iChainTailA,tTailA);
+        }
+        else
+        {
+            confs.setHead(iChainA,tHeadA);
+            int iChainTailA=confs.pushChain(getSetA() );
+            confs.setHeadTail(iChainTailA,M,tTailA);
+            confs.join(iChainTailA,iChainANext);
+            confs.copyData({tTailA+1,M}  , iChainA, iChainTailA  );
+        }
+
+         if (t0B +l >= M)
+        {
+            confs.join(iChainTailB,iChainHeadB);
+        }
+        else
+        {
+
+        }
+
+    }
+    else
+    {
+
+        if (tTailB + 1 + l >= M)
+        {
+            confs.setTail(iChainHeadB,-1);
+            confs.removeChains(iChainTailB,iChainHeadB);
+        }
+        else
+        {
+            confs.removeChain(iChainHeadB);       
+        }
+
+        
+    }
+
+    return accept;
+};
+
+
+
+
 
 
 bool openMoveTest::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG )
@@ -3337,6 +3649,263 @@ bool closeMove::attemptSemiGrandCanonicalMove(configurations_t & confs , firstOr
 };
 
 
+
+bool removeWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG )
+{
+
+    _levy.setReconstructorBoundaries(pimc::chainBoundary::fixed,pimc::chainBoundary::fixed);
+
+    _levy.setGaussianParticleSampling();
+    _levy.setSigma(1);
+
+
+     if ( not  (confs.isOpen(getSetA() ) and confs.isOpen(getSetB() ) ) )
+    {
+        return false;
+    }
+
+    const auto & headsA = confs.getGroups()[getSetA()].heads;
+    const auto & tailsA = confs.getGroups()[getSetA()].tails;
+
+
+
+    int iChainHeadA=headsA[std::floor(uniformRealNumber(randG) * headsA.size() )];
+    int iChainTailA=tailsA[std::floor(uniformRealNumber(randG) * tailsA.size() )];
+
+    int tHeadA=confs.getChain(iChainHeadA).head;
+
+    int tTailA = confs.getChain(iChainTailA).tail;
+
+    int setB= getSetB();
+
+
+    //int setB= samplePartnerSet(randG) ;
+
+
+    const auto & headsB = confs.getGroups()[setB].heads;
+    const auto & tailsB = confs.getGroups()[setB].tails;
+
+    int iChainHeadB=headsB[std::floor(uniformRealNumber(randG) * headsB.size() )];
+    int iChainTailB=tailsB[std::floor(uniformRealNumber(randG) * tailsB.size() )];
+
+
+    int tHeadB=confs.getChain(iChainHeadB).head;
+    int tTailB = confs.getChain(iChainTailB).tail;
+
+    assert( tHeadA == tTailB + 1);
+    assert( tHeadB == tTailA + 1);
+
+
+     if (iChainHeadB != iChainTailB )
+    {
+       if ( confs.getChain(iChainTailB).next  != iChainHeadB )
+       {
+           return false;
+       }
+    }
+
+
+
+
+
+
+    
+    auto timeStep = S.getTimeStep();
+
+    auto & geo = S.getGeometry();
+
+    int M = confs.nBeads();
+    
+    int NA = confs.nParticles(getSetA() );
+
+
+    //int l= std::floor( uniformRealNumber(randG) * (_maxLength -2) ) + 1 ; // distance from itime where the head is formed
+    int l = tTailA - tHeadA + 1 ;
+
+    if (l<=0)
+    {
+        l+= M;
+    }
+
+    if (l > _maxLength)
+    {
+        return false;
+    }
+
+    int lToRemove = (tHeadB - (tTailB + 1) );
+
+    if (iChainHeadB != iChainTailB)
+    {
+        lToRemove+=M;
+    }
+
+    if (lToRemove != l )
+    {
+        return false;
+    }
+
+
+    auto & sPot = S.getPotentialAction();
+
+    Real deltaS=0;
+    int t0A= tHeadA;
+    int t1A=std::min(tHeadA + l,M); 
+
+    std::array<int,2> timeRangeA={t0A,t1A-1 };
+
+    auto & data = confs.dataTensor();
+
+    //std::cout << data(iChainHead,0,iHead)-data(iChainTail,0,iTail) << std::endl;
+
+
+    deltaS-=sPot.evaluate(confs,timeRangeA,iChainHeadA);
+
+    t0A=0;
+    t1A=tHeadA + l - M  ; 
+    std::array<int,2> timeRangeA2={t0A,t1A-1 };
+
+
+    deltaS-=sPot.evaluate(confs,timeRangeA2,iChainTailA);
+
+
+    int t0B=tTailB + 1;
+
+    std::array<int,2> timeRangeB{t0B, std::min(t0B + l,M) - 1  };
+    std::array<int,2> timeRangeB2{0,t0B + l - M -1};
+
+
+    deltaS-=sPot.evaluate(confs,timeRangeB,iChainTailB);
+    deltaS-=sPot.evaluate(confs,timeRangeB2,iChainHeadB);
+
+
+
+    std::array<Real,3> diff;
+
+    std::array<Real,getDimensions()> difference;
+    std::array<Real,getDimensions()> delta;
+    
+
+    for (int d=0;d<getDimensions();d++)
+    {
+        difference[d]=
+               geo.difference( 
+                data(iChainTailA,d,tTailA + 1)-data(iChainHeadA,d,tHeadA),d
+            );
+        data(iChainHeadA,d,tHeadA + l) =                           data(iChainHeadA,d,tHeadA) + difference[d];
+        delta[d]=  data(iChainHeadA,d,tHeadA + l) -  data(iChainTailA,d,tTailA + 1);  
+    }
+
+    _levy.apply( confs,{tHeadA,tHeadA + l}, iChainHeadA,S,randG);
+
+    configurations_t::copyData(confs, {M,tHeadA + l}, {iChainHeadA,iChainHeadA} , confs, 0 , iChainTailA   );
+
+    confs.setHead(iChainHeadA, std::min(tHeadA+l,M));
+    confs.setHead(iChainTailB,tTailB + 1);
+    
+
+    if (tHeadA + l >= M)
+    {
+       
+        confs.setTail(iChainTailA,-1);
+        confs.join(iChainHeadA,iChainTailA);
+        confs.setHead(iChainHeadB,0);
+    
+    }
+
+    deltaS+=sPot.evaluate(confs,timeRangeA,iChainHeadA);
+    deltaS+=sPot.evaluate(confs,timeRangeA2,iChainTailA);
+
+
+    Real mass = confs.getGroupByChain(iChainHeadA).mass;
+
+    int nNewA = NA + 1;
+
+    if ( (tHeadA + l >=M) and (iChainHeadA != iChainTailA ) )
+    {   
+        nNewA= NA + 2;    
+    }
+
+
+    std::array<Real,getDimensions()> x0B;
+    for (int d=0;d<getDimensions();d++)
+    {
+        x0B[d]=data(iChainTailB,d,t0B);   
+    }
+
+    auto rhoDifference= freeParticleLogProbability(difference,S.getTimeStep()*l,mass);
+    auto coeff = log( openCloseRatioCoefficient(nNewA,M)   );
+    auto deltaMu= ( confs.getChemicalPotential( getSetA() ) - confs.getChemicalPotential( setB )  );
+    auto probInit=_levy.probabilityInitialPosition(geo,x0B) ;
+    auto propRatio = -deltaS + rhoDifference - coeff + deltaMu*l*timeStep + probInit;
+
+    bool accept = sampler.acceptLog(propRatio,randG);
+
+    if ( accept)
+    {
+        
+        if (( tHeadA + l) < M)
+        {
+            confs.copyData({tTailA + 1,M},iChainTailA,iChainHeadA);
+            confs.translateData({tTailA + 1,M},{iChainHeadA,iChainHeadA},delta);
+            
+
+            int iChainNextA=confs.getChain(iChainTailA).next;
+            confs.setHead(iChainHeadA,M);
+            confs.join(iChainHeadA,iChainNextA);
+            confs.removeChain(iChainTailA);
+            
+        }
+        else
+        {
+            confs.translateData({tTailA + 1, M},{iChainTailA,iChainTailA},delta);
+
+        }
+
+
+         if ( iChainTailB == iChainHeadB)
+        {
+            confs.removeChain(iChainHeadB);
+        }
+        else
+        {
+            confs.setTail(iChainHeadB,-1);
+            confs.removeChains(iChainTailB,iChainHeadB);
+        }
+
+    }
+    else
+    {
+        confs.setHead(iChainHeadA,tHeadA);
+        confs.setTail(iChainTailA,tTailA);
+
+        confs.setHead(iChainHeadB,tHeadB);
+        confs.setTail(iChainTailB,tTailB);
+        
+        if (tHeadA + l >= M)
+        {
+            std::array<Real,getDimensions()> deltaOpposite;
+    
+            for(int d=0;d<getDimensions();d++)
+                {
+                deltaOpposite[d]=-delta[d];
+            }
+            
+            confs.translateData({tTailA + 1,tTailA + 1},{iChainTailA,iChainTailA},deltaOpposite);
+            confs.setHead(iChainTailB,M);
+            confs.join(iChainTailB,iChainHeadB);
+        }
+    }
+
+   /*  std::cout << "After close" << std::endl;
+    confs >> std::cout;
+    std::cout << std::endl; */
+
+    return accept;
+
+};
+
+
+
 advanceHead::advanceHead(int maxAdvanceLength_,int set) :
 _maxReconstructedLength(maxAdvanceLength_+2) , _levy((maxAdvanceLength_+2)*2),gauss(0,1),uniformRealNumber(0,1),singleSetMove(set) ,
 enforceMaxParticleNumber(false),_nMax(1e+9)
@@ -3587,6 +4156,14 @@ int recedeHeadTail::sampleLength(randomGenerator_t & randG)
 
 bool recedeHeadTail::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG)
 {
+
+
+    if ( not( confs.isOpen(getSetA() ) and confs.isOpen(getSetB() ) ) )
+    {
+        return false;
+    }
+
+
     _levy.setReconstructorBoundaries(chainBoundary::free,chainBoundary::fixed);
 
 
@@ -3606,10 +4183,15 @@ bool recedeHeadTail::attemptMove(configurations_t & confs , firstOrderAction & S
     int tTailB=confs.getChain(iChainTailB).tail;
     int iChainHeadAPrev=confs.getChain(iChainHeadA).prev;
 
+
+    assert(  tHeadA == tTailB + 1);
+    
+    
+
     int l= sampleLength(randG);
 
     // checks if enough beads on the head to remove
-    if ( tHeadA - l >= 0 )
+    if ( tHeadA - l > 0 )
     {
         if ( tHeadA - l <= confs.getChain(iChainHeadA).tail + 1 )
         {
@@ -3627,6 +4209,21 @@ bool recedeHeadTail::attemptMove(configurations_t & confs , firstOrderAction & S
             return false;
         }
     }
+
+
+/*     //**************************** TMP code *************
+    {
+        int t0=3;
+        int tMin=t0;
+        assert( tHeadA>= tMin);
+        if ( tHeadA - l < tMin )
+        {
+            return false;
+        } 
+        
+    } */
+//**************************** TMP code *************/
+    
 
     Real deltaS=0;
     
@@ -3722,8 +4319,19 @@ bool advanceHeadTail::attemptMove(configurations_t & confs , firstOrderAction & 
 {
 
     _levy.setReconstructorBoundaries(chainBoundary::fixed,chainBoundary::free);
+    const auto & geo = S.getGeometry();
 
+
+  
     Real timeStep = S.getTimeStep();
+
+    const auto & groupA = confs.getGroups()[getSetA()];
+    const auto & groupB = confs.getGroups()[getSetB() ];
+
+    if ( not( confs.isOpen(getSetA() ) and confs.isOpen(getSetB() ) ) )
+    {
+        return false;
+    }
 
     const auto & headsA = confs.getGroups()[getSetA()].heads;
     const auto & tailsB = confs.getGroups()[getSetB()].tails;
@@ -3739,10 +4347,12 @@ bool advanceHeadTail::attemptMove(configurations_t & confs , firstOrderAction & 
     int tTailB=confs.getChain(iChainTailB).tail;
     int iChainTailBNext=confs.getChain(iChainTailB).next;
 
+    assert( tHeadA == tTailB + 1);
+
+
     int l= sampleLength(randG);
 
     // check if there is enough beads to delete from the tail of B set
-
     if ( tTailB + 1 + l < M )
     {
         if ( (tTailB + 1 + l) >= confs.getChain(iChainTailB).head )
@@ -3762,6 +4372,8 @@ bool advanceHeadTail::attemptMove(configurations_t & confs , firstOrderAction & 
         }
     }
 
+    
+    
 
     Real deltaS=0;
     
@@ -3801,7 +4413,7 @@ bool advanceHeadTail::attemptMove(configurations_t & confs , firstOrderAction & 
 
     if (tHeadA + l >= M)
     {
-        confs.setHead(iChainHeadANew,timeRangeHead2[1] + 1);
+        confs.setHeadTail(iChainHeadANew,timeRangeHead2[1] + 1,-1);
         confs.join(iChainHeadA,iChainHeadANew);
     }
 

@@ -40,6 +40,7 @@ private:
 
 enum sector_t{ diagonal = 0 , offDiagonal = 1 , any = 2} ;
 
+
 struct particleGroup
 {
     static const int maxWorms = 1;
@@ -213,8 +214,6 @@ public:
          
 
           void translateData(const std::array<int,2> & timeRange, const std::array<int,2> & particleRange,const std::array<Real,getDimensions() > & delta);
-
-
 
           void copyData(const std::array<int,2> & timeRange, int iParticleFrom, int timeOffset, int iParticleTo)
          {
@@ -411,6 +410,10 @@ class configurationsSampler
 };
 
 int nParticlesOnClose(const pimcConfigurations & configurations, int set);
+
+
+bool checkTimePeriodicBoundaryConditions( const pimcConfigurations & confs, const geometry_t & geo  );
+
 
 };
 

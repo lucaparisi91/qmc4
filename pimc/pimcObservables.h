@@ -6,7 +6,7 @@
 #include "pimcConfigurations.h"
 #include "action.h"
 #include "accumulators.h"
-
+#include "nConnectedChains.h"
 
 namespace pimc
 {
@@ -208,20 +208,32 @@ class thermodynamicEnergyEstimator : public scalarEstimator
 };
 
 
+
 class particleNumberEstimator : public scalarEstimator 
 {
     
     public:
     
-    particleNumberEstimator(int setA) : _setA(setA) {}
+    particleNumberEstimator( const std::vector<int> & sets_) : _sets(sets_) {}
+
+    particleNumberEstimator(int setA) : _sets({setA}) {}
+
+
     
     particleNumberEstimator(const json_t & j) : particleNumberEstimator( j["set"].get<int>() ) {}
 
 
-    virtual Real operator()(configurations_t & configurations, firstOrderAction & S) {return configurations.nParticles(_setA);}
+    virtual Real operator()(configurations_t & configurations, firstOrderAction & S) {
+        int N=0;
+        for( auto set : _sets)
+        {
+            N+=configurations.nParticles(set);
+        }
+    return N;
+    }
 
     private: 
-    int _setA;
+    std::vector<int> _sets;
 };
 
 class magnetizationSquaredEstimator : public scalarEstimator 
@@ -279,9 +291,12 @@ class lengthEstimator : public scalarEstimator
 {
     
     public:
-    
+
+    lengthEstimator( );
+
     lengthEstimator( int l);
     
+
     lengthEstimator(const json_t & j) :  lengthEstimator( j["chain"].get<int>()   ) { }
     
     virtual Real operator()(configurations_t & configurations, firstOrderAction & S);
@@ -304,9 +319,36 @@ class lengthEstimator : public scalarEstimator
     int _l;
     bool _startFromHeadOrTail;
     int _iGroup;
+    bool _setMaxLength;
+
 };
 
+class nBeadsInWormEstimator : public scalarEstimator 
+{
+    public:
+    
+    nBeadsInWormEstimator( int iGroup ) : _iGroup(iGroup) {};
+    virtual Real operator()(configurations_t & configurations, firstOrderAction & S);
 
+
+    private:
+    int _iGroup;
+
+};
+
+class nConnectedChainsEstimator : public scalarEstimator
+{
+    public:
+
+    nConnectedChainsEstimator( int set_) : _set(set_){};
+    virtual Real operator()(configurations_t & configurations, firstOrderAction & S);
+
+
+    private:
+
+    nConnectedChains chainCounter;
+    int _set;
+};
 
 
 

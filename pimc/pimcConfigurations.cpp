@@ -5,6 +5,7 @@
 #include <algorithm>
 #include "hdf5IO.h"
 #include <iostream>
+#include "geometryPMC.h"
 
 namespace fs = std::filesystem;
 
@@ -86,7 +87,7 @@ void pimcConfigurations::setHead( int iChain, int newHead )
 
     currentChain.head=newHead;
     currentChain.next=-1;
-
+    
     assert(currentChain.tail < currentChain.head);
 
     if ( oldNext  >= 0 )
@@ -1202,6 +1203,7 @@ pimcConfigurations pimcConfigurations::loadHDF5(const std::string & filename)
 
     pimc::pimcConfigurations configurations(nBeads,DIMENSIONS,groups);
 
+
     configurations.dataTensor().setConstant(0);
 
      int ensamble;
@@ -1378,9 +1380,65 @@ void pimcConfigurations::setRandom( const std::array<Real,DIMENSIONS> & lBox,ran
             }
     
     fillHeads();
-
-}
     
+}
+
+
+bool checkTimePeriodicBoundaryConditions( const pimcConfigurations & confs, const geometry_t & geo  )
+{
+
+    const auto & data =confs.dataTensor();
+    auto M = confs.nBeads();
+
+    for (const auto & group : confs.getGroups() )
+    {
+        for (int i=group.iStart;i<=group.iEnd;i++)
+        {
+            const auto & chain = confs.getChain(i);
+
+            
+            if (chain.next == -1 )
+            {
+                if ( chain.head >= M ) {return false;}
+
+                if (chain.prev!= -1 )
+                {
+                    if ( chain.head < 0 ) {return false;}
+                }
+                else
+                {
+                    if (chain.tail + 1 >= chain.head ) {return false;}
+                }
+            }
+
+            if (chain.tail == -1 )
+            {
+                if (( chain.tail < -1) or (chain.tail >=M- 1) ) {return false;}
+
+            }
+
+            if ( chain.next !=-1    )
+            {
+                for(int d=0;d<getDimensions();d++)
+                {
+                   Real diff = geo.difference( data(i,d,M) - data(chain.next,d,0)  ,d);
+
+                   if ( std::abs(diff) > 1e-6 )
+                   {
+                       return false;
+                   }
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+
+
+
+
 };
 
 

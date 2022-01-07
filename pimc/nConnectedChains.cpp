@@ -10,15 +10,16 @@ namespace pimc
         std::fill(_visited.begin(), _visited.end(), false);
 
         size_t nRings=0;
+        
         for ( int i=group.iStart ; i<= group.iEnd ; i++ )
         {
-            if ( not _visited[i] )
+            if ( not _visited[i - group.iStart] )
             {
                 int iChain=i;
                 nRings+=1;
                 do
                 {
-                    _visited[iChain]=true;
+                    _visited[iChain - group.iStart]=true;
                     iChain=configurations.getChain(iChain).next;
                 }
                 while ( (iChain>=0) and (iChain!=i) );

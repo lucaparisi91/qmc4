@@ -11,10 +11,8 @@
 #include <cassert>
 #include "levyReconstructor.h"
 
-
 namespace pimc
 {
-
     class firstOrderAction;
     class action;
 
@@ -62,21 +60,24 @@ class singleSetMove : public move
 class twoSetMove : public move
 {
     public:
-    twoSetMove(int setA, int setB) : move({setA,setB}){}
+    twoSetMove(int setA, int setB) : move({setA }),_setB(setB){}
     twoSetMove(const json_t & j) : twoSetMove::twoSetMove(j["setA"].get<int>() ,j["setB"].get<int>() ){}
     
 
     virtual bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG)=0;
 
 
-    int getSetA(){return getSets()[0];}
+    int getSetA() const  {return getSets()[0];}
 
-    int getSetB(){return getSets()[1];}
-
+    
+    int getSetB() const {return _setB;}
+    
     auto & getChainSampler() {return _chainSampler;}
 
     private:
     configurationsSampler _chainSampler;
+
+    int _setB;
 };
 
 
@@ -168,6 +169,8 @@ class tableMoves
     std::vector<Real> nOpenSectorMoves;
     std::vector<Real> nClosedSectorMoves;
     configurationsSampler _chainSampler;
+
+
 };
 
 
@@ -251,19 +254,19 @@ class openMove : public singleSetMove
     int startingChain;
 };
 
-
-class semiOpenMove : public singleSetMove
+class semiOpenMove : public twoSetMove
 {
     public:
     // splits a chain in two morms with one overlapping bead
-    semiOpenMove(Real C , int setA ,int maxLength_=1 ) ;
+    semiOpenMove(Real C , int setA ,int setB, int maxLength_=1 ) ;
 
-    semiOpenMove(const json_t & j) : semiOpenMove(j["C"].get<Real>() ,j["group"].get<int>() ,j["reconstructionMaxLength"].get<int>() ) {}
+    semiOpenMove(const json_t & j) : semiOpenMove(j["C"].get<Real>() ,j["setA"].get<int>() ,j["setB"].get<int>(),j["reconstructionMaxLength"].get<int>() ) {}
 
     void setStartingBead(int m){setStartingBeadRandom=false; startingBead=m;assert(m>=0);};
     void setLength( int l1){setLengthCutRandom=false;lengthCut=l1;}
 
     void setStartingChain(int m){setStartingChainRandom=false; startingChain=m;assert(m>=0);};
+
 
     bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG);
 
@@ -304,17 +307,14 @@ class fullSemiCanonicalOpenMove : public twoSetMove
     fullSemiCanonicalOpenMove( const json_t & j) : fullSemiCanonicalOpenMove(j["C"].get<Real>() ,j["setA"].get<int>() ,j["setB"].get<int>() ,j["reconstructionMaxLength"].get<int>() ) {}
 
 
-    void setStartingBead(int m){setStartingBeadRandom=false; startingBead=m;assert(m>=0);};
-
     void setLength( int l1){setLengthCutRandom=false;lengthCut=l1;}
 
     void setStartingChain(int m){setStartingChainRandom=false; startingChain=m;assert(m>=0);};
 
     bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG);
-
     
     private:
-
+    
     Real openCloseRatioCoefficient(int N,int M);
 
     Real C;
@@ -333,7 +333,6 @@ class fullSemiCanonicalOpenMove : public twoSetMove
 
     int startingBead;
     int startingChain;
-    bool setStartingBeadRandom;
     bool setLengthCutRandom;
     bool setStartingChainRandom;
     int lengthCut;
@@ -343,13 +342,12 @@ class fullSemiCanonicalOpenMove : public twoSetMove
 class fullSemiCanonicalCloseMove : public twoSetMove
 {
     public:
-    
+
     fullSemiCanonicalCloseMove(Real CA , int setA , int setB, int maxLength_=1 );
 
     fullSemiCanonicalCloseMove( const json_t & j) : fullSemiCanonicalCloseMove(j["C"].get<Real>() ,j["setA"].get<int>() ,j["setB"].get<int>() ,j["reconstructionMaxLength"].get<int>() ) {}
 
 
-    void setStartingBead(int m){setStartingBeadRandom=false; startingBead=m;assert(m>=0);};
 
     void setLength( int l1){setLengthCutRandom=false;lengthCut=l1;}
 
@@ -377,7 +375,6 @@ class fullSemiCanonicalCloseMove : public twoSetMove
 
     int startingBead;
     int startingChain;
-    bool setStartingBeadRandom;
     bool setLengthCutRandom;
     bool setStartingChainRandom;
     int lengthCut;
@@ -385,14 +382,105 @@ class fullSemiCanonicalCloseMove : public twoSetMove
 };
 
 
+class createWormSemiCanonicalMove : public twoSetMove
+{
+    public:
 
-class semiCloseMove : public singleSetMove
+
+    public:
+    // splits a chain in two morms with one overlapping bead
+    createWormSemiCanonicalMove(Real CA_ , Real CB_, int setA, int setB,int maxReconstructedLength_=1);
+
+
+    createWormSemiCanonicalMove(const json_t & j) : createWormSemiCanonicalMove(j["CA"].get<Real>() ,j["CB"].get<Real>(),j["setA"].get<int>() ,j["setB"].get<int>(),j["reconstructionMaxLength"].get<int>() ) {}
+
+    void setStartingBead(int m){setStartingBeadRandom=false; startingBead=m;assert(m>=0);};
+    void setLengthCut( int l1){setLengthCutRandom=false;lengthCut=l1;}
+
+    void setStartingChain(int m){setStartingChainRandom=false; startingChain=m;assert(m>=0);};
+
+
+    bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG);
+
+
+    private:
+
+    Real openCloseRatioCoefficient(int N,int M);
+
+
+    Real CA,CB;
+    std::array<Real, 3> tmp;
+
+    const Real D = 0.5;
+    configurationsSampler confsSampler;
+    std::normal_distribution<Real> gauss;
+    std::uniform_real_distribution<float> uniformRealNumber;
+    levyReconstructor _levy;
+    metropolis sampler;
+    Eigen::Tensor<Real,2> buffer;
+    int _maxLength;
+
+    int startingBead;
+    bool setStartingBeadRandom;
+    bool setLengthCutRandom;
+    bool setStartingChainRandom;
+    int lengthCut;
+    int startingChain;
+
+};
+
+class removeWormSemiCanonicalMove : public twoSetMove
 {
     public:
     // splits a chain in two morms with one overlapping bead
-    semiCloseMove(Real C , int setA ,int maxLength_=1 ) ;
+    removeWormSemiCanonicalMove(Real CA_ , Real CB_, int setA, int setB,int maxReconstructedLength_=1);
 
-    semiCloseMove(const json_t & j) : semiCloseMove(j["C"].get<Real>() ,j["group"].get<int>() ,j["reconstructionMaxLength"].get<int>() ) {}
+
+    removeWormSemiCanonicalMove(const json_t & j) : removeWormSemiCanonicalMove(j["CA"].get<Real>() ,j["CB"].get<Real>(),j["setA"].get<int>() ,j["setB"].get<int>(),j["reconstructionMaxLength"].get<int>() ) {}
+
+    void setStartingBead(int m){setStartingBeadRandom=false; startingBead=m;assert(m>=0);};
+    void setLengthCut( int l1){setLengthCutRandom=false;lengthCut=l1;}
+
+    void setStartingChain(int m){setStartingChainRandom=false; startingChain=m;assert(m>=0);};
+
+
+    bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG);
+
+
+    private:
+
+    Real openCloseRatioCoefficient(int N,int M);
+
+
+    Real CA,CB;
+    std::array<Real, 3> tmp;
+
+    const Real D = 0.5;
+    configurationsSampler confsSampler;
+    std::normal_distribution<Real> gauss;
+    std::uniform_real_distribution<float> uniformRealNumber;
+    levyReconstructor _levy;
+    metropolis sampler;
+    Eigen::Tensor<Real,2> buffer;
+    int _maxLength;
+
+    int startingBead;
+    bool setStartingBeadRandom;
+    bool setLengthCutRandom;
+    bool setStartingChainRandom;
+    int lengthCut;
+    int startingChain;
+
+};
+
+
+class semiCloseMove : public twoSetMove
+{
+    public:
+    // splits a chain in two morms with one overlapping bead
+    semiCloseMove(Real C , int setA , int setB, int maxLength_=1 ) ;
+
+    semiCloseMove(const json_t & j) : semiCloseMove(j["C"].get<Real>() ,j["setA"].get<int>() ,j["setB"].get<int>(),j["reconstructionMaxLength"].get<int>() ) {}
 
     void setLength( int l1){setLengthRandom=false;length=l1;}
 
@@ -487,7 +575,6 @@ class createWorm : public singleSetMove
     public:
     // splits a chain in two morms with one overlapping bead
     createWorm(Real C_ , int set,int maxReconstructedLength_=1,Real sigma_=1);
-
 
     createWorm(const json_t & j) : createWorm(j["C"].get<Real>() ,j["set"].get<int>() ,j["reconstructionMaxLength"].get<int>() ) 
     {
@@ -1321,6 +1408,7 @@ class moveConstructor
             Real weight = jMove["weight"].get<Real>();
 
             const auto sets = jMove["sets"].get<std::vector<int> >();
+
 
             for ( auto set : sets)
             {
