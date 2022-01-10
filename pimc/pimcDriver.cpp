@@ -136,7 +136,6 @@ currentEnsamble(ensamble_t::canonical)
 
     // ------------------ build moves ------------------------------
 
-
     pimc::moveConstructor pimcMoveConstructor(nMaxParticles,nBeads);
     pimcMoveConstructor.registerMove<pimc::levyMove>("levy");
     pimcMoveConstructor.registerMove<pimc::translateMove>("translate");
@@ -146,6 +145,7 @@ currentEnsamble(ensamble_t::canonical)
     pimcMoveConstructor.registerMove<pimc::moveTail>("moveTail");
     pimcMoveConstructor.registerMove<pimc::swapMove>("swap");
 
+
     if (currentEnsamble == ensamble_t::grandCanonical )
     {
         pimcMoveConstructor.registerMove<pimc::advanceHead>("advanceHead");
@@ -153,6 +153,7 @@ currentEnsamble(ensamble_t::canonical)
         pimcMoveConstructor.registerMove<pimc::createWorm>("createWorm");
         pimcMoveConstructor.registerMove<pimc::deleteWorm>("deleteWorm");
     }
+    
 
     tab = pimcMoveConstructor.createTable( j["movesTable"] );
 
@@ -288,8 +289,6 @@ void pimcDriver::run()
             throw std::runtime_error("Max iteration reached in generating the initial condition");
         }
     }
-
-
 
     configurations.fillHeads();
 

@@ -399,9 +399,16 @@ class createWormSemiCanonicalMove : public twoSetMove
 
     void setStartingChain(int m){setStartingChainRandom=false; startingChain=m;assert(m>=0);};
 
-
     bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG);
 
+    void setInitialGaussianSampling( Real sigma )
+    {
+        _levy.setGaussianParticleSampling();
+        _levy.setSigma( sigma );
+    }
+
+
+    void setInitialUniformSampling( ) { _levy.setUniformParticleSampling(); }
 
     private:
 
@@ -445,6 +452,16 @@ class removeWormSemiCanonicalMove : public twoSetMove
 
 
     bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG);
+
+    void setInitialGaussianSampling( Real sigma )
+    {
+        _levy.setGaussianParticleSampling();
+        _levy.setSigma( sigma );
+    }
+
+
+    void setInitialUniformSampling( ) { _levy.setUniformParticleSampling(); }
+    
 
 
     private:
@@ -1415,7 +1432,6 @@ class moveConstructor
 
                 json_t moveJInput (jMove["move"]);
                 moveJInput["set"]=set;
-
 
                 auto move = createMove(moveJInput);
 

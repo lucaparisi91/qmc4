@@ -985,7 +985,6 @@ TEST_F( configurationsTest, createRemoveWormSemiCanonical_run )
     lengthEstimatorALong->setStartFromHeadOrTail(0);
 
 
-
     auto lengthAObShort = std::make_shared<pimc::scalarObservable>(lengthEstimatorAShort,std::string("lengthAShort"),false);
     auto lengthAObLong = std::make_shared<pimc::scalarObservable>(lengthEstimatorALong,std::string("lengthALong"),false);
 
@@ -1004,7 +1003,6 @@ TEST_F( configurationsTest, createRemoveWormSemiCanonical_run )
     Real nLong=0;
     Real ratio=0;
     Real n=0;
-
     
 
     std::ofstream openRatioOut("openRatio.dat");
@@ -1105,20 +1103,20 @@ bool checkHeadTailMatch( const pimc::configurations_t & confs, int setA, int set
 
 TEST_F( configurationsTest, semiCanonical_run )
 {
+
     auto j= R"(
         {
-        "CA": 1e-3,
-        "CB" : 1e-3,
+        "CA": 1e-1,
+        "CB" : 1e-1,
         "lLong" : 6,
         "lShort" : 4,
         "nBlocks" : 10000,
         "stepsPerBlock" : 100000,
         "NA" : 2,
         "NB" : 0,
-        "deltaMu" : 2
+        "deltaMu" : 1
         }
     )"_json;
-
 
 
     SetSeed(236789);
@@ -1185,7 +1183,6 @@ TEST_F( configurationsTest, semiCanonical_run )
     jWormMoveSettingsB["setA"]=1;
     jWormMoveSettingsB["setB"]=0;
 
-
      auto jSemiOpenA = R"(
         {
             "setA": 0,
@@ -1204,7 +1201,7 @@ TEST_F( configurationsTest, semiCanonical_run )
             "C" : 1
         }
             )"_json;
-
+    
     
 
     jSemiOpenA["C"]=CA;
@@ -1213,6 +1210,9 @@ TEST_F( configurationsTest, semiCanonical_run )
 
     jSemiOpenB["C"]=CB;
     jSemiOpenB["reconstructionMaxLength"]=lShort;
+
+
+
 
     pimc::semiOpenMove semiOpenA(jSemiOpenA);
     pimc::semiCloseMove semiCloseA(jSemiOpenA);
@@ -1229,24 +1229,25 @@ TEST_F( configurationsTest, semiCanonical_run )
     pimc::swapMove swapMoveA( lLong, NA + NB , 0 );
     pimc::swapMove swapMoveB( lLong, NA + NB , 1 );
 
+
     //openFullMoveA.setLength(lShort);
     //closeFullMoveA.setLength(lShort);
+
 
     //openFullMoveB.setLength(lShort);
     //closeFullMoveB.setLength(lShort);
 
 
     int nBeads=10;
-  
 
 
     Real beta=0.1* nBeads;
     std::array<Real,3> lBox{ TRUNCATE_D(1,1,1)};
-    SetUp( {NA,NB}, nBeads,beta , {300000,300000,300000} );
-    SetUpNonInteractingHarmonicAction();
+    SetUp( {NA,NB}, nBeads,beta , {1,1, 1} );
 
-    SetUpTwoBodyInteractionHarmonicInTrap( { {0,1 } });
-    
+    //SetUpNonInteractingHarmonicAction();
+    SetUpFreeParticleAction();
+    //SetUpTwoBodyInteractionHarmonicInTrap( { {0,1 } , {0,0}, {1,1} });
 
     //SetUpFreeParticleAction();
     SetGrandCanonicalEnsamble( {deltaMu,0});
@@ -1267,6 +1268,9 @@ TEST_F( configurationsTest, semiCanonical_run )
 
     //semiOpenA.setStartingChain(groupA.iStart);
     //semiCloseA.setStartingChain(groupA.iStart);
+    //semiCloseA.setLength(lShort);
+
+
 
     //semiOpenB.setStartingBead(5);
     //semiCloseB.setStartingBead(5);
@@ -1279,6 +1283,8 @@ TEST_F( configurationsTest, semiCanonical_run )
 
     //openFullMoveA.setStartingChain(groupA.iStart);
     //closeFullMoveA.setStartingChain(groupA.iStart);
+
+
     
 
     pimc::createWormSemiCanonicalMove openMoveA(jWormMoveSettingsA);
@@ -1286,6 +1292,30 @@ TEST_F( configurationsTest, semiCanonical_run )
 
     pimc::createWormSemiCanonicalMove openMoveB(jWormMoveSettingsB);
     pimc::removeWormSemiCanonicalMove closeMoveB(jWormMoveSettingsB);
+
+
+
+
+    openMoveA.setInitialUniformSampling();
+    //openMoveA.setInitialGaussianSampling(1);
+
+    closeMoveA.setInitialUniformSampling();
+    //closeMoveA.setInitialGaussianSampling(1);
+
+    openMoveB.setInitialUniformSampling();
+    //openMoveB.setInitialGaussianSampling(1);
+
+    closeMoveB.setInitialUniformSampling();
+    //openMoveB.setInitialGaussianSampling(1);
+
+    //openMoveA.setLengthCut( lShort);
+    //closeMoveA.setLengthCut( lShort);
+
+    //openMoveA.setStartingBead( 6);
+    //closeMoveA.setStartingBead( 6);
+    
+
+  
 
 
 
@@ -1330,6 +1360,16 @@ TEST_F( configurationsTest, semiCanonical_run )
     auto wormLengthAOb = std::make_shared< pimc::scalarObservable>(wormLengthAEst,"lWormA",false);
     auto wormLengthBOb = std::make_shared< pimc::scalarObservable>(wormLengthBEst,"lWormB",false);
 
+    auto lengthEstimatorA=std::make_shared< pimc::lengthEstimator >( M );
+    auto lengthEstimatorB=std::make_shared< pimc::lengthEstimator >( M );
+
+    lengthEstimatorA->setStartingBead(groupA.iStart + 0,0);
+    lengthEstimatorB->setStartingBead(groupB.iStart + 0,0);
+
+    
+    auto lengthAOb = std::make_shared<pimc::scalarObservable>(lengthEstimatorA,std::string("lengthChainA"),false);
+    auto lengthBOb = std::make_shared<pimc::scalarObservable>(lengthEstimatorB,std::string("lengthChainB"),false);
+
 
     tab.push_back(&levyMoveA,0.5,pimc::sector_t::offDiagonal,"levyA");
     tab.push_back(&moveHeadMoveA,0.05,pimc::sector_t::offDiagonal,"moveHeadA");
@@ -1341,7 +1381,7 @@ TEST_F( configurationsTest, semiCanonical_run )
     tab.push_back(&semiCloseA,0.05,pimc::sector_t::offDiagonal,"semiCloseMoveA");
     tab.push_back(&closeFullMoveA,0.05,pimc::sector_t::offDiagonal,"closeFullMoveA");
     tab.push_back(&swapMoveA,0.1,pimc::sector_t::offDiagonal,"swapMoveA");
-    
+
 
     tab.push_back(&levyMoveB,0.5,pimc::sector_t::offDiagonal,"levyB");
     tab.push_back(&moveHeadMoveB,0.05,pimc::sector_t::offDiagonal,"moveHeadB");
@@ -1353,7 +1393,7 @@ TEST_F( configurationsTest, semiCanonical_run )
     tab.push_back(&closeFullMoveB,0.05,pimc::sector_t::offDiagonal,"closeFullMoveB");
     tab.push_back(&semiCloseB,0.05,pimc::sector_t::offDiagonal,"semiCloseMoveB");
     tab.push_back(&swapMoveB,0.1,pimc::sector_t::offDiagonal,"swapMoveB");
-    
+
 
     tab.push_back(&levyMoveA,0.8,pimc::sector_t::diagonal,"levyA");
     tab.push_back(&translMoveA,0.05,pimc::sector_t::diagonal,"translateA");
@@ -1361,12 +1401,12 @@ TEST_F( configurationsTest, semiCanonical_run )
     tab.push_back(&semiOpenA,0.05,pimc::sector_t::diagonal,"semiOpenMoveA");
     tab.push_back(&openFullMoveA,0.05,pimc::sector_t::diagonal,"openFullMoveA");
 
-
     tab.push_back(&levyMoveB,0.8,pimc::sector_t::diagonal,"levyB");
     tab.push_back(&translMoveB,0.05,pimc::sector_t::diagonal,"translateB");
     tab.push_back(&openMoveB,0.05,pimc::sector_t::diagonal,"openMoveB");
     tab.push_back(&openFullMoveB,0.05,pimc::sector_t::diagonal,"openFullMoveB");
     tab.push_back(&semiOpenB,0.05,pimc::sector_t::diagonal,"semiOpenMoveB");
+
 
     /*  int t0=3;
     configurations.setHeadTail(0 + groupA.iStart,  M , t0-1);
@@ -1392,7 +1432,8 @@ TEST_F( configurationsTest, semiCanonical_run )
 
     /* configurations.setHead(groupA.iStart + 2, 5);
     configurations.setTail(groupA.iStart + 0, 5-1);
-    
+
+
     configurations.join(groupA.iStart + 0,groupA.iStart + 1);
     configurations.join(groupA.iStart + 1,groupA.iStart + 2);
     
@@ -1400,7 +1441,8 @@ TEST_F( configurationsTest, semiCanonical_run )
     configurations.setHead(groupB.iStart + 1, 5-1);
     configurations.join(groupB.iStart + 0 ,groupB.iStart + 1);
  */
-
+   
+    
     configurations.fillHeads();
 
     
@@ -1453,8 +1495,11 @@ TEST_F( configurationsTest, semiCanonical_run )
                 nOb->accumulate(configurations,S);
                 nRingsAOb->accumulate(configurations,S);
                 nRingsBOb->accumulate(configurations,S);
-                
-                
+
+                lengthAOb->accumulate(configurations,S);
+                lengthBOb->accumulate(configurations,S);
+
+
                 ratio+=1;
                 ratioA+=1;
                 ratioB+=1;
@@ -1506,7 +1551,13 @@ TEST_F( configurationsTest, semiCanonical_run )
 
            nRingsAOb->out(t);
            nRingsAOb->clear();
-           
+
+           lengthAOb->out(t);
+           lengthAOb->clear();
+
+           lengthBOb->out(t);
+           lengthBOb->clear();
+
             nShort=0;
         }
     
