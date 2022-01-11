@@ -224,6 +224,9 @@ class action
 };
 
 
+
+
+
 class nullPotentialAction : public action
 {
     public:
@@ -244,8 +247,8 @@ class nullPotentialAction : public action
     }
 
     virtual Real evaluateTimeDerivative( const  configurations_t & configurations) override {return 0;}
-
     
+        
     private:
     
 };

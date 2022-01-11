@@ -25,7 +25,10 @@ namespace pimc
 
 
     
-levyMove::levyMove(int maxBeadLength_,int set) : _levy(maxBeadLength_) , uniformRealNumber(0,1),maxBeadLength(maxBeadLength_) , buffer(( maxBeadLength_+1)*2,getDimensions() ) ,singleSetMove::singleSetMove(set){}
+levyMove::levyMove(int maxBeadLength_,int set) : _levy(maxBeadLength_) , uniformRealNumber(0,1),maxBeadLength(maxBeadLength_) , buffer(( maxBeadLength_+1)*2,getDimensions() ) ,singleSetMove::singleSetMove(set)
+{
+    
+}
 
 bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,randomGenerator_t & randG)
 {
@@ -750,6 +753,35 @@ setStartingChainRandom(true),
 twoSetMove(setA,setB)
 {}
 
+createWormSemiCanonicalMove::createWormSemiCanonicalMove( const json_t &  j ) : createWormSemiCanonicalMove(j["CA"].get<Real>() ,j["CB"].get<Real>(),j["setA"].get<int>() ,j["setB"].get<int>(),j["reconstructionMaxLength"].get<int>() ) {
+    if ( j.find("initialBeadSampling") != j.end() )
+    {
+        auto samplingKind = j["initialBeadSampling"]["kind"];
+        if (samplingKind == "uniform" )
+        {
+            setInitialUniformSampling();
+        }
+        else if (samplingKind == "gaussian")
+        {
+            auto sigma = j["initialBeadSampling"]["sigma"].get<Real>();
+
+            setInitialGaussianSampling(sigma);
+        }
+        else
+        {
+            throw std::runtime_error("Unkown initialBeadSampling");
+
+        }
+    }
+    else
+    {
+
+    }
+
+
+}
+
+
 removeWormSemiCanonicalMove::removeWormSemiCanonicalMove(Real CA_ , Real CB_,  int setA,int setB,int maxReconstructedLength_) : CA(CA_),CB(CB_), _levy(maxReconstructedLength_+2) ,  _maxLength(maxReconstructedLength_) ,buffer(2*(maxReconstructedLength_+2),getDimensions()),
 gauss(0,1),uniformRealNumber(0,1),
 setStartingBeadRandom(true),
@@ -760,6 +792,35 @@ startingChain(-1),
 setStartingChainRandom(true),
 twoSetMove(setA,setB)
 {}
+
+
+removeWormSemiCanonicalMove::removeWormSemiCanonicalMove( const json_t &  j ) : removeWormSemiCanonicalMove(j["CA"].get<Real>() ,j["CB"].get<Real>(),j["setA"].get<int>() ,j["setB"].get<int>(),j["reconstructionMaxLength"].get<int>() ) {
+    if ( j.find("initialBeadSampling") != j.end() )
+    {
+        auto samplingKind = j["initialBeadSampling"]["kind"].get<std::string>();
+        if (samplingKind == "uniform" )
+        {
+            setInitialUniformSampling();
+        }
+        else if (samplingKind == "gaussian")
+        {
+            auto sigma = j["initialBeadSampling"]["sigma"].get<Real>();
+
+            setInitialGaussianSampling(sigma);
+        }
+        else
+        {
+            throw std::runtime_error("Unkown initialBeadSampling");
+            
+        }
+    }
+    else
+    {
+
+    }
+
+
+}
 
 
 

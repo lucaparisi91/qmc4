@@ -13,6 +13,35 @@ namespace pimc{
     };
 
 
+
+
+
+
+class nullPotentialActionConstructor : public actionConstructor
+{
+    public:
+    nullPotentialActionConstructor() {}
+
+    void setGeometry( const geometry_t & geo ) { _geo=geo;}
+
+    void setTimeStep( Real timeStep) { _timeStep = timeStep; }
+
+
+
+    std::shared_ptr<action> create( const json_t & j )
+    {
+        auto S = std::make_shared<nullPotentialAction>(_timeStep,_geo);
+        return S;
+    }
+
+    private:
+
+    geometry_t _geo;
+    Real _timeStep;
+};
+
+
+
 };
 
 #endif

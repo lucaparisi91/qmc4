@@ -392,7 +392,7 @@ class createWormSemiCanonicalMove : public twoSetMove
     createWormSemiCanonicalMove(Real CA_ , Real CB_, int setA, int setB,int maxReconstructedLength_=1);
 
 
-    createWormSemiCanonicalMove(const json_t & j) : createWormSemiCanonicalMove(j["CA"].get<Real>() ,j["CB"].get<Real>(),j["setA"].get<int>() ,j["setB"].get<int>(),j["reconstructionMaxLength"].get<int>() ) {}
+    createWormSemiCanonicalMove(const json_t & j) ;
 
     void setStartingBead(int m){setStartingBeadRandom=false; startingBead=m;assert(m>=0);};
     void setLengthCut( int l1){setLengthCutRandom=false;lengthCut=l1;}
@@ -443,8 +443,7 @@ class removeWormSemiCanonicalMove : public twoSetMove
     removeWormSemiCanonicalMove(Real CA_ , Real CB_, int setA, int setB,int maxReconstructedLength_=1);
 
 
-    removeWormSemiCanonicalMove(const json_t & j) : removeWormSemiCanonicalMove(j["CA"].get<Real>() ,j["CB"].get<Real>(),j["setA"].get<int>() ,j["setB"].get<int>(),j["reconstructionMaxLength"].get<int>() ) {}
-
+    removeWormSemiCanonicalMove(const json_t & j);
     void setStartingBead(int m){setStartingBeadRandom=false; startingBead=m;assert(m>=0);};
     void setLengthCut( int l1){setLengthCutRandom=false;lengthCut=l1;}
 

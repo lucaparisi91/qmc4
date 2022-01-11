@@ -220,8 +220,8 @@ class particleNumberEstimator : public scalarEstimator
 
 
     
-    particleNumberEstimator(const json_t & j) : particleNumberEstimator( j["set"].get<int>() ) {}
-
+    particleNumberEstimator(const json_t & j) : particleNumberEstimator( j["sets"].get<std::vector<int> >() ) {}
+    
 
     virtual Real operator()(configurations_t & configurations, firstOrderAction & S) {
         int N=0;
@@ -320,6 +320,24 @@ class lengthEstimator : public scalarEstimator
     bool _startFromHeadOrTail;
     int _iGroup;
     bool _setMaxLength;
+
+};
+
+
+class closedLengthEstimator : public scalarEstimator 
+{
+    
+    public:
+
+    closedLengthEstimator( int set ) : _set(set) {}
+
+    closedLengthEstimator(const json_t & j) :  closedLengthEstimator( j["set"].get<int>()   ) { }
+
+    virtual Real operator()(configurations_t & configurations, firstOrderAction & S);
+
+    private: 
+
+    int _set;
 
 };
 

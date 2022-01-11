@@ -14,10 +14,9 @@
 #include "propagators.h"
 #include <csignal>
 
+
+
 namespace fs = std::filesystem;
-
-
-
 
 
 namespace pimc
@@ -146,14 +145,28 @@ currentEnsamble(ensamble_t::canonical)
     pimcMoveConstructor.registerMove<pimc::swapMove>("swap");
 
 
+
     if (currentEnsamble == ensamble_t::grandCanonical )
     {
         pimcMoveConstructor.registerMove<pimc::advanceHead>("advanceHead");
         pimcMoveConstructor.registerMove<pimc::recedeHead>("recedeHead");
         pimcMoveConstructor.registerMove<pimc::createWorm>("createWorm");
         pimcMoveConstructor.registerMove<pimc::deleteWorm>("deleteWorm");
+
+        if ( nParticles.size() > 1 )
+        {
+            pimcMoveConstructor.registerMove<pimc::semiOpenMove>("semiOpen");
+            pimcMoveConstructor.registerMove<pimc::semiCloseMove>("semiClose");
+            pimcMoveConstructor.registerMove<pimc::fullSemiCanonicalCloseMove>("fullClose");
+            pimcMoveConstructor.registerMove<pimc::fullSemiCanonicalOpenMove>("fullOpen");
+            pimcMoveConstructor.registerMove<pimc::advanceHeadTail>("advanceHeadTail");
+            pimcMoveConstructor.registerMove<pimc::recedeHeadTail>("recedeHeadTail");
+            pimcMoveConstructor.registerMove<pimc::createWormSemiCanonicalMove>("createTwoWorms");
+            pimcMoveConstructor.registerMove<pimc::removeWormSemiCanonicalMove>("deleteTwoWorms");
+
+        }
     }
-    
+
 
     tab = pimcMoveConstructor.createTable( j["movesTable"] );
 
@@ -206,7 +219,13 @@ void pimcDriver::run()
 
     int nChains = std::accumulate(nMaxParticles.begin(),nMaxParticles.end() , 0);
 
+    auto sNullC=std::make_shared<nullPotentialActionConstructor>();
+    sNullC->setTimeStep(timeStep);
+    sNullC->setGeometry( geo );
+
     auto sOneBodyC = std::make_shared<potentialActionOneBodyConstructor>();
+
+
 
 
     sOneBodyC->setTimeStep(timeStep);
@@ -240,6 +259,8 @@ void pimcDriver::run()
 
 
     sC.addConstructor("twoBody",sTwoBodyCreator);
+    sC.addConstructor("nullPotential",sNullC);
+    
 
 
     //sC.registerPotential<isotropicHarmonicPotential>();
@@ -273,10 +294,18 @@ void pimcDriver::run()
 
     // sets a random initial condition
     std::cout << "Generating initial configurations" << std::endl;
+    {
+    std::uniform_real_distribution<double> uniformDistribution(0.0,1.0);
 
-    
-    configurations.setRandom( { geo.getLBox(0) ,geo.getLBox(1),geo.getLBox(2) } , randG );
-
+        auto & data=configurations.dataTensor();
+        for (int t=0;t<data.dimensions()[2];t++)
+            for (int i=0;i<data.dimensions()[0];i++)
+                for  (int d=0;d<DIMENSIONS;d++)
+                {
+                    data(i,d,t)=(uniformDistribution(randG)-0.5 )*geo.getLBox(d);
+                }
+        configurations.fillHeads();
+    }
     int iAttemptInitialCondition;
 
     while (not S.checkConstraints(configurations) )

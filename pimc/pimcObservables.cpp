@@ -2,7 +2,6 @@
 namespace pimc
 {
 
-
 Real thermodynamicEnergyEstimator::operator()(configurations_t & confs, firstOrderAction & S)
 {
     auto & geo = S.getGeometry();
@@ -19,7 +18,7 @@ Real thermodynamicEnergyEstimator::operator()(configurations_t & confs, firstOrd
 
     Real e= sV - sA +  getDimensions()/(2.*kA.getTimeStep())*confs.nParticles();
 
-    return e;
+    return sA;
 }
 
 
@@ -486,6 +485,35 @@ Real lengthEstimator::operator()(configurations_t & configurations, firstOrderAc
 
     return sum;
 }
+
+Real closedLengthEstimator::operator()(configurations_t & configurations, firstOrderAction & S) {
+
+    const auto & group = configurations.getGroups()[_set];
+
+    const auto & data=configurations.dataTensor();
+
+    std::array<int,2> timeRange { 0 , configurations.nBeads() - 1};
+
+    Real sum=0;
+
+    for(int t=timeRange[0];t<=timeRange[1];t++ )
+    {
+        for(int i=0; i<=0;i++ )
+        {
+            for(int d=0;d<getDimensions(); d++)
+            {
+                Real tmp=data(i,d,t+1) - data(i,d,t);
+                sum+=tmp*tmp;
+            }
+        }
+    }
+
+
+        
+
+    return sum;
+}
+
 
 Real nBeadsInWormEstimator::operator()(configurations_t & configurations, firstOrderAction & S) {
 

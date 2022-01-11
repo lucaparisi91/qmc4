@@ -7,11 +7,10 @@ namespace pimc
         public:
         using geometry_t=geometryPBC_PIMC;
 
-
         std::vector<std::shared_ptr<pimc::action> > createActions(const json_t & js)
         {
             std::vector< std::shared_ptr<pimc::action> > actions;
-
+            
             for (const auto & j : js)
             {
                 std::string key = j["kind"].get<std::string>();
@@ -21,8 +20,10 @@ namespace pimc
 
             if ( actions.size() == 0 )
             {
-                actions.push_back( std::make_shared<nullPotentialAction>());
+                json_t jEmpty;
+                actions.push_back( mapKeyToConstructor.at("nullPotential")->create( jEmpty));
             }
+
 
             return actions;
 
