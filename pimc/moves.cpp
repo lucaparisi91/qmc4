@@ -239,8 +239,6 @@ bool swapMove::attemptCanonicalMove(configurations_t & confs, firstOrderAction &
     }
 
 
-    
-
     Real deltaS=-(log(weightForwardMove) - log(weightBackwardMove)) ;
 
     
@@ -493,10 +491,30 @@ bool swapMove::attemptGrandCanonicalMove(configurations_t & confs, firstOrderAct
         {
             return false;
         }
+    
 
 
     assert(iNewChainHead != -1);
 
+    std::array<Real,getDimensions()> differenceNoPBC;
+
+    for(int d=0;d<getDimensions();d++)
+    {
+        differenceNoPBC[d]=data(iNewChainHead,d,tHead) - data(iPartner,d,tJoin);
+
+        if (tHead + l >=M)
+        {
+            differenceNoPBC[d]+=data(iPartner,d,0) - data(iNewChainHead,d,M);
+        }
+
+        if (std::abs(differenceNoPBC[d]) > geo.getLBox(d)/2  )
+        {
+            return false;
+        }
+   
+    }
+
+   
 
     // metropolic test based on ratio of forward and backward move
     Real weightBackwardMove= 0;
@@ -750,6 +768,7 @@ startingBead(-1),
 lengthCut(-1),
 startingChain(-1),
 setStartingChainRandom(true),
+intDistribution(0,1),
 twoSetMove(setA,setB)
 {}
 
@@ -790,6 +809,7 @@ startingBead(-1),
 lengthCut(-1),
 startingChain(-1),
 setStartingChainRandom(true),
+intDistribution(0,1),
 twoSetMove(setA,setB)
 {}
 
@@ -2684,24 +2704,49 @@ bool openMove::attemptSemiGrandCanonicalMove(configurations_t & confs , firstOrd
     return accept;
 };
 
+std::array<int,2>  createWormSemiCanonicalMove::sampleSets(randomGenerator_t & randG)
+{
+    //int iSet = intDistribution(randG);
+    std::array<int,2> sets = {getSetA(),getSetB()};
+    //return { sets[iSet], sets[(iSet + 1)%2]};
+
+    return sets;
+}
+
+
+std::array<int,2>  removeWormSemiCanonicalMove::sampleSets(randomGenerator_t & randG)
+{
+    //int iSet = intDistribution(randG);
+    std::array<int,2> sets = {getSetA(),getSetB()};
+    //return { sets[iSet], sets[(iSet + 1)%2]};
+    return sets;
+}
+
 
 bool createWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG )
 {
     /* deleting from the setA and creating a worm in another set */
+     range_t sets= {getSetA(),getSetB() };
+    int iSet= intDistribution(randG);
+
+    auto [setA, setB ] = sampleSets(randG);
+
+
 
     Real timeStep = S.getTimeStep();
     _levy.setReconstructorBoundaries(pimc::chainBoundary::free,pimc::chainBoundary::free);
-    
 
-    int setB=getSetB();
-    int setA=getSetA();
 
     int NA = confs.nParticles(setA);
     int NB = confs.nParticles(setB);
 
     const auto & geo = S.getGeometry();
 
-    if ( confs.isOpen(getSetA() ) or confs.isOpen( getSetB() ) )
+
+   
+    
+
+    if ( confs.isOpen(setA ) or confs.isOpen( setB ) )
     {
         return false;
     }
@@ -2710,7 +2755,7 @@ bool createWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOr
 
     if (setStartingChainRandom)
     {
-        iChainA = confsSampler.sampleChain(confs,getSetA(),randG);
+        iChainA = confsSampler.sampleChain(confs,setA,randG);
     }
 
     if (iChainA < 0)
@@ -2877,7 +2922,7 @@ bool createWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOr
         else
         {
             confs.setHead(iChainA,tHeadA);
-            int iChainTailA=confs.pushChain(getSetA() );
+            int iChainTailA=confs.pushChain(setA );
             confs.setHeadTail(iChainTailA,M,tTailA);
             confs.join(iChainTailA,iChainANext);
             confs.copyData({tTailA+1,M}  , iChainA, iChainTailA  );
@@ -3507,6 +3552,8 @@ bool closeMove::attemptSemiGrandCanonicalMove(configurations_t & confs , firstOr
     int iChainHeadA=headsA[std::floor(uniformRealNumber(randG) * headsA.size() )];
     int iChainTailA=tailsA[std::floor(uniformRealNumber(randG) * tailsA.size() )];
 
+    
+
     int tHeadA=confs.getChain(iChainHeadA).head;
 
     int tTailA = confs.getChain(iChainTailA).tail;
@@ -3730,14 +3777,17 @@ bool removeWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOr
 
     _levy.setReconstructorBoundaries(pimc::chainBoundary::fixed,pimc::chainBoundary::fixed);
 
+    auto [setA, setB ] = sampleSets(randG);
 
-     if ( not  (confs.isOpen(getSetA() ) and confs.isOpen(getSetB() ) ) )
+
+
+     if ( not  (confs.isOpen(setA ) and confs.isOpen(setB ) ) )
     {
         return false;
     }
 
-    const auto & headsA = confs.getGroups()[getSetA()].heads;
-    const auto & tailsA = confs.getGroups()[getSetA()].tails;
+    const auto & headsA = confs.getGroups()[setA].heads;
+    const auto & tailsA = confs.getGroups()[setA].tails;
 
 
 
@@ -3748,7 +3798,6 @@ bool removeWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOr
 
     int tTailA = confs.getChain(iChainTailA).tail;
 
-    int setB= getSetB();
 
 
     //int setB= samplePartnerSet(randG) ;
@@ -3782,7 +3831,7 @@ bool removeWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOr
 
     int M = confs.nBeads();
     
-    int NA = confs.nParticles(getSetA() );
+    int NA = confs.nParticles(setA );
 
 
     //int l= std::floor( uniformRealNumber(randG) * (_maxLength -2) ) + 1 ; // distance from itime where the head is formed
@@ -3900,7 +3949,7 @@ bool removeWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOr
 
     auto rhoDifference= freeParticleLogProbability(difference,S.getTimeStep()*l,mass);
     auto coeff = log( openCloseRatioCoefficient(nNewA,M)   );
-    auto deltaMu= ( confs.getChemicalPotential( getSetA() ) - confs.getChemicalPotential( setB )  );
+    auto deltaMu= ( confs.getChemicalPotential( setA ) - confs.getChemicalPotential( setB )  );
     auto probInit=_levy.probabilityInitialPosition(geo,x0B) ;
     auto propRatio = -deltaS + rhoDifference - coeff + deltaMu*l*timeStep + probInit;
 

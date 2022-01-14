@@ -236,6 +236,37 @@ class particleNumberEstimator : public scalarEstimator
     std::vector<int> _sets;
 };
 
+
+class particleNumberSquaredEstimator : public scalarEstimator 
+{
+    
+    public:
+    
+    particleNumberSquaredEstimator( const std::vector<int> & sets_) : _sets(sets_) {}
+
+    particleNumberSquaredEstimator(int setA) : _sets({setA}) {}
+
+    
+    particleNumberSquaredEstimator(const json_t & j) : particleNumberSquaredEstimator( j["sets"].get<std::vector<int> >() ) {}
+    
+        
+
+    virtual Real operator()(configurations_t & configurations, firstOrderAction & S) {
+        int N=0;
+        for( auto set : _sets)
+        {
+            N+=configurations.nParticles(set);
+        }
+    return N*N;
+    }
+
+    private: 
+    std::vector<int> _sets;
+};
+
+
+
+
 class magnetizationSquaredEstimator : public scalarEstimator 
 {
     
@@ -285,6 +316,8 @@ class magnetizationEstimator : public scalarEstimator
     int _setB;
 
 };
+
+
 
 
 class lengthEstimator : public scalarEstimator 

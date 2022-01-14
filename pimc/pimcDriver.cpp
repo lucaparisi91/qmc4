@@ -163,6 +163,7 @@ currentEnsamble(ensamble_t::canonical)
             pimcMoveConstructor.registerMove<pimc::recedeHeadTail>("recedeHeadTail");
             pimcMoveConstructor.registerMove<pimc::createWormSemiCanonicalMove>("createTwoWorms");
             pimcMoveConstructor.registerMove<pimc::removeWormSemiCanonicalMove>("deleteTwoWorms");
+            
 
         }
     }
@@ -339,6 +340,9 @@ void pimcDriver::run()
     obFactory.registerObservable<magnetizationEstimator>("magnetization");
 
     obFactory.registerObservable<pairCorrelation>("pairCorrelation");
+    obFactory.registerObservable< particleNumberSquaredEstimator>("nParticlesSquared");
+    
+            
 
     if (j.find("observables") == j.end())
     {
@@ -436,15 +440,18 @@ void pimcDriver::run()
     // start the simulation
     std::cout << "Start." << std::endl << std::flush;
 
+    int nClosed=0;
+    int nOpen=0;
+    int n=0;
+
+
     for (int i=0;(i< nBlocks) & (!pimc_main_is_interrupted); i++)
     {
         Real eStep=0;
-        Real nClosed=0;
-        Real nOpen=0;
-        
-        while ( nClosed < stepsPerBlock & (!pimc_main_is_interrupted) )
+
+        while ( (nClosed < stepsPerBlock) and (!pimc_main_is_interrupted) and ( n < stepsPerBlock) )
         {
-            
+            n++;
             for (int j=0;(j<correlationSteps) & (!pimc_main_is_interrupted) ;j++)
             {
                 bool accepted=tab.attemptMove(configurations, S, randG);
@@ -467,12 +474,11 @@ void pimcDriver::run()
             else
             {
                nOpen+=1;
-                
             }
             
         }
 
-        
+        std::cout << "Acceptance ratio: " << success*1./n << std::endl;
 
         //std::cout << e << std::endl;
         if (eO != nullptr )
@@ -483,19 +489,33 @@ void pimcDriver::run()
             }
         }
 
-        for (auto & O : observables)
+        if (nClosed == stepsPerBlock)
         {
-            O->out(i);
-            O->clear();
+            for (auto & O : observables)
+            {
+                O->out(i);
+                O->clear();
+            }
+            nClosed=0;
+
+        }
+        
+        if (n == stepsPerBlock)
+        {
+            
+            ratioOut << i << " " << nOpen * 1./n <<std::endl;
+
+            nOpen=0;
+            n=0;
+            success=0;
+
         }
 
-
-        std::cout << "Acceptance ratio: " << success*1./((i+1)*stepsPerBlock*correlationSteps) << std::endl;
+        
 
         
         tab >> std::cout;
 
-        ratioOut << i << " " << nOpen<< " " << nClosed <<std::endl;        
 
         configurations.saveHDF5("configurations/sample"+std::to_string(i+1) + ".hdf5" );
 

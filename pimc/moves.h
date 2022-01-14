@@ -414,6 +414,9 @@ class createWormSemiCanonicalMove : public twoSetMove
 
     Real openCloseRatioCoefficient(int N,int M);
 
+    std::array<int,2> sampleSets(randomGenerator_t & randG);
+
+
 
     Real CA,CB;
     std::array<Real, 3> tmp;
@@ -433,6 +436,8 @@ class createWormSemiCanonicalMove : public twoSetMove
     bool setStartingChainRandom;
     int lengthCut;
     int startingChain;
+    std::uniform_int_distribution<int> intDistribution;
+
 
 };
 
@@ -441,7 +446,6 @@ class removeWormSemiCanonicalMove : public twoSetMove
     public:
     // splits a chain in two morms with one overlapping bead
     removeWormSemiCanonicalMove(Real CA_ , Real CB_, int setA, int setB,int maxReconstructedLength_=1);
-
 
     removeWormSemiCanonicalMove(const json_t & j);
     void setStartingBead(int m){setStartingBeadRandom=false; startingBead=m;assert(m>=0);};
@@ -461,12 +465,15 @@ class removeWormSemiCanonicalMove : public twoSetMove
 
     void setInitialUniformSampling( ) { _levy.setUniformParticleSampling(); }
     
-
+    
 
     private:
+    
+    std::array<int,2> sampleSets(randomGenerator_t & randG);
 
     Real openCloseRatioCoefficient(int N,int M);
 
+    std::array<int,2> sampleSets();
 
     Real CA,CB;
     std::array<Real, 3> tmp;
@@ -486,6 +493,8 @@ class removeWormSemiCanonicalMove : public twoSetMove
     bool setStartingChainRandom;
     int lengthCut;
     int startingChain;
+    std::uniform_int_distribution<int> intDistribution;
+
 
 };
 

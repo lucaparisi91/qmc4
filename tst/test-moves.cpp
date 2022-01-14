@@ -1116,7 +1116,7 @@ TEST_F( configurationsTest, semiCanonical_run )
         "stepsPerBlock" : 100000,
         "NA" : 2,
         "NB" : 0,
-        "deltaMu" : 0
+        "deltaMu" : 2
         }
     )"_json;
 
@@ -1234,6 +1234,7 @@ TEST_F( configurationsTest, semiCanonical_run )
     pimc::swapMove swapMoveA( lShort, NA + NB , 0 );
     pimc::swapMove swapMoveB( lShort, NA + NB , 1 );
 
+    //swapMoveA.setFixedLength();
 
     //openFullMoveA.setLength(lShort);
     //closeFullMoveA.setLength(lShort);
@@ -1246,7 +1247,7 @@ TEST_F( configurationsTest, semiCanonical_run )
 
 
     Real beta=0.1* nBeads;
-    std::array<Real,3> lBox{ TRUNCATE_D(1,1,1)};
+    std::array<Real,3> lBox{ TRUNCATE_D(2,2,2)};
     SetUp( {NA,NB}, nBeads,beta , lBox );
 
 
@@ -1340,9 +1341,10 @@ TEST_F( configurationsTest, semiCanonical_run )
     pimc::moveHead moveHeadMoveB(lShort,1);
     pimc::moveTail moveTailMoveB(lShort,1);
 
-    Real delta=3;
+    Real delta=1;
     pimc::translateMove translMoveA(delta,(M+1)*configurations.nChains()*2,0);
     pimc::translateMove translMoveB(delta,(M+1)*configurations.nChains()*2,1);    
+
 
     std::shared_ptr<pimc::scalarEstimator> nAEst=std::make_shared<pimc::particleNumberEstimator>( 0 );
     std::shared_ptr<pimc::scalarEstimator>  nBEst=std::make_shared<pimc::particleNumberEstimator>( 1 );
@@ -1351,7 +1353,9 @@ TEST_F( configurationsTest, semiCanonical_run )
     auto nRingsAEst = std::make_shared<pimc::nConnectedChainsEstimator>(0);
     auto nRingsBEst = std::make_shared<pimc::nConnectedChainsEstimator>(1);
 
-     auto totalLengthEstimatorA = std::make_shared<pimc::closedLengthEstimator>(0);
+    auto totalLengthEstimatorA = std::make_shared<pimc::closedLengthEstimator>(0);
+
+
 
 
     auto nAOb = std::make_shared< pimc::scalarObservable>(nAEst,"NA",false);
@@ -1374,14 +1378,22 @@ TEST_F( configurationsTest, semiCanonical_run )
     auto lengthEstimatorA=std::make_shared< pimc::lengthEstimator >(  );
     auto lengthEstimatorB=std::make_shared< pimc::lengthEstimator >( );
 
+    auto l2WormA=std::make_shared< pimc::lengthEstimator >(  );
+    l2WormA->setStartFromHeadOrTail(0);
+
 
     lengthEstimatorA->setStartingBead(groupA.iStart + 0,0);
     lengthEstimatorB->setStartingBead(groupB.iStart + 0,0);
 
 
+    auto l2WormAOb = std::make_shared<pimc::scalarObservable>(l2WormA,std::string("l2WormA"),false);
     
+
     auto lengthAOb = std::make_shared<pimc::scalarObservable>(lengthEstimatorA,std::string("lengthChainA"),false);
     auto lengthBOb = std::make_shared<pimc::scalarObservable>(lengthEstimatorB,std::string("lengthChainB"),false);
+
+
+    
 
     auto eEstim=std::make_shared<pimc::thermodynamicEnergyEstimator> ();
     auto eVEstim = std::make_shared<pimc::virialEnergyEstimator> (configurations.nChains(),configurations.nBeads() );
@@ -1389,42 +1401,42 @@ TEST_F( configurationsTest, semiCanonical_run )
     auto eOb = std::make_shared<pimc::scalarObservable>(eEstim,std::string("e"),false);
     auto eVOb = std::make_shared<pimc::scalarObservable>(eVEstim,std::string("eV"),false);
 
-
-    tab.push_back(&levyMoveA,0.7,pimc::sector_t::offDiagonal,"levyA");
+    tab.push_back(&levyMoveA,0.5,pimc::sector_t::offDiagonal,"levyA");
     tab.push_back(&moveHeadMoveA,0.05,pimc::sector_t::offDiagonal,"moveHeadA");
     tab.push_back(&moveTailMoveA,0.05,pimc::sector_t::offDiagonal,"moveTailA");
     tab.push_back(&translMoveA,0.05,pimc::sector_t::offDiagonal,"translateA");
-    //tab.push_back(&advanceMoveA,0.05,pimc::sector_t::offDiagonal,"advanceMoveA");
-    //tab.push_back(&recedeMoveA,0.05,pimc::sector_t::offDiagonal,"recedeMoveA");
-    //tab.push_back(&closeMoveA,0.05,pimc::sector_t::offDiagonal,"closeMoveA");
+    tab.push_back(&advanceMoveA,0.05,pimc::sector_t::offDiagonal,"advanceMoveA");
+    tab.push_back(&recedeMoveA,0.05,pimc::sector_t::offDiagonal,"recedeMoveA");
+    tab.push_back(&closeMoveA,0.05,pimc::sector_t::offDiagonal,"closeMoveA");
     tab.push_back(&semiCloseA,0.05,pimc::sector_t::offDiagonal,"semiCloseMoveA");
-    //tab.push_back(&closeFullMoveA,0.05,pimc::sector_t::offDiagonal,"closeFullMoveA");
+    tab.push_back(&closeFullMoveA,0.05,pimc::sector_t::offDiagonal,"closeFullMoveA");
     tab.push_back(&swapMoveA,0.1,pimc::sector_t::offDiagonal,"swapMoveA");
 
-    tab.push_back(&levyMoveB,0.85,pimc::sector_t::offDiagonal,"levyB");
+
+    tab.push_back(&levyMoveB,0.5,pimc::sector_t::offDiagonal,"levyB");
     tab.push_back(&moveHeadMoveB,0.05,pimc::sector_t::offDiagonal,"moveHeadB");
     tab.push_back(&moveTailMoveB,0.05,pimc::sector_t::offDiagonal,"moveTailB");
     tab.push_back(&translMoveB,0.05,pimc::sector_t::offDiagonal,"translateB");
-    //tab.push_back(&advanceMoveB,0.05,pimc::sector_t::offDiagonal,"advanceMoveB");
-    //tab.push_back(&recedeMoveB,0.05,pimc::sector_t::offDiagonal,"recedeMoveB");
-    //tab.push_back(&closeMoveB,0.05,pimc::sector_t::offDiagonal,"closeMoveB");
-    //tab.push_back(&closeFullMoveB,0.05,pimc::sector_t::offDiagonal,"closeFullMoveB");
-    //tab.push_back(&semiCloseB,0.05,pimc::sector_t::offDiagonal,"semiCloseMoveB");
-    //tab.push_back(&swapMoveB,0.1,pimc::sector_t::offDiagonal,"swapMoveB");
+    tab.push_back(&advanceMoveB,0.05,pimc::sector_t::offDiagonal,"advanceMoveB");
+    tab.push_back(&recedeMoveB,0.05,pimc::sector_t::offDiagonal,"recedeMoveB");
 
+    tab.push_back(&closeMoveB,0.05,pimc::sector_t::offDiagonal,"closeMoveB");
+    tab.push_back(&closeFullMoveB,0.05,pimc::sector_t::offDiagonal,"closeFullMoveB");
+    tab.push_back(&semiCloseB,0.05,pimc::sector_t::offDiagonal,"semiCloseMoveB");
+    tab.push_back(&swapMoveB,0.1,pimc::sector_t::offDiagonal,"swapMoveB");
 
-    tab.push_back(&levyMoveA,0.85,pimc::sector_t::diagonal,"levyA");
-    tab.push_back(&translMoveA,0.1,pimc::sector_t::diagonal,"translateA");
-    //tab.push_back(&openMoveA,0.05,pimc::sector_t::diagonal,"openMoveA");
+    tab.push_back(&levyMoveA,0.8,pimc::sector_t::diagonal,"levyA");
+    tab.push_back(&translMoveA,0.05,pimc::sector_t::diagonal,"translateA");
+    tab.push_back(&openMoveA,0.05,pimc::sector_t::diagonal,"openMoveA");
     tab.push_back(&semiOpenA,0.05,pimc::sector_t::diagonal,"semiOpenMoveA");
-    //tab.push_back(&openFullMoveA,0.05,pimc::sector_t::diagonal,"openFullMoveA");
+    tab.push_back(&openFullMoveA,0.05,pimc::sector_t::diagonal,"openFullMoveA");
 
-    tab.push_back(&levyMoveB,0.9,pimc::sector_t::diagonal,"levyB");
-    tab.push_back(&translMoveB,0.1,pimc::sector_t::diagonal,"translateB");
-    //tab.push_back(&openMoveB,0.05,pimc::sector_t::diagonal,"openMoveB");
-    //tab.push_back(&openFullMoveB,0.05,pimc::sector_t::diagonal,"openFullMoveB");
-    //tab.push_back(&semiOpenB,0.05,pimc::sector_t::diagonal,"semiOpenMoveB");
-
+    tab.push_back(&levyMoveB,0.8,pimc::sector_t::diagonal,"levyB");
+    tab.push_back(&translMoveB,0.05,pimc::sector_t::diagonal,"translateB");
+    tab.push_back(&openMoveB,0.05,pimc::sector_t::diagonal,"openMoveB");
+    tab.push_back(&openFullMoveB,0.05,pimc::sector_t::diagonal,"openFullMoveB");
+    tab.push_back(&semiOpenB,0.05,pimc::sector_t::diagonal,"semiOpenMoveB");
+    
 
     /*  int t0=3;
     configurations.setHeadTail(0 + groupA.iStart,  M , t0-1);
@@ -1448,23 +1460,17 @@ TEST_F( configurationsTest, semiCanonical_run )
     //configurations.setHead(groupB.iStart + 1,t0);
     //configurations.join(groupB.iStart + 0,groupB.iStart + 1);
 
-    /* configurations.setHead(groupA.iStart + 2, 5);
-    configurations.setTail(groupA.iStart + 0, 5-1);
 
+    //int t0=3;
+    //configurations.setHead(groupA.iStart + 2, t0);
+    //configurations.setTail(groupA.iStart + 1, t0-1);
+    //configurations.join(groupA.iStart + 1 ,groupA.iStart + 2);
 
-    configurations.join(groupA.iStart + 0,groupA.iStart + 1);
-    configurations.join(groupA.iStart + 1,groupA.iStart + 2);
-    
-    configurations.setTail(groupB.iStart + 0, 5-1);
-    configurations.setHead(groupB.iStart + 1, 5-1);
-    configurations.join(groupB.iStart + 0 ,groupB.iStart + 1);
-    */
-   configurations.join(groupA.iStart + 0,groupA.iStart + 1);
-   configurations.join(groupA.iStart + 1,groupA.iStart + 0);
+    //configurations.join(groupA.iStart + 2 ,groupA.iStart + 0);
+
 
     
     configurations.fillHeads();
-
     
     std::cout << "Equilibrating..." << std::endl;
 
@@ -1478,7 +1484,7 @@ TEST_F( configurationsTest, semiCanonical_run )
     Real nShort=0;
     Real nLongA=0;
     Real nLongB=0;
-    
+
     Real ratio=0,ratioA=0,ratioB=0;
     Real n=0;
 
@@ -1519,8 +1525,8 @@ TEST_F( configurationsTest, semiCanonical_run )
                 lengthAOb->accumulate(configurations,S);
                 lengthBOb->accumulate(configurations,S);
 
-                eOb->accumulate(configurations,S);
-                eVOb->accumulate(configurations,S);
+                //eOb->accumulate(configurations,S);
+                //eVOb->accumulate(configurations,S);
 
                 totalLengthAOb->accumulate(configurations,S);
 
@@ -1536,6 +1542,8 @@ TEST_F( configurationsTest, semiCanonical_run )
                 {
                     nLongA++;
                     wormLengthAOb->accumulate(configurations,S);
+                    l2WormAOb->accumulate(configurations,S);
+
                     
                 } else
                 {
@@ -1600,7 +1608,8 @@ TEST_F( configurationsTest, semiCanonical_run )
             wormLengthAOb->out(t);
             wormLengthAOb->clear();
 
-            
+            l2WormAOb->out(t);
+            l2WormAOb->clear();
 
             nLongA=0;
         }

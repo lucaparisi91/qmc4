@@ -1,7 +1,7 @@
 #include "pimcObservables.h"
 namespace pimc
 {
-
+    
 Real thermodynamicEnergyEstimator::operator()(configurations_t & confs, firstOrderAction & S)
 {
     auto & geo = S.getGeometry();
@@ -18,7 +18,7 @@ Real thermodynamicEnergyEstimator::operator()(configurations_t & confs, firstOrd
 
     Real e= sV - sA +  getDimensions()/(2.*kA.getTimeStep())*confs.nParticles();
 
-    return sA;
+    return e;
 }
 
 
@@ -442,7 +442,7 @@ Real lengthEstimator::operator()(configurations_t & configurations, firstOrderAc
             timeRange[0]=std::max(t0,tTail+1);
             timeRange[1]=std::min( t0+l,tHead );    
         }
-        else
+
         {
             timeRange[1]=std::min( t0 , tHead);
             timeRange[0]=std::max(t0+l,tTail + 1);
@@ -498,7 +498,7 @@ Real closedLengthEstimator::operator()(configurations_t & configurations, firstO
 
     for(int t=timeRange[0];t<=timeRange[1];t++ )
     {
-        for(int i=0; i<=0;i++ )
+        for(int i=group.iStart; i<=group.iEnd;i++ )
         {
             for(int d=0;d<getDimensions(); d++)
             {

@@ -1,0 +1,518 @@
+{
+    "inverseTemperature": 1,
+    "nBeads": 10,
+    "nBlocks": 10000000,
+    "stepsPerBlock": 1000,
+    "correlationSteps": 100,
+    "particles": [
+        3,
+        0
+    ],
+    "maxParticles": [
+        1000,
+        1000
+    ],
+    "ensamble": "grandCanonical",
+    "chemicalPotential": [
+        0,
+        0
+    ],
+    "lBox": [
+        2,
+        2,
+        2
+    ],
+    "seed": 18563,
+    "movesTable": [
+        {
+            "move": {
+                "reconstructionMaxLength": 6,
+                "kind": "levy"
+            },
+            "weight": 0.8,
+            "sectors": [
+                "closed"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "delta": 1,
+                "kind": "translate"
+            },
+            "weight": 0.05,
+            "sectors": [
+                "closed"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 4,
+                "kind": "levy"
+            },
+            "weight": 0.5,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "delta": 1,
+                "kind": "translate"
+            },
+            "weight": 0.05,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 4,
+                "kind": "moveHead"
+            },
+            "weight": 0.05,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 4,
+                "kind": "moveTail"
+            },
+            "weight": 0.05,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 6,
+                "kind": "swap"
+            },
+            "weight": 0.1,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 4,
+                "kind": "advanceHeadTail",
+                "setA": 0,
+                "setB": 1
+            },
+            "weight": 0.05,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 4,
+                "kind": "recedeHeadTail",
+                "setA": 0,
+                "setB": 1
+            },
+            "weight": 0.05,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "setA": 0,
+                "setB": 1,
+                "C": 0.01,
+                "reconstructionMaxLength": 4,
+                "kind": "semiOpen"
+            },
+            "weight": 0.05,
+            "sectors": [
+                "closed"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "setA": 0,
+                "setB": 1,
+                "C": 0.01,
+                "reconstructionMaxLength": 4,
+                "kind": "semiClose"
+            },
+            "weight": 0.05,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 4,
+                "kind": "fullOpen",
+                "setA": 0,
+                "setB": 1,
+                "C": 0.01
+            },
+            "weight": 0.05,
+            "sectors": [
+                "closed"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 4,
+                "kind": "fullClose",
+                "setA": 0,
+                "setB": 1,
+                "C": 0.01
+            },
+            "weight": 0.05,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 4,
+                "kind": "createTwoWorms",
+                "setA": 0,
+                "setB": 1,
+                "CA": 0.01,
+                "CB": 0.01,
+                "initialBeadSampling": {
+                    "kind": "uniform"
+                }
+            },
+            "weight": 0.05,
+            "sectors": [
+                "closed"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 4,
+                "kind": "deleteTwoWorms",
+                "setA": 0,
+                "setB": 1,
+                "CA": 0.01,
+                "CB": 0.01,
+                "initialBeadSampling": {
+                    "kind": "uniform"
+                }
+            },
+            "weight": 0.05,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                0
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 6,
+                "kind": "levy"
+            },
+            "weight": 0.8,
+            "sectors": [
+                "closed"
+            ],
+            "sets": [
+                1
+            ]
+        },
+        {
+            "move": {
+                "delta": 1,
+                "kind": "translate"
+            },
+            "weight": 0.05,
+            "sectors": [
+                "closed"
+            ],
+            "sets": [
+                1
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 4,
+                "kind": "levy"
+            },
+            "weight": 0.5,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                1
+            ]
+        },
+        {
+            "move": {
+                "delta": 1,
+                "kind": "translate"
+            },
+            "weight": 0.05,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                1
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 4,
+                "kind": "moveHead"
+            },
+            "weight": 0.05,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                1
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 4,
+                "kind": "moveTail"
+            },
+            "weight": 0.05,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                1
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 6,
+                "kind": "swap"
+            },
+            "weight": 0.1,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                1
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 4,
+                "kind": "advanceHeadTail",
+                "setA": 1,
+                "setB": 0
+            },
+            "weight": 0.05,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                1
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 4,
+                "kind": "recedeHeadTail",
+                "setA": 1,
+                "setB": 0
+            },
+            "weight": 0.05,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                1
+            ]
+        },
+        {
+            "move": {
+                "setA": 1,
+                "setB": 0,
+                "C": 0.01,
+                "reconstructionMaxLength": 4,
+                "kind": "semiOpen"
+            },
+            "weight": 0.05,
+            "sectors": [
+                "closed"
+            ],
+            "sets": [
+                1
+            ]
+        },
+        {
+            "move": {
+                "setA": 1,
+                "setB": 0,
+                "C": 0.01,
+                "reconstructionMaxLength": 4,
+                "kind": "semiClose"
+            },
+            "weight": 0.05,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                1
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 4,
+                "kind": "fullOpen",
+                "setA": 1,
+                "setB": 0,
+                "C": 0.01
+            },
+            "weight": 0.05,
+            "sectors": [
+                "closed"
+            ],
+            "sets": [
+                1
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 4,
+                "kind": "fullClose",
+                "setA": 1,
+                "setB": 0,
+                "C": 0.01
+            },
+            "weight": 0.05,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                1
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 4,
+                "kind": "createTwoWorms",
+                "setA": 1,
+                "setB": 0,
+                "CA": 0.01,
+                "CB": 0.01,
+                "initialBeadSampling": {
+                    "kind": "uniform"
+                }
+            },
+            "weight": 0.05,
+            "sectors": [
+                "closed"
+            ],
+            "sets": [
+                1
+            ]
+        },
+        {
+            "move": {
+                "reconstructionMaxLength": 4,
+                "kind": "deleteTwoWorms",
+                "setA": 1,
+                "setB": 0,
+                "CA": 0.01,
+                "CB": 0.01,
+                "initialBeadSampling": {
+                    "kind": "uniform"
+                }
+            },
+            "weight": 0.05,
+            "sectors": [
+                "open"
+            ],
+            "sets": [
+                1
+            ]
+        }
+    ],
+    "action": [],
+    "observables": [
+        {
+            "kind": "thermalEnergy",
+            "label": "energy"
+        },
+        {
+            "kind": "virialEnergy",
+            "label": "eV"
+        },
+        {
+            "kind": "nParticles",
+            "label": "NA",
+            "sets": [
+                0
+            ]
+        },
+        {
+            "kind": "nParticles",
+            "label": "NB",
+            "sets": [
+                1
+            ]
+        },
+        {
+            "kind": "nParticles",
+            "label": "N",
+            "sets": [
+                0,
+                1
+            ]
+        },
+        {
+            "kind": "nParticlesSquared",
+            "label": "NA2",
+            "sets": [
+                0
+            ]
+        }
+    ]
+}
