@@ -1400,7 +1400,7 @@ TEST_F( configurationsTest, semiCanonical_run )
 
     auto eOb = std::make_shared<pimc::scalarObservable>(eEstim,std::string("e"),false);
     auto eVOb = std::make_shared<pimc::scalarObservable>(eVEstim,std::string("eV"),false);
-
+    
     tab.push_back(&levyMoveA,0.5,pimc::sector_t::offDiagonal,"levyA");
     tab.push_back(&moveHeadMoveA,0.05,pimc::sector_t::offDiagonal,"moveHeadA");
     tab.push_back(&moveTailMoveA,0.05,pimc::sector_t::offDiagonal,"moveTailA");
@@ -1436,7 +1436,7 @@ TEST_F( configurationsTest, semiCanonical_run )
     tab.push_back(&openMoveB,0.05,pimc::sector_t::diagonal,"openMoveB");
     tab.push_back(&openFullMoveB,0.05,pimc::sector_t::diagonal,"openFullMoveB");
     tab.push_back(&semiOpenB,0.05,pimc::sector_t::diagonal,"semiOpenMoveB");
-    
+
 
     /*  int t0=3;
     configurations.setHeadTail(0 + groupA.iStart,  M , t0-1);

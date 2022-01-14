@@ -45,7 +45,9 @@ Real getTimeStep(json_t & j)
 
 pimcDriver::pimcDriver(const json_t & j_) : j(j_),
 chemicalPotential({}),
-currentEnsamble(ensamble_t::canonical)
+currentEnsamble(ensamble_t::canonical),
+saveConfigurations(false),
+doCheckPoint(false)
 {
     
     std::vector<Real> lBox;
@@ -191,6 +193,12 @@ currentEnsamble(ensamble_t::canonical)
        
     }
 
+
+    if ( j.find("saveConfigurations") != j.end() )
+    {
+        saveConfigurations=j["saveConfigurations"].get<bool>();
+       
+    }
 }
 
 
@@ -341,7 +349,7 @@ void pimcDriver::run()
 
     obFactory.registerObservable<pairCorrelation>("pairCorrelation");
     obFactory.registerObservable< particleNumberSquaredEstimator>("nParticlesSquared");
-    
+
             
 
     if (j.find("observables") == j.end())
@@ -516,9 +524,11 @@ void pimcDriver::run()
         
         tab >> std::cout;
 
-
-        configurations.saveHDF5("configurations/sample"+std::to_string(i+1) + ".hdf5" );
-
+        if(saveConfigurations)
+        {
+            configurations.saveHDF5("configurations/sample"+std::to_string(i+1) + ".hdf5" );
+        }
+        
         if (doCheckPoint)
         {
             if (!configurations.isOpen() )

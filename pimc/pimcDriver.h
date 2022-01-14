@@ -34,6 +34,8 @@ namespace pimc{
     ensamble_t currentEnsamble;
     std::vector<Real> chemicalPotential ;
 
+    bool saveConfigurations;
+
     
  
  };

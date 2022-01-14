@@ -4,6 +4,8 @@
     "nBlocks": 10000000,
     "stepsPerBlock": 1000,
     "correlationSteps": 100,
+    "checkPointFile": "latest.hdf5",
+    "saveConfigurations" : false,
     "particles": [
         3,
         0
