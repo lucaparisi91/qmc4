@@ -5,6 +5,7 @@ import h5py
 import argparse
 import os
 import re
+import tqdm
 
 def _pdbAtomRow( index,iParticle, x,y,z,group,iTime ):
     _atoms=["N","O"]
@@ -25,10 +26,14 @@ class pdbParser:
         return self.text
 
 
+def pbc( x , lBox ):
+    lBoxInv=1./lBox
+    return x - np.floor(x*lBoxInv + 0.5)*lBox
 
-def convertHDF5ToPdb( fileNameHDF5, fileNamePDB  ):
+
+def convertHDF5ToPdb( fileNameHDF5, fileNamePDB ,lBox=None ):
     file=h5py.File(fileNameHDF5,"r")
-    
+
     parser=pdbParser()
     iSet=0
     for iSet,setName in enumerate(file):
@@ -48,10 +53,16 @@ def convertHDF5ToPdb( fileNameHDF5, fileNamePDB  ):
 
         dimensions=3
         
+        X=np.array(particleData[:,:,:])
+
+        if ( lBox is not None ):
+            for d in range(dimensions):
+                X[:,d,:]=pbc(X[:,d,:],lBox[d])
 
         for i in range(particleData.shape[2]):
             for t in range(particleData.shape[0]):
-                x=[ particleData[t,d,i] for d in range(dimensions) ]
+                x=[ X[t,d,i] for d in range(dimensions) ]
+
 
                 if isMasked(i,t):
                     x=_maxX
@@ -72,17 +83,23 @@ if __name__ == "__main__":
                     help='File name of the HDF5 file to convert')
     parser.add_argument('--out', type=str ,
                         help='File name of the convert pdb file',default=None, nargs='*')
+        
+    parser.add_argument('--lBox', type=float ,
+                        help='Size of the box',default=None, nargs=3 )
     
     args = parser.parse_args()
 
     inputFiles=args.inputFiles
     outputFiles=args.out
+    lBox=args.lBox
+
 
     # generate output file names if --out was not given
     if outputFiles is None:
        outputFiles=[ re.sub("\.[a-zA-Z0-9]+$",".pdb" , inputFile )  for inputFile in inputFiles ]
     
-    for inputFile,outputFile in zip(inputFiles,outputFiles):
-        convertHDF5ToPdb(inputFile,outputFile)
+    for inputFile,outputFile in tqdm.tqdm(zip(inputFiles,outputFiles) , total=len(outputFiles) ):
+        
+        convertHDF5ToPdb(inputFile,outputFile,lBox=args.lBox)
 
     

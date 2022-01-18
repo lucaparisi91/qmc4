@@ -452,11 +452,13 @@ void pimcDriver::run()
     int nOpen=0;
     int n=0;
 
+    pimc::openRatio  openRatioOb( configurations.getGroups().size() ) ;
+
 
     for (int i=0;(i< nBlocks) & (!pimc_main_is_interrupted); i++)
     {
         Real eStep=0;
-
+        
         while ( (nClosed < stepsPerBlock) and (!pimc_main_is_interrupted) and ( n < stepsPerBlock) )
         {
             n++;
@@ -468,6 +470,8 @@ void pimcDriver::run()
                 {success+=1;}
             }
             
+            openRatioOb.accumulate(configurations);
+
             if (!configurations.isOpen() )
             {
                 
@@ -510,16 +514,15 @@ void pimcDriver::run()
         
         if (n == stepsPerBlock)
         {
-            
-            ratioOut << i << " " << nOpen * 1./n <<std::endl;
+            openRatioOb.out(i);
+            openRatioOb.clear();
 
+            
             nOpen=0;
             n=0;
             success=0;
 
         }
-
-        
 
         
         tab >> std::cout;
@@ -542,7 +545,6 @@ void pimcDriver::run()
 
 
     f.close();
-    ratioOut.close();
     
     std::cout << "END." << std::endl;
 

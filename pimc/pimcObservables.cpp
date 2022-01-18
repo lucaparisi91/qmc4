@@ -543,9 +543,50 @@ Real nConnectedChainsEstimator::operator()(configurations_t & configurations, fi
     return chainCounter.count(configurations,_set);
 }
 
+void openRatio::accumulate(configurations_t & configurations)
+{
+    const auto & groups = configurations.getGroups();
 
+    int j=0;
+    for(int i=0;i<groups.size() ;i++)
+    {
+        j+= (int) (groups[i].isOpen()) *  std::pow(2,i); 
+    }
+    assert( j< nOpen.size());
+    nOpen[j]+=1;
+    n+=1;
+
+}
+
+void openRatio::out(int t)
+{
+    f << t << "\t";
+
+    if (n==0)
+    {
+        return ;
+    }
+
+    for(int i=0;i<nOpen.size();i++)
+    {
+        f << "\t" << average( i ) ;
+    }
+
+    f<<std::endl;
+}
+
+openRatio::openRatio( int nSets ) :
+n(0) , filename("ratio.dat")
+{
+    nOpen.resize(  1<< nSets , 0 );
+    assert(nSets>=1);
+    f.open(filename);
+}
+
+openRatio::~openRatio()
+{
+    f.close();
+}
 
 
 };
-
-

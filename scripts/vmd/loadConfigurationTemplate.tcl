@@ -1,15 +1,15 @@
 mol delete all
-set molId [ mol new /home/luca/data/droplet-finite-temperature/semiCanonical/test/N10M10T0.100Seed567r1.000/configurations/sample69.pdb ]
+set molId [ mol new __FIRSTFILE__ ]
 topo clearbonds
 mol delrep 1 $molId
-mol rep Points 6.000000
+mol rep Points 15.000000
 mol color Occupancy
 mol addrep $molId
 mol rep Lines
 mol addrep $molId
 
+set M __M__
 
-set M 10
 set sel [atomselect top all]
 set NM [ $sel num]
 set N [ expr $NM / [expr $M + 1] ]
@@ -28,14 +28,20 @@ mol modselect 2 $molId x < 9999
 
 mol selupdate 2 $molId 1
 mol colupdate 2 $molId 1
-display resetview
 
-set pdbFiles [ list /home/luca/data/droplet-finite-temperature/semiCanonical/test/N10M10T0.100Seed567r1.000/configurations/sample8.pdb   ]
+mol selupdate 1 $molId 1
+mol colupdate 1 $molId 1
 
-foreach file $files {
+
+set pdbFiles [ list __PDBFILES__   ]
+
+foreach file $pdbFiles {
     mol addfile $file
 }
- 
 
+
+__PBCSCRIPT__
+
+display resetview
 
 

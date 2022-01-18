@@ -453,6 +453,34 @@ class pairCorrelation : public histogramEstimator
 };
 
 
+class openRatio 
+{
+    public:
+    openRatio( int nSets );
+
+    void accumulate(configurations_t & configurations);
+
+    auto average( int i) { return nOpen[i]/n  ;  }
+
+    void clear() { n=0; std::fill(nOpen.begin(), nOpen.end(), 0); }
+
+    void out( int i );
+
+
+    ~openRatio() ;
+
+    private:
+
+    std::vector< Real > nOpen;
+    Real n;
+
+    std::string filename;
+    std::ofstream f;
+
+};
+
+
+
 };
 
 
