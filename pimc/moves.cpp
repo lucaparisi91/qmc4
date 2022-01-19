@@ -103,19 +103,18 @@ bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,rand
             }// ensures to reconstruct along a continuos path
      }
 
-    bool accepted = S.checkConstraints(confs,timeRange1,{iChain,iChain});
-    accepted = accepted and S.checkConstraints(confs,timeRange2,{iChainNext,iChainNext});
-    
-    
-    if (accepted)
-    {
+    //bool accepted = S.checkConstraints(confs,timeRange1,{iChain,iChain});
+    //accepted = accepted and S.checkConstraints(confs,timeRange2,{iChainNext,iChainNext});
+
+    //if (accepted)
+    //{
         auto  sNew= S.evaluate(confs,timeRange1, iChain) ;
         sNew+=S.evaluate(confs,timeRange2, iChainNext) ;
         const auto actionDifference = sNew - sOld;
 
-        accepted = sampler.acceptLog(-actionDifference,randG);
+        bool accepted = sampler.acceptLog(-actionDifference,randG);
 
-    }
+    //}
 
     if (! accepted)
     {
@@ -998,20 +997,26 @@ bool semiOpenMove::attemptMove(configurations_t & confs , firstOrderAction & S,r
 
     }
 
+    
 
     if (tHead - l < 0)
     {
+       
+
         deltaS+=sPot.evaluate(confs,timeRange2,iChainPrev);
     }
+
+
     
     deltaS+=sPot.evaluate(confs,timeRange,iChain);
-
-
+    
     auto propRatio = -deltaS - freeParticleLogProbability(difference,S.getTimeStep()*l,mass)  + log( openCloseRatioCoefficient(N,M) );
 
 
 
     bool accept = sampler.acceptLog(propRatio,randG);
+
+
 
     if ( accept)
     {
@@ -2701,7 +2706,6 @@ std::array<int,2>  createWormSemiCanonicalMove::sampleSets(randomGenerator_t & r
 
     return sets;
 }
-
 
 std::array<int,2>  removeWormSemiCanonicalMove::sampleSets(randomGenerator_t & randG)
 {

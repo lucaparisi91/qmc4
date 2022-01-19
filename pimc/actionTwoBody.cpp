@@ -1,4 +1,6 @@
 #include "actionTwoBody.h"
+#include <limits>
+
 namespace pimc
 {
 
@@ -198,6 +200,16 @@ Real twoBodySkippingEvaluationPolicy::evaluateRectangular(
 
 Real actionTwoBody::evaluate(const configurations_t & configurations,const std::array<int,2> & timeRange_, const range_t & particleRange )
     {
+        
+         bool satisfyConstraints= checkConstraints(configurations,timeRange_,particleRange);
+
+         if (not satisfyConstraints)
+         {
+            return std::numeric_limits<Real>::infinity();
+         }
+
+
+       
         const auto & groupA = configurations.getGroups()[setA];
         const auto & groupB = configurations.getGroups()[setB];
 

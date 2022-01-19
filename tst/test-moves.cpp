@@ -1413,15 +1413,16 @@ TEST_F( configurationsTest, semiCanonical_run )
 
     auto eOb = std::make_shared<pimc::scalarObservable>(eEstim,std::string("e"),false);
     auto eVOb = std::make_shared<pimc::scalarObservable>(eVEstim,std::string("eV"),false);
-    
-    //tab.push_back(&levyMoveA,0.9,pimc::sector_t::offDiagonal,"levyA");
-    //tab.push_back(&moveHeadMoveA,0.05,pimc::sector_t::offDiagonal,"moveHeadA");
-    //tab.push_back(&moveTailMoveA,0.05,pimc::sector_t::offDiagonal,"moveTailA");
-    //tab.push_back(&translMoveA,0.1,pimc::sector_t::offDiagonal,"translateA");
+
+
+    tab.push_back(&levyMoveA,0.75,pimc::sector_t::offDiagonal,"levyA");
+    tab.push_back(&moveHeadMoveA,0.05,pimc::sector_t::offDiagonal,"moveHeadA");
+    tab.push_back(&moveTailMoveA,0.05,pimc::sector_t::offDiagonal,"moveTailA");
+    tab.push_back(&translMoveA,0.1,pimc::sector_t::offDiagonal,"translateA");
     //tab.push_back(&advanceMoveA,0.05,pimc::sector_t::offDiagonal,"advanceMoveA");
     //tab.push_back(&recedeMoveA,0.05,pimc::sector_t::offDiagonal,"recedeMoveA");
     //tab.push_back(&closeMoveA,0.05,pimc::sector_t::offDiagonal,"closeMoveA");
-    //tab.push_back(&semiCloseA,0.05,pimc::sector_t::offDiagonal,"semiCloseMoveA");
+    tab.push_back(&semiCloseA,0.05,pimc::sector_t::offDiagonal,"semiCloseMoveA");
     //tab.push_back(&closeFullMoveA,0.05,pimc::sector_t::offDiagonal,"closeFullMoveA");
     //tab.push_back(&swapMoveA,0.1,pimc::sector_t::offDiagonal,"swapMoveA");
 
@@ -1438,10 +1439,10 @@ TEST_F( configurationsTest, semiCanonical_run )
     //tab.push_back(&semiCloseB,0.05,pimc::sector_t::offDiagonal,"semiCloseMoveB");
     //tab.push_back(&swapMoveB,0.1,pimc::sector_t::offDiagonal,"swapMoveB");
 
-    tab.push_back(&levyMoveA,0.9,pimc::sector_t::diagonal,"levyA");
+    tab.push_back(&levyMoveA,0.85,pimc::sector_t::diagonal,"levyA");
     tab.push_back(&translMoveA,0.1,pimc::sector_t::diagonal,"translateA");
     //tab.push_back(&openMoveA,0.05,pimc::sector_t::diagonal,"openMoveA");
-    //tab.push_back(&semiOpenA,0.05,pimc::sector_t::diagonal,"semiOpenMoveA");
+    tab.push_back(&semiOpenA,0.05,pimc::sector_t::diagonal,"semiOpenMoveA");
     //tab.push_back(&openFullMoveA,0.05,pimc::sector_t::diagonal,"openFullMoveA");
 
     tab.push_back(&levyMoveB,0.9,pimc::sector_t::diagonal,"levyB");
