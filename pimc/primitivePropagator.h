@@ -1,4 +1,7 @@
 
+#ifndef PRIMITIVEPROPAGATOR_H
+#define PRIMITIVEPROPAGATOR_H
+
 #include "traits.h"
 
 namespace pimc
@@ -74,3 +77,5 @@ namespace pimc
     Real tau;
     };
 }
+
+#endif

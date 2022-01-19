@@ -2,7 +2,6 @@
 namespace pimc
 {
 
-
 Real twoBodyEvaluationPolicy::evaluateTriangular(
         const configurations_t & configurations,
         const  std::array<int,2> & timeRange, 

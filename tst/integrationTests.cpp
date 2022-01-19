@@ -88,11 +88,10 @@ void twoBodyTest::SetUpTwoBodyInteractionGaussian_kernel(Real V0, Real R0)
         [V0, alpha](Real r) {return V0*exp(-alpha*r*r) ;} ,
         [V0,alpha](Real r) {return  V0*(-2*r*alpha)*exp(-alpha*r*r) ;} );
 
-    auto kernel = std::make_shared<                         pimc::primitiveApproximationTwoBodyKernel<decltype(V) >  >(std::make_shared<decltype(V)>(V));
+    auto kernel = std::make_shared< pimc::primitiveApproximationTwoBodyKernel<decltype(V) >  >(std::make_shared<decltype(V)>(V));
 
     kernel->setTimeStep(timeStep);
     kernel->setGeometry(geo);
-
 
     auto sV2B=std::make_shared<pimc::actionTwoBody>();
     sV2B->setSets({0,0});
@@ -1242,6 +1241,7 @@ TEST_F( harmonicTrapTest, caoBernePropagator )
     //SetUpTwoBodyInteractionGaussian( 10 , a );
 
     SetUpCaoBernePropagator(a);
+    
 
     //SetUpCaoBernePropagatorTrapped(a);
 

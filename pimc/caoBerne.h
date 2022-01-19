@@ -1,3 +1,8 @@
+
+#ifndef CAOBERNE_H
+#define CAOBERNE_H
+
+
 #include "traits.h"
 #include <memory>
 
@@ -152,8 +157,6 @@ namespace pimc
         }
 
 
-
-
     private:
 
     Real D;
@@ -161,3 +164,5 @@ namespace pimc
     Real a;
     };
 }
+
+#endif

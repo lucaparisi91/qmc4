@@ -14,16 +14,6 @@ namespace pimc
         return {t0,t1};
     }
 
-
-
-
-
-
-
-    
-
-
-
     
 levyMove::levyMove(int maxBeadLength_,int set) : _levy(maxBeadLength_) , uniformRealNumber(0,1),maxBeadLength(maxBeadLength_) , buffer(( maxBeadLength_+1)*2,getDimensions() ) ,singleSetMove::singleSetMove(set)
 {
@@ -50,10 +40,8 @@ bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,rand
 
     int M= confs.nBeads();
 
-
     std::array<int,2> timeRange1 { timeRange[0] , std::min(timeRange[1],M) - 1 } ;
     std::array<int,2> timeRange2 { 0  , timeRange[1] - M -1  };
-
 
     const auto & currentChain = confs.getChain(iChain);
 
@@ -117,6 +105,7 @@ bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,rand
 
     bool accepted = S.checkConstraints(confs,timeRange1,{iChain,iChain});
     accepted = accepted and S.checkConstraints(confs,timeRange2,{iChainNext,iChainNext});
+    
     
     if (accepted)
     {

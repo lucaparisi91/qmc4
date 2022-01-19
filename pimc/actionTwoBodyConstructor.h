@@ -14,6 +14,7 @@ namespace pimc{
 
         actionTwoBodyConstructor() : _timeStep(0),_nBeads(0),_nMaxParticles(0) {}
 
+        
         void setTimeStep( Real timeStep) { _timeStep = timeStep;
          }
 

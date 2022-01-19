@@ -854,6 +854,8 @@ TEST_F( configurationsTest, createRemoveWormSemiCanonical_run )
         "fixedLength" : false
         }
     )"_json;
+
+
     
     if (arguments::testInputFile != "" )
     {
@@ -1102,6 +1104,7 @@ bool checkHeadTailMatch( const pimc::configurations_t & confs, int setA, int set
         return true;
     }
 
+#include "../pimc/exampleActions.h"
 
 TEST_F( configurationsTest, semiCanonical_run )
 {
@@ -1116,12 +1119,14 @@ TEST_F( configurationsTest, semiCanonical_run )
         "stepsPerBlock" : 100000,
         "NA" : 2,
         "NB" : 0,
-        "deltaMu" : 2
+        "deltaMu" : 0
         }
     )"_json;
 
 
     SetSeed(236789);
+
+
 
 
     if (arguments::testInputFile != "" )
@@ -1218,7 +1223,6 @@ TEST_F( configurationsTest, semiCanonical_run )
 
 
 
-
     pimc::semiOpenMove semiOpenA(jSemiOpenA);
     pimc::semiCloseMove semiCloseA(jSemiOpenA);
 
@@ -1245,9 +1249,10 @@ TEST_F( configurationsTest, semiCanonical_run )
 
     int nBeads=10;
 
+    Real beta=1;
 
-    Real beta=0.1* nBeads;
-    std::array<Real,3> lBox{ TRUNCATE_D(2,2,2)};
+
+    std::array<Real,3> lBox{ TRUNCATE_D(10,10,10)};
     SetUp( {NA,NB}, nBeads,beta , lBox );
 
 
@@ -1256,6 +1261,8 @@ TEST_F( configurationsTest, semiCanonical_run )
     SetUpFreeParticleAction();
     //SetUpTwoBodyInteractionHarmonicInTrap( { {0,1 } , {0,0}, {1,1} });
 
+    Real a=0.1;
+    auto S = createFreeCaoBerneAction( a , timeStep ,  geo,{0,0}, configurations.nChains() , configurations.nBeads() );
     //SetUpFreeParticleAction();
     SetGrandCanonicalEnsamble( {deltaMu,0});
 
@@ -1341,7 +1348,7 @@ TEST_F( configurationsTest, semiCanonical_run )
     pimc::moveHead moveHeadMoveB(lShort,1);
     pimc::moveTail moveTailMoveB(lShort,1);
 
-    Real delta=1;
+    Real delta=10;
     pimc::translateMove translMoveA(delta,(M+1)*configurations.nChains()*2,0);
     pimc::translateMove translMoveB(delta,(M+1)*configurations.nChains()*2,1);    
 
@@ -1349,6 +1356,11 @@ TEST_F( configurationsTest, semiCanonical_run )
     std::shared_ptr<pimc::scalarEstimator> nAEst=std::make_shared<pimc::particleNumberEstimator>( 0 );
     std::shared_ptr<pimc::scalarEstimator>  nBEst=std::make_shared<pimc::particleNumberEstimator>( 1 );
     std::shared_ptr<pimc::scalarEstimator>  nEst=std::make_shared<pimc::particleNumberEstimator>( std::vector<int>{0,1} );
+
+
+    auto pairEst= std::make_shared<pimc::pairCorrelation>( 0,0 );
+
+
 
     auto nRingsAEst = std::make_shared<pimc::nConnectedChainsEstimator>(0);
     auto nRingsBEst = std::make_shared<pimc::nConnectedChainsEstimator>(1);
@@ -1361,6 +1373,7 @@ TEST_F( configurationsTest, semiCanonical_run )
     auto nAOb = std::make_shared< pimc::scalarObservable>(nAEst,"NA",false);
     auto nBOb = std::make_shared< pimc::scalarObservable>(nBEst,"NB",false);
     auto nOb = std::make_shared< pimc::scalarObservable>(nEst,"N",false);
+    auto pairOb = std::make_shared< pimc::histogramObservable>(pairEst,"pair",100,0,5);
 
     
     auto nRingsAOb = std::make_shared< pimc::scalarObservable>(nRingsAEst,"nRingsA",false);
@@ -1401,41 +1414,41 @@ TEST_F( configurationsTest, semiCanonical_run )
     auto eOb = std::make_shared<pimc::scalarObservable>(eEstim,std::string("e"),false);
     auto eVOb = std::make_shared<pimc::scalarObservable>(eVEstim,std::string("eV"),false);
     
-    tab.push_back(&levyMoveA,0.5,pimc::sector_t::offDiagonal,"levyA");
-    tab.push_back(&moveHeadMoveA,0.05,pimc::sector_t::offDiagonal,"moveHeadA");
-    tab.push_back(&moveTailMoveA,0.05,pimc::sector_t::offDiagonal,"moveTailA");
-    tab.push_back(&translMoveA,0.05,pimc::sector_t::offDiagonal,"translateA");
-    tab.push_back(&advanceMoveA,0.05,pimc::sector_t::offDiagonal,"advanceMoveA");
-    tab.push_back(&recedeMoveA,0.05,pimc::sector_t::offDiagonal,"recedeMoveA");
-    tab.push_back(&closeMoveA,0.05,pimc::sector_t::offDiagonal,"closeMoveA");
-    tab.push_back(&semiCloseA,0.05,pimc::sector_t::offDiagonal,"semiCloseMoveA");
-    tab.push_back(&closeFullMoveA,0.05,pimc::sector_t::offDiagonal,"closeFullMoveA");
-    tab.push_back(&swapMoveA,0.1,pimc::sector_t::offDiagonal,"swapMoveA");
+    //tab.push_back(&levyMoveA,0.9,pimc::sector_t::offDiagonal,"levyA");
+    //tab.push_back(&moveHeadMoveA,0.05,pimc::sector_t::offDiagonal,"moveHeadA");
+    //tab.push_back(&moveTailMoveA,0.05,pimc::sector_t::offDiagonal,"moveTailA");
+    //tab.push_back(&translMoveA,0.1,pimc::sector_t::offDiagonal,"translateA");
+    //tab.push_back(&advanceMoveA,0.05,pimc::sector_t::offDiagonal,"advanceMoveA");
+    //tab.push_back(&recedeMoveA,0.05,pimc::sector_t::offDiagonal,"recedeMoveA");
+    //tab.push_back(&closeMoveA,0.05,pimc::sector_t::offDiagonal,"closeMoveA");
+    //tab.push_back(&semiCloseA,0.05,pimc::sector_t::offDiagonal,"semiCloseMoveA");
+    //tab.push_back(&closeFullMoveA,0.05,pimc::sector_t::offDiagonal,"closeFullMoveA");
+    //tab.push_back(&swapMoveA,0.1,pimc::sector_t::offDiagonal,"swapMoveA");
 
 
-    tab.push_back(&levyMoveB,0.5,pimc::sector_t::offDiagonal,"levyB");
-    tab.push_back(&moveHeadMoveB,0.05,pimc::sector_t::offDiagonal,"moveHeadB");
-    tab.push_back(&moveTailMoveB,0.05,pimc::sector_t::offDiagonal,"moveTailB");
-    tab.push_back(&translMoveB,0.05,pimc::sector_t::offDiagonal,"translateB");
-    tab.push_back(&advanceMoveB,0.05,pimc::sector_t::offDiagonal,"advanceMoveB");
-    tab.push_back(&recedeMoveB,0.05,pimc::sector_t::offDiagonal,"recedeMoveB");
+    //tab.push_back(&levyMoveB,0.5,pimc::sector_t::offDiagonal,"levyB");
+    //tab.push_back(&moveHeadMoveB,0.05,pimc::sector_t::offDiagonal,"moveHeadB");
+    //tab.push_back(&moveTailMoveB,0.05,pimc::sector_t::offDiagonal,"moveTailB");
+    //tab.push_back(&translMoveB,0.05,pimc::sector_t::offDiagonal,"translateB");
+    //tab.push_back(&advanceMoveB,0.05,pimc::sector_t::offDiagonal,"advanceMoveB");
+    //tab.push_back(&recedeMoveB,0.05,pimc::sector_t::offDiagonal,"recedeMoveB");
 
-    tab.push_back(&closeMoveB,0.05,pimc::sector_t::offDiagonal,"closeMoveB");
-    tab.push_back(&closeFullMoveB,0.05,pimc::sector_t::offDiagonal,"closeFullMoveB");
-    tab.push_back(&semiCloseB,0.05,pimc::sector_t::offDiagonal,"semiCloseMoveB");
-    tab.push_back(&swapMoveB,0.1,pimc::sector_t::offDiagonal,"swapMoveB");
+    //tab.push_back(&closeMoveB,0.05,pimc::sector_t::offDiagonal,"closeMoveB");
+    //tab.push_back(&closeFullMoveB,0.05,pimc::sector_t::offDiagonal,"closeFullMoveB");
+    //tab.push_back(&semiCloseB,0.05,pimc::sector_t::offDiagonal,"semiCloseMoveB");
+    //tab.push_back(&swapMoveB,0.1,pimc::sector_t::offDiagonal,"swapMoveB");
 
-    tab.push_back(&levyMoveA,0.8,pimc::sector_t::diagonal,"levyA");
-    tab.push_back(&translMoveA,0.05,pimc::sector_t::diagonal,"translateA");
-    tab.push_back(&openMoveA,0.05,pimc::sector_t::diagonal,"openMoveA");
-    tab.push_back(&semiOpenA,0.05,pimc::sector_t::diagonal,"semiOpenMoveA");
-    tab.push_back(&openFullMoveA,0.05,pimc::sector_t::diagonal,"openFullMoveA");
+    tab.push_back(&levyMoveA,0.9,pimc::sector_t::diagonal,"levyA");
+    tab.push_back(&translMoveA,0.1,pimc::sector_t::diagonal,"translateA");
+    //tab.push_back(&openMoveA,0.05,pimc::sector_t::diagonal,"openMoveA");
+    //tab.push_back(&semiOpenA,0.05,pimc::sector_t::diagonal,"semiOpenMoveA");
+    //tab.push_back(&openFullMoveA,0.05,pimc::sector_t::diagonal,"openFullMoveA");
 
-    tab.push_back(&levyMoveB,0.8,pimc::sector_t::diagonal,"levyB");
-    tab.push_back(&translMoveB,0.05,pimc::sector_t::diagonal,"translateB");
-    tab.push_back(&openMoveB,0.05,pimc::sector_t::diagonal,"openMoveB");
-    tab.push_back(&openFullMoveB,0.05,pimc::sector_t::diagonal,"openFullMoveB");
-    tab.push_back(&semiOpenB,0.05,pimc::sector_t::diagonal,"semiOpenMoveB");
+    tab.push_back(&levyMoveB,0.9,pimc::sector_t::diagonal,"levyB");
+    tab.push_back(&translMoveB,0.1,pimc::sector_t::diagonal,"translateB");
+    //tab.push_back(&openMoveB,0.05,pimc::sector_t::diagonal,"openMoveB");
+    //tab.push_back(&openFullMoveB,0.05,pimc::sector_t::diagonal,"openFullMoveB");
+    //tab.push_back(&semiOpenB,0.05,pimc::sector_t::diagonal,"semiOpenMoveB");
 
 
     /*  int t0=3;
@@ -1469,15 +1482,28 @@ TEST_F( configurationsTest, semiCanonical_run )
     //configurations.join(groupA.iStart + 2 ,groupA.iStart + 0);
 
 
-    
     configurations.fillHeads();
-    
+    {
+        int iAttemptInitialCondition=0;
+
+        while (not S.checkConstraints(configurations) )
+        {
+            configurations.setRandom( { geo.getLBox(0) ,geo.getLBox(1),geo.getLBox(2) } , randG );
+            iAttemptInitialCondition++;
+
+            if (iAttemptInitialCondition > 100000)
+            {
+                throw std::runtime_error("Max iteration reached in generating the initial condition");
+            }
+        }
+    }
+/* 
     std::cout << "Equilibrating..." << std::endl;
 
     for(int n=0;n<nBurnsIn;n++)
     {
         tab.attemptMove(configurations,S,randG);
-    }
+    } */
 
     const auto & data = configurations.dataTensor();
 
@@ -1525,10 +1551,11 @@ TEST_F( configurationsTest, semiCanonical_run )
                 lengthAOb->accumulate(configurations,S);
                 lengthBOb->accumulate(configurations,S);
 
-                //eOb->accumulate(configurations,S);
-                //eVOb->accumulate(configurations,S);
+                eOb->accumulate(configurations,S);
+                eVOb->accumulate(configurations,S);
 
                 totalLengthAOb->accumulate(configurations,S);
+                pairOb->accumulate(configurations,S);
 
                 ratio+=1;
                 ratioA+=1;
@@ -1598,6 +1625,10 @@ TEST_F( configurationsTest, semiCanonical_run )
 
            totalLengthAOb->out(t);
            totalLengthAOb->clear();
+
+           pairOb->out(t);
+           pairOb->clear();
+
            
 
            nShort=0;
@@ -1639,7 +1670,7 @@ TEST_F( configurationsTest, semiCanonical_run )
             n=0;
         }
 
-            // configurations.saveHDF5("configurations/particles" + std::to_string(t) + ".hdf5");
+             configurations.saveHDF5("configurations/particles" + std::to_string(t) + ".hdf5");
         
     }
 

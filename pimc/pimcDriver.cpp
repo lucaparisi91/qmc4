@@ -315,8 +315,8 @@ void pimcDriver::run()
                 }
         configurations.fillHeads();
     }
-    int iAttemptInitialCondition;
-
+    int iAttemptInitialCondition=0;
+    
     while (not S.checkConstraints(configurations) )
     {
         configurations.setRandom( { geo.getLBox(0) ,geo.getLBox(1),geo.getLBox(2) } , randG );
@@ -517,7 +517,7 @@ void pimcDriver::run()
             openRatioOb.out(i);
             openRatioOb.clear();
 
-            
+
             nOpen=0;
             n=0;
             success=0;

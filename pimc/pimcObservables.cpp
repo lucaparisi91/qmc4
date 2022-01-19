@@ -536,7 +536,6 @@ Real nBeadsInWormEstimator::operator()(configurations_t & configurations, firstO
 }
 
 
-
 Real nConnectedChainsEstimator::operator()(configurations_t & configurations, firstOrderAction & S) {
 
 
@@ -555,7 +554,6 @@ void openRatio::accumulate(configurations_t & configurations)
     assert( j< nOpen.size());
     nOpen[j]+=1;
     n+=1;
-
 }
 
 void openRatio::out(int t)

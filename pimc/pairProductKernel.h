@@ -31,13 +31,14 @@ namespace pimc
                     {
                         for(int d=0;d<getDimensions();d++)
                         {
-                            
                             buffer(k,d,t)=geometry().difference( tn(i,d,t) - tn(j,d,t) ,d);
                         }
                         k++;
 
                     }     
             }
+
+            
 
             
             for (int t=timeRange[0];t<timeRange[1];t++)
@@ -376,11 +377,7 @@ namespace pimc
                     }     
             }
 
-
-
             return sum;
-
-
 
         }
 
