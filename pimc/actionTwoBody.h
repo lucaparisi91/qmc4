@@ -146,7 +146,7 @@ class actionTwoBody : public action
                         configurations.getGroups()[setA].range()
                         );
     }
-    
+
     virtual Real evaluateTimeDerivative( const configurations_t & configurations) override
     {
         return evaluateTimeDerivative(configurations,
@@ -157,6 +157,16 @@ class actionTwoBody : public action
     
 
     virtual void addGradient(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange,  Eigen::Tensor<Real,3> & gradientBuffer);
+
+
+    virtual void addGradient(const configurations_t &configurations,  Eigen::Tensor<Real,3> & gradientBuffer)
+    {
+        addGradient(configurations,
+                        range_t{0,configurations.nBeads()-1},
+                        configurations.getGroups()[setA].range(),
+                        gradientBuffer
+                        );
+    }
 
     
     virtual bool checkConstraints(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange);

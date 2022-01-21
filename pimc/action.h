@@ -192,6 +192,9 @@ class action
     virtual void addGradient(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange,  Eigen::Tensor<Real,3> & gradientBuffer){throw missingImplementation("Gradient not implemented for this action.");}
 
 
+    virtual void addGradient(const configurations_t & pimcConfigurations,Eigen::Tensor<Real,3> & gradientBuffer){
+        throw missingImplementation("Gradient not implemented on all configurations for this action.");}
+
 
     const auto & getGeometry() const {return _geo ;}
     auto & getGeometry() {return _geo ;}
@@ -245,6 +248,10 @@ class nullPotentialAction : public action
 
     virtual void addGradient(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange,  Eigen::Tensor<Real,3> & gradientBuffer){// not doing anything
     }
+
+     virtual void addGradient(const configurations_t & ,  Eigen::Tensor<Real,3> & gradientBuffer){// not doing anything
+    }
+
 
     virtual Real evaluateTimeDerivative( const  configurations_t & configurations) override {return 0;}
     
@@ -600,6 +607,16 @@ class potentialActionOneBody : public action
             }
         } */
      }
+
+    virtual void addGradient(const configurations_t & configurations,  Eigen::Tensor<Real,3> & gradientBuffer)
+    {
+        addGradient(configurations,
+                        range_t{0,configurations.nBeads()-1},
+                        configurations.getGroups()[_set].range(),
+                        gradientBuffer
+                        );
+    }
+
 
     private:
     functor_t V;
@@ -974,6 +991,17 @@ class sumAction : public action
         
 
     }
+
+    virtual void addGradient(const configurations_t & pimcConfigurations,  Eigen::Tensor<Real,3> & gradientBuffer)
+    {
+        for(auto S : _actions)
+        {
+            S->addGradient(pimcConfigurations,gradientBuffer);
+        }
+        
+
+    }
+
 
     auto & operator[](int i) {return *(_actions[i]);}
 

@@ -15,7 +15,7 @@ namespace pimc
             
             geometry_t _geo;
             Real _timeStep;
-
+            
         };
 
         template<class V_t>

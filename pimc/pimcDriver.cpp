@@ -301,6 +301,23 @@ void pimcDriver::run()
         configurations.setChemicalPotential(chemicalPotential);
     }
 
+    std::array<Real,3> lBoxSample;
+
+    if (j.find("randomInitialCondition") != j.end() )
+    {
+        for(int d=0;d<getDimensions();d++)
+        {
+            lBoxSample[d]=j["randomInitialCondition"]["lBox"][d].get<Real>();
+        }
+    }
+    else
+    {
+        for(int d=0;d<getDimensions();d++)
+        {
+            lBoxSample[d]=geo.getLBox(d);
+        }
+    }
+
     // sets a random initial condition
     std::cout << "Generating initial configurations" << std::endl;
     {
@@ -311,7 +328,7 @@ void pimcDriver::run()
             for (int i=0;i<data.dimensions()[0];i++)
                 for  (int d=0;d<DIMENSIONS;d++)
                 {
-                    data(i,d,t)=(uniformDistribution(randG)-0.5 )*geo.getLBox(d);
+                    data(i,d,t)=(uniformDistribution(randG)-0.5 )*lBoxSample[d];
                 }
         configurations.fillHeads();
     }
@@ -319,7 +336,7 @@ void pimcDriver::run()
     
     while (not S.checkConstraints(configurations) )
     {
-        configurations.setRandom( { geo.getLBox(0) ,geo.getLBox(1),geo.getLBox(2) } , randG );
+        configurations.setRandom( { lBoxSample[0] ,lBoxSample[1],lBoxSample[2] } , randG );
         iAttemptInitialCondition++;
 
         if (iAttemptInitialCondition > 100000)
@@ -480,7 +497,6 @@ void pimcDriver::run()
                     O->accumulate(configurations,S);
                 }
                 nClosed+=1;
-                
                 
             }
             else

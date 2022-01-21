@@ -21,7 +21,6 @@ Real thermodynamicEnergyEstimator::operator()(configurations_t & confs, firstOrd
     return e;
 }
 
-
 Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderAction & S)
 {
     auto & geo = S.getGeometry();
@@ -32,13 +31,14 @@ Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderActio
     int N=0;
     buffer.setConstant(0.);
 
+    Spot.addGradient(confs,buffer);
+    
     for ( const auto & group : confs.getGroups() )
     {
         N+=group.iEnd - group.iStart + 1;
         int iStart=group.iStart;
         int iEnd=group.iEnd;
 
-        Spot.addGradient(confs,{0,confs.nBeads()-1},{iStart,iEnd},buffer);
         
 
       for(int i= iStart;i<=iEnd ; i++)
@@ -59,7 +59,6 @@ Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderActio
     rC.setConstant(0);
     for (const auto & group : confs.getGroups() )
     {
-        
 
         for (int alpha=0; alpha< confs.nBeads();alpha++)
         {
