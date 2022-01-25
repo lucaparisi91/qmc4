@@ -7,6 +7,10 @@
 #include "../pimc/pimcObservables.h"
 #include <filesystem>
 #include "../pimc/particleContainer/particleContainer.h"
+#include "../pimc/particleContainer/particleDistancesList.h"
+#include "../pimc/pairProductMeshKernel.h"
+
+
 
 namespace fs = std::filesystem;
 
@@ -189,5 +193,110 @@ TEST( simpleCellNeighbourList , basic)
         std::cout<<std::endl;
     }
 
+}
+
+
+TEST( tools , listIntersection)
+{
+    std::vector<int> L1 { 1 , 3 , 6 ,8 };
+    std::vector<int> L2 { 1, 2 , 6  , 7, 8 , 9  };
+
+    int n = pimc::intersect( L1.begin(),L1.end(),L2.begin(),L2.end() );
+
+    ASSERT_EQ( n , 3);
+
+    ASSERT_EQ(L1[0],1);
+    ASSERT_EQ(L1[1],6);
+    ASSERT_EQ(L1[2],8);
+
+}
+
+
+TEST( particleDistances , basic)
+{
+    int N=10;
+    int nBeads=10;
+
+
+    pimc::cell cell{};
+    cell.setCapacity( N );
+
+    
+
+
+    std::array<Real,getDimensions() > lBox { 1 , 1 , 1};
+
+    Eigen::Tensor<Real , 3 > positions( N, getDimensions() , nBeads +1 );
+
+    std::default_random_engine randG;
+    std::uniform_real_distribution<double> distribution(-0.5,0.5);
+
+    for( int t=0;t<nBeads;t++)
+        for(int i=0;i<N;i++)
+        {
+            for(int d=0;d<getDimensions(); d++)
+            {
+                positions(i,d,t)=distribution(randG)*lBox[d] ;
+            }
+        }
+
+    for(int i=0;i<N;i++)
+        {
+            for(int d=0;d<getDimensions(); d++)
+            {
+                positions(i,d,nBeads)=positions(i,d,0) ;
+            }
+        }
+
+    std::array<size_t,getDimensions()> nCells { 4,4,4};
+
+    pimc::linkedCellParticles griddedParticles(nCells,lBox);
+
+    griddedParticles.setCapacity(N,nBeads);
+    
+    griddedParticles.add( positions, {0, nBeads -1} , {0,N-1} );
+
+    pimc::twoBodyPairsList pairList(N,nBeads);
+    pairList.buildParticleList(griddedParticles, 0, {0,nBeads-1});
+
+
+
+    const auto & filteredParticles = pairList.getPairList();
+    const auto & nFilteredParticles = pairList.sizes();
+    /*
+    TODO
+
+    Some check on particles filtered to implement
+    */
+
+    int iParticle=0;
+
+    for(int t=0;t<nBeads;t++)
+    {
+
+        for(int i=0;i<nFilteredParticles[t];i++)
+        {
+            std::cout << filteredParticles(i,t) << " ";
+        }
+        std::cout << std::endl;
+    }
+
+
+
+    pimc::twoBodyDistancesBuffer distanceBuffer(N,nBeads);
+    pimc::geometry_t geo(lBox[0],lBox[1],lBox[2]);
+    
+
+    distanceBuffer.buildDistanceList( positions,griddedParticles,geo,{0,nBeads-1},0);
+
+     /*
+    TODO
+
+
+    Some check on filtered distances
+
+    */
+
+   
 }
 

@@ -138,7 +138,7 @@ class simpleCellNeighbourList
 
     }
 
-    const auto & getParticleCell( int iParticle) { auto I=cellIndexPerParticle[iParticle] ; return *cells[I];}
+    const auto & getParticleCell( int iParticle) const { auto I=cellIndexPerParticle[iParticle] ; return *cells[I];}
 
 
 
@@ -200,4 +200,27 @@ class simpleCellNeighbourList
    
 };
 
+
+class linkedCellParticles
+{
+    public:
+    using linkedCell_t = pimc::simpleCellNeighbourList;
+
+    linkedCellParticles( std::array<size_t,getDimensions()> nCells, std::array<Real,getDimensions() > lBox  );
+    void setCapacity(size_t N, size_t M);
+    void add( const Eigen::Tensor<Real,3> & data, const range_t &  timeRange,const  range_t & particleRange);
+    void remove(  const range_t &  timeRange,const  range_t & particleRange);
+
+
+    auto & operator[](size_t i ) {return *particles[i]; }
+    const auto & operator[](size_t i ) const {return *particles[i]; }
+
+    private:
+
+    std::vector< std::shared_ptr<linkedCell_t> > particles;
+    std::array<size_t,getDimensions()> _nCells;
+    std::array< Real ,getDimensions()> _lBox;
+
 };
+
+}

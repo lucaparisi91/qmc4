@@ -42,6 +42,38 @@ namespace pimc{
     using range_t = std::array<int,2>;
 
     range_t intersectRanges(const range_t & rangeA,const range_t & rangeB );
+
+
+    template<class IT1_t , class IT2_t>
+    auto intersect( IT1_t left1, IT1_t right1,  IT2_t left2, IT2_t right2 )
+    {
+        auto head = left1;
+        int n=0;
+
+        while (left1 < right1 )
+        {
+            while ( *left2 < *left1 )
+            {
+                left2++;
+                if (left2 >=right2 ) return n;
+            }
+
+            if (*left1 == *left2)
+            {
+                *head = *left1;
+                head++;
+                n++;
+            }
+
+            left1++;
+
+
+        }
+        
+        return n;
+
+
+    }
     
 }
 

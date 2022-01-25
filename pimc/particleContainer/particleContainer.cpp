@@ -157,6 +157,53 @@ void cell::setCapacity(size_t N)
 }
 
 
+linkedCellParticles::linkedCellParticles( std::array<size_t,getDimensions()> nCells, std::array<Real,getDimensions() > lBox  ) :
+_nCells(nCells),
+_lBox(lBox)
+ {}
+
+void linkedCellParticles::setCapacity(size_t N,size_t M)
+{
+    auto oldSize=particles.size();
+    particles.resize( M + 1);
+    for(int i=oldSize;i<M + 1;i++)
+    {
+        particles[i]=std::make_shared<linkedCell_t>(_nCells,_lBox);
+    };
+
+    for(int i=0;i<M + 1;i++)
+    {
+        particles[i]->setCapacity(N);
+    }
+
+}
+
+void linkedCellParticles::add( const Eigen::Tensor<Real,3> & data, const range_t &  timeRange,const  range_t & particleRange)
+{
+
+    for (int t=timeRange[0]; t<=timeRange[1]+1;t++)
+    {
+        for(int i=particleRange[0];i<=particleRange[1];i++)
+        {
+            particles[t]->add(i, data(i,0,t),data(i,1,t),data(i,2,t));
+        }
+    }
+}
+
+void linkedCellParticles::remove(  const range_t &  timeRange,const  range_t & particleRange)
+{
+
+    for (int t=timeRange[0]; t<=timeRange[1];t++)
+    {
+        for(int i=particleRange[0];i<=particleRange[1];i++)
+        {
+            particles[t]->remove(i);
+        }
+    }
+}
+
+
+
 
 
 }
