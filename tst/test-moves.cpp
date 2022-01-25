@@ -1252,7 +1252,7 @@ TEST_F( configurationsTest, semiCanonical_run )
     Real beta=1;
 
 
-    std::array<Real,3> lBox{ TRUNCATE_D(10,10,10)};
+    std::array<Real,3> lBox{ TRUNCATE_D(1,1,1)};
     SetUp( {NA,NB}, nBeads,beta , lBox );
 
 
@@ -1439,10 +1439,11 @@ TEST_F( configurationsTest, semiCanonical_run )
     //tab.push_back(&semiCloseB,0.05,pimc::sector_t::offDiagonal,"semiCloseMoveB");
     //tab.push_back(&swapMoveB,0.1,pimc::sector_t::offDiagonal,"swapMoveB");
 
-    tab.push_back(&levyMoveA,0.85,pimc::sector_t::diagonal,"levyA");
+
+    tab.push_back(&levyMoveA,0.9,pimc::sector_t::diagonal,"levyA");
     tab.push_back(&translMoveA,0.1,pimc::sector_t::diagonal,"translateA");
     //tab.push_back(&openMoveA,0.05,pimc::sector_t::diagonal,"openMoveA");
-    tab.push_back(&semiOpenA,0.05,pimc::sector_t::diagonal,"semiOpenMoveA");
+    //tab.push_back(&semiOpenA,0.05,pimc::sector_t::diagonal,"semiOpenMoveA");
     //tab.push_back(&openFullMoveA,0.05,pimc::sector_t::diagonal,"openFullMoveA");
 
     tab.push_back(&levyMoveB,0.9,pimc::sector_t::diagonal,"levyB");

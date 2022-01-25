@@ -194,7 +194,11 @@ Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderActio
                     for(int d=0;d<getDimensions();d++)
                     {
                         
-                        e3+= ( data(i,d,t) - rC(i,d,t) ) *
+                        auto delta=( data(i,d,t) - rC(i,d,t) ) ;
+                        //auto delta=geo.difference( data(i,d,t) - rC(i,d,t) ,d) ;
+
+                        
+                        e3+= delta *
                         buffer(i,d,t);
                     }
 
