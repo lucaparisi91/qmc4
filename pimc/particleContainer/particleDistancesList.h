@@ -36,6 +36,7 @@ namespace pimc
 
     };
 
+
     class twoBodyDistancesBuffer
     {
 
@@ -53,9 +54,7 @@ namespace pimc
 
         const auto & getBufferDistances() const { return buffer;};
         const auto & getBufferDistancesOffset() const { return bufferOffset;};
-
         
-
 
     private:
 
@@ -64,7 +63,6 @@ namespace pimc
 
     std::vector<Real> nDistances;
     twoBodyPairsList pairList;
-
 
 };
 

@@ -382,8 +382,7 @@ namespace pimc
 
         auto & distanceBuffer() {return *_distances; }
         void  setDistanceBuffer(std::shared_ptr<Eigen::Tensor<Real,3> > buffer) {_distances=buffer; }
-
-
+        
 
         
         private:

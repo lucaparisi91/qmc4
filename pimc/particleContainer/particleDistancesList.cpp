@@ -34,8 +34,7 @@ namespace pimc
                     filteredParticles(k,t)=j;
                     k++;
                 }
-                
-
+            
             }
 
             for ( auto neighbour : cell.neighbours() )
@@ -56,8 +55,21 @@ namespace pimc
             
         }
 
-        // sort particle indices in the whole time range
+        //std::cout << "..not intersected neighbours..." << std::endl;
 
+        // sort particle indices in the whole time range
+        /*  for (int t=timeRange[0];t<=timeRange[1]+1;t++)
+         {
+             std::cout << t << " ";
+
+             for(int ii=0;ii<nParticles[t];ii++)
+             {
+                 std::cout  << filteredParticles(ii,t) << " ";
+             }
+
+             std::cout << std::endl;
+
+         } */
 
          for (int t=timeRange[0];t<=timeRange[1]+1;t++)
          {
@@ -87,24 +99,50 @@ bufferOffset(N,getDimensions(),M+1)
 void twoBodyDistancesBuffer::buildDistanceList( const  Eigen::Tensor<Real,3> & data, const linkedCellParticles &  cellList,  const geometry_t & geo , const range_t & timeRange, int iParticle)
 {
 
+    Real cutOff = cellList.cellLength(0);
+    Real cutOffSquared = cutOff*cutOff;
+
     pairList.buildParticleList(cellList,iParticle,timeRange);
 
     const auto & nPairs = pairList.sizes();
     const auto & pairs = pairList.getPairList();
 
-    int k=0;
-
     for(int t=timeRange[0];t<=timeRange[1];t++)
     {
+        int k=0;
         for( int ii=0;ii<nPairs[t];ii++)
         {
+            std::array<Real,getDimensions() > delta;
+            std::array<Real,getDimensions() > deltaNext;
+            Real r2=0;
+            Real r2Next=0;
+            
             for(int d=0;d<getDimensions();d++)
             {
-                buffer(k,d,t)=geo.difference( data(iParticle,d,t) - data(pairs(ii,t),d,t) ,d );
-                bufferOffset(k,d,t)=data(iParticle,d,t+1) - data(pairs(ii,t),d,t+1);
+                delta[d]=geo.difference( data(iParticle,d,t) - data(pairs(ii,t),d,t) ,d );
+                deltaNext[d]=geo.difference(data(iParticle,d,t+1) - data(pairs(ii,t),d,t+1),d);  
+                r2+=delta[d]*delta[d];
+                r2Next+=deltaNext[d]*deltaNext[d];
             }
-            
+
+             if (  not((r2>=(cutOffSquared) ) or (r2Next>=cutOffSquared)
+            ) )
+            {
+                for(int d=0;d<getDimensions();d++)
+                {
+                    buffer(k,d,t)=delta[d];
+                    bufferOffset(k,d,t)=deltaNext[d];
+                }
+                k++;
+            }
+
         }
+
+        nDistances[t]=k;
+
+        
+        //std::cout<<std::endl;
+
 
     }
 

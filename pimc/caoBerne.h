@@ -133,6 +133,84 @@ namespace pimc
 
 
 
+
+
+
+namespace pimc
+{
+    class testingCaoBernePropagator
+    {
+
+    public:
+
+        testingCaoBernePropagator(const json_t & j ) : testingCaoBernePropagator(j["timeStep"].get<Real>() , j["a"].get<Real>() , j["cutOff"].get<Real>() ) {};
+
+        testingCaoBernePropagator(Real timeStep, Real a_, Real cutOff) : tau(timeStep),a(a_),D(1),_cutOff(cutOff) {}
+        
+        Real logEvaluate( const std::array<Real,3> & x1 , const std::array<Real,3> & x2 ) const
+        {
+            Real r1 = std::sqrt(x1[0]*x1[0] + x1[1]*x1[1] + x1[2]*x1[2]);
+            Real r2 = std::sqrt(x2[0]*x2[0] + x2[1]*x2[1] + x2[2]*x2[2]);
+            Real r1Dotr2=x1[0]*x2[0] + x1[1]*x2[1] + x1[2]*x2[2];
+
+            if ( (r1>=_cutOff) or (r2>=_cutOff) )
+            {
+                return 0;
+            }
+
+
+            Real value =  
+                        1 - (a*(r1 + r2) - a*a)/(r1*r2) *
+                        exp(- 
+                            (r1*r2 + a*a -a*(r1+r2) )*(1+r1Dotr2/(r1*r2))/(2*D*tau)
+                        );
+            
+
+            return -log(value);    
+
+        }
+
+
+      
+
+        inline Real logTimeDerivative( const std::array<Real,3> & x1 , const std::array<Real,3> & x2 ) const
+        {
+            return 0;
+
+        }
+
+        Real logGradientLeft2(const std::array<Real,3> & x1, const std::array<Real,3> & x2, int d) const
+        {
+           return 0;
+        }
+
+        Real logGradientLeft(const std::array<Real,3> & x1, const std::array<Real,3> & x2, int d) const
+        {
+            return 0;
+            
+        }
+
+
+
+         Real logGradientRight(const std::array<Real,3> & x1, const std::array<Real,3> & x2, int d) const
+        {
+            return logGradientLeft(x2,x1,d);
+        }
+
+    private:
+
+    Real D;
+    Real tau;
+    Real a;
+    Real _cutOff;
+
+    };
+}
+
+
+
+
+
 namespace pimc
 {
     class caoBernePropagatorIsotropic

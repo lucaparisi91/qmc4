@@ -161,6 +161,7 @@ class simpleCellNeighbourList
 
     const auto & getCells() { return cells;}
 
+    const auto & getNCells() const {return _nCells;}
 
     private:
  
@@ -214,6 +215,13 @@ class linkedCellParticles
 
     auto & operator[](size_t i ) {return *particles[i]; }
     const auto & operator[](size_t i ) const {return *particles[i]; }
+
+    const auto & getNCells() const {return _nCells;}
+
+    const auto & getBox() const {return _lBox;}
+
+    const auto cellLength( int d) const {return _lBox[d]/_nCells[d];}
+
 
     private:
 

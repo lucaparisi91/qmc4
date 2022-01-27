@@ -10,6 +10,7 @@
 #include "../pimc/particleContainer/particleDistancesList.h"
 #include "../pimc/pairProductMeshKernel.h"
 
+#include "testConfigurations.h"
 
 
 namespace fs = std::filesystem;
@@ -69,7 +70,6 @@ TEST( cell , basic)
     ASSERT_EQ( indices[j],i);
     ASSERT_EQ( indices[i],j);
 
-
     
 
     for(int i=0;i<N;i++)
@@ -80,7 +80,9 @@ TEST( cell , basic)
         }
     }
 
+
     cell.pop();
+
 
     ASSERT_EQ(cell.size(), N-1);
     ASSERT_EQ(cell.capacity(), N);
@@ -211,10 +213,48 @@ TEST( tools , listIntersection)
 
 }
 
+auto countDistances( const Eigen::Tensor<Real,3> & data,Real cutOff , int t , int iParticle , const pimc::range_t & particleRange , const pimc::geometry_t & geo)
+{
+    Real cutOffSquared=cutOff*cutOff;
+
+    size_t n=0;
+    Real diff=0;
+    for(int i=particleRange[0];i<=particleRange[1];i++)
+    {
+        if (i==iParticle)
+        {
+            continue;
+        }
+        Real r2=0;
+        Real r2Next=0;
+
+        for(int d=0;d<getDimensions();d++)
+        {
+            Real diff=geo.difference(data(i,d,t) - data(iParticle,d,t),d);
+            Real diffNext=geo.difference(data(i,d,t+1) - data(iParticle,d,t+1),d);
+
+            r2+=diff*diff;
+            r2Next+=diffNext*diffNext;
+        }
+
+        if (not ( (  r2>=cutOffSquared  ) or   (r2Next>=cutOffSquared  ) ) )
+        {
+            n+=1;
+            //std::cout << t << " " << i << " " << iParticle << std::endl;
+        } 
+       
+    }
+
+    return n;
+
+}
+
+
+
 
 TEST( particleDistances , basic)
 {
-    int N=10;
+    int N=500;
     int nBeads=10;
 
 
@@ -256,6 +296,7 @@ TEST( particleDistances , basic)
     
     griddedParticles.add( positions, {0, nBeads -1} , {0,N-1} );
 
+    
     pimc::twoBodyPairsList pairList(N,nBeads);
     pairList.buildParticleList(griddedParticles, 0, {0,nBeads-1});
 
@@ -263,6 +304,8 @@ TEST( particleDistances , basic)
 
     const auto & filteredParticles = pairList.getPairList();
     const auto & nFilteredParticles = pairList.sizes();
+
+
     /*
     TODO
 
@@ -273,12 +316,12 @@ TEST( particleDistances , basic)
 
     for(int t=0;t<nBeads;t++)
     {
-
+        //std::cout << t << " ";
         for(int i=0;i<nFilteredParticles[t];i++)
         {
-            std::cout << filteredParticles(i,t) << " ";
+            //std::cout << filteredParticles(i,t) << " ";
         }
-        std::cout << std::endl;
+        //std::cout << std::endl;
     }
 
 
@@ -289,6 +332,23 @@ TEST( particleDistances , basic)
 
     distanceBuffer.buildDistanceList( positions,griddedParticles,geo,{0,nBeads-1},0);
 
+    //std::cout  << "...distancesBuffer.." << std::endl;
+
+    
+
+    for (int t=0;t<nBeads;t++)
+    {
+        auto n1=distanceBuffer.getNDistances()[t];
+        auto n2 = countDistances( positions , griddedParticles.cellLength(0),t,iParticle,{0,N-1},geo  );
+
+        ASSERT_EQ(n1,n2);
+
+
+    }
+
+
+
+
      /*
     TODO
 
@@ -297,6 +357,361 @@ TEST( particleDistances , basic)
 
     */
 
-   
+
+
+
 }
+
+#include "../pimc/pairProductKernel.h"
+#include "../pimc/actionTwoBodyConstructor.h"
+
+class caoBerneGridded : public ::testing::Test
+{
+protected:
+
+    void SetUp()
+    {
+        nCells={3,3,3};
+        lBox= { 1,1,1};
+        beta=1;
+        nBeads=10;
+        N=10;
+        scatteringLength=0.01;
+        _doCutOff=false;
+
+    };
+
+    void SetBox( std::array<Real,getDimensions()> l)
+    {
+        lBox=l;
+    };
+
+    void SetBeta(Real beta_)
+    {
+        beta=beta_;
+    }
+
+
+    void SetNCells( std::array<size_t,getDimensions()> nCells_)
+    {
+        nCells=nCells_;
+    };
+
+    void SetScatteringLength(Real a)
+    {
+        scatteringLength=a;
+
+    }
+
+    void SetN( int N2)
+    {
+        N=N2;
+    };
+
+    void SetNBeads( int M)
+    {
+        nBeads=M;
+    }
+
+
+
+    void run()
+    {
+
+        Real timeStep=beta/nBeads;
+
+
+        randomGenerator_t randG( time(NULL));
+
+
+
+        pimc::pimcConfigurations configurations(nBeads,getDimensions(), { {0,N-1,N+1,1.0} } );
+
+        pimc::geometryPBC_PIMC geo({lBox[0],lBox[1],lBox[2] });
+
+        pimc::linkedCellParticles linkedCellList( nCells, lBox);
+
+
+
+
+        int seed=567;
+
+        configurations.setRandom( lBox , randG );
+
+        configurations.fillHeads();
+
+        auto sTwoBodyCreator = std::make_shared<pimc::actionTwoBodyConstructor >() ;
+        sTwoBodyCreator->setTimeStep(timeStep);
+        sTwoBodyCreator->setGeometry(geo);
+        sTwoBodyCreator->setNBeads(nBeads);
+
+        sTwoBodyCreator->setNMaxParticles(N);
+
+        sTwoBodyCreator->registerGreenFunction<pimc::testingCaoBernePropagator>("caoBerne");
+
+
+
+        auto j = R"(
+        {
+                "kind": "twoBody",
+                "groupA": 0,
+                "groupB": 0,
+                "greenFunction": {
+                    "a": 0.01,
+                    "kind": "caoBerne"
+                }
+            }
+
+                )"_json;
+
+        j["greenFunction"]["a"]=scatteringLength;
+
+
+        Real cutOff=lBox[0]*2;
+
+        if (_doCutOff)
+        {
+            cutOff=linkedCellList.cellLength(0);
+        }
+        j["greenFunction"]["cutOff"]=cutOff;
+
+
+        auto sG = sTwoBodyCreator->create( j);
+
+        while (not sG->checkConstraints(configurations) )
+        {
+            configurations.setRandom( lBox , randG );
+        }
+
+        
+        auto sT= std::make_shared<pimc::kineticAction>(timeStep, configurations.nChains() , nBeads  , geo);
+
+        auto S = std::make_shared<pimc::firstOrderAction>(sT, sG);
+
+        int l= int(nBeads*0.6);
+        pimc::levyMove levyMove(l,0);
+
+        int nBurnsIn=1000;
+
+         for(int n=0;n<nBurnsIn;n++)
+        {
+            levyMove.attemptMove(configurations,*S,randG);
+        }
+
+
+
+
+
+        pimc::range_t timeRange {0,nBeads-1};
+        int iParticle=0;
+
+
+
+        auto G = std::make_shared<pimc::caoBernePropagator>(timeStep,scatteringLength);
+
+        auto meshKernel=std::make_shared<pimc::pairProductMeshKernel<pimc::caoBernePropagator> >(G,N,nBeads);
+
+
+
+
+
+        linkedCellList.setCapacity(N,nBeads);
+
+        linkedCellList.add( configurations.dataTensor(), {0,nBeads-1} , {0,N-1} );
+
+        meshKernel->setGeometry(geo);
+
+
+
+
+
+
+
+
+         p = sG->evaluate(configurations, timeRange, iParticle);
+        Real a = j["greenFunction"]["a"].get<Real>();
+
+
+        p2=meshKernel->evaluate( configurations.dataTensor() , linkedCellList,{0,nBeads} , iParticle );
+
+
+    }
+
+
+
+    auto getNonGriddedResult()  {return p;}
+    auto getGriddedResult() {return p2;}
+
+    void SetDoCutOff( bool doCutOff)  {_doCutOff=doCutOff;} 
+    
+    private:
+
+    std::array<size_t,getDimensions()> nCells;
+    std::array<Real,getDimensions()> lBox;
+    Real beta;
+    int nBeads;
+    int N;
+    Real scatteringLength;
+
+    Real p;
+    Real p2;
+
+    bool _doCutOff;
+
+};
+
+
+TEST_F( caoBerneGridded , nCells3)
+{
+
+    Real na3=1e-6;
+    std::vector<int> Ns { 100 , 200 , 300 , 500 };
+    
+    Real T=0.1;
+    Real zeta=2.612;
+
+    SetBeta(1);
+
+
+    for (auto N : Ns )
+    {
+        Real V = N/zeta * std::pow(T,3/2.);
+
+        Real l=std::pow(V,1/3.);
+        SetScatteringLength( std::pow(na3/(N/V)  ,1./3) );
+
+        SetBox( {l,l,l});
+        SetN(N);
+
+        run();
+
+        auto p = getNonGriddedResult();
+        auto p2=getGriddedResult();
+
+        ASSERT_EQ(p,p2);
+
+    }
+
+}
+TEST_F( caoBerneGridded , cutOff)
+{
+    Real na3=1e-6;
+    std::vector<int> Ns { 20, 100 , 200 , 500  };
+    std::vector<int> nCells { 3 , 4 , 5 , 6  };
+
+    Real T=0.1;
+    Real zeta=2.612;
+
+    Real beta=1./(2*M_PI);
+
+    int nBeads=100;
+
+    SetNBeads(nBeads);
+    SetBeta(beta);
+
+    SetDoCutOff(true);
+
+    for (auto N : Ns )
+    {
+        Real V = N/(zeta * std::pow(T,3/2.) );
+
+        Real l=std::pow(V,1/3.);
+        
+        Real a=std::pow(na3/(N/V),1./3 )  ;
+        SetScatteringLength( a  ) ;
+
+
+        for( auto nCell : nCells)
+        {
+
+        
+            
+            SetBox( {l,l,l});
+            SetN(N);
+            SetNCells( {nCell,nCell,nCell});
+
+            run();
+
+            auto p = getNonGriddedResult();
+            auto p2=getGriddedResult();
+
+
+            ASSERT_NEAR(p,p2, 1e-9);
+
+
+
+        }
+
+    }
+
+
+}
+
+TEST_F( caoBerneGridded , accuracy)
+{
+    Real na3=1e-6;
+    std::vector<int> Ns { 60  };
+    std::vector<int> nCells { 3 , 4 , 5 , 6  };
+
+    Real T=0.1;
+    Real zeta=2.612;
+
+    Real beta=1./(2*M_PI);
+
+    int nBeads=100;
+
+    SetNBeads(nBeads);
+    SetBeta(beta);
+
+    SetDoCutOff(false);
+
+    for (auto N : Ns )
+    {
+        Real V = N/(zeta * std::pow(T,3/2.) );
+
+        Real l=std::pow(V,1/3.);
+        
+        Real a=std::pow(na3/(N/V),1./3 )  ;
+        SetScatteringLength( a  ) ;
+
+       
+        std::cout << "eps : " <<  ( sqrt(beta/nBeads) + a)/l << std::endl;
+        std::cout << "l : " <<  l << std::endl;
+        std::cout << "tau : " <<  beta/nBeads << std::endl;
+        std::cout << "a : " <<  a << std::endl;
+
+
+        for( auto nCell : nCells)
+        {
+        
+            
+            SetBox( {l,l,l});
+            SetN(N);
+            SetNCells( {nCell,nCell,nCell});
+            
+            Real p=0;
+            Real p2=0;
+            
+            for(int i=0;i<100;i++)
+            {
+                run();
+                p+= getNonGriddedResult();
+                p2+=getGriddedResult();
+
+            }
+            
+
+
+            std::cout << nCell << " " <<  p << " "<< p2 << std::endl;
+
+
+        }
+
+    }
+
+
+}
+
+
+
 
