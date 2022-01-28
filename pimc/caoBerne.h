@@ -175,18 +175,58 @@ namespace pimc
 
         inline Real logTimeDerivative( const std::array<Real,3> & x1 , const std::array<Real,3> & x2 ) const
         {
-            return 0;
+            Real r1 = std::sqrt(x1[0]*x1[0] + x1[1]*x1[1] + x1[2]*x1[2]);
+            Real r2 = std::sqrt(x2[0]*x2[0] + x2[1]*x2[1] + x2[2]*x2[2]);
+            Real r1Dotr2=x1[0]*x2[0] + x1[1]*x2[1] + x1[2]*x2[2];
+            Real cosTeta = r1Dotr2/(r1*r2);
+
+            if ( (r1>=_cutOff) or (r2>=_cutOff) )
+            {
+                return 0;
+            }
+
+            Real E=exp(-(r1*r2 + a*a - a*(r1+r2) )*(1+cosTeta)/(2*D*tau));
+
+            Real dgdtau= -a*(r1 + r2 - a)/(r1*r2) *(r1*r2 + a*a -a*(r1+r2)) *(1+cosTeta)/(2*D*tau*tau) * E;
+
+            
+            Real g=1 - a*( r1 + r2 - a)/(r1*r2)*E;
+
+            return -dgdtau/g;
 
         }
 
-        Real logGradientLeft2(const std::array<Real,3> & x1, const std::array<Real,3> & x2, int d) const
-        {
-           return 0;
-        }
+        
 
         Real logGradientLeft(const std::array<Real,3> & x1, const std::array<Real,3> & x2, int d) const
         {
-            return 0;
+
+
+            Real r1 = std::sqrt(x1[0]*x1[0] + x1[1]*x1[1] + x1[2]*x1[2]);
+            Real r2 = std::sqrt(x2[0]*x2[0] + x2[1]*x2[1] + x2[2]*x2[2]);
+            Real r1Dotr2=x1[0]*x2[0] + x1[1]*x2[1] + x1[2]*x2[2];
+
+              if ( (r1>=_cutOff) or (r2>=_cutOff) )
+            {
+                return 0;
+            }
+
+            Real cosTeta = r1Dotr2/(r1*r2);
+
+            Real E=exp(-(r1*r2 + a*a - a*(r1+r2) )*(1+cosTeta)/(2*D*tau));
+
+            Real dgdcosTeta = a*(r1 + r2 - a)/(r1*r2) * (r1*r2 + a*a - a *( r1 + r2)  )/(2*D*tau) * E;
+            Real dgdr = -a / (r2*r1) *( 1 - (r1 + r2 - a)/r1 + (r1 + r2 -a)*(a - r2)*(1+ cosTeta)/(2*D*tau))*E;
+
+
+            Real drdrd = x1[d]/r1;
+            Real dcosTetadrd = ( x2[d]/(r1*r2) - x1[d]*r1Dotr2/(r2*r1*r1*r1) );
+
+            Real dgdrd = dgdr * drdrd + dgdcosTeta*dcosTetadrd;
+
+            Real g=1 - a*( r1 + r2 - a)/(r1*r2)*E;
+            
+            return -dgdrd/g;
             
         }
 
@@ -196,7 +236,6 @@ namespace pimc
         {
             return logGradientLeft(x2,x1,d);
         }
-
     private:
 
     Real D;

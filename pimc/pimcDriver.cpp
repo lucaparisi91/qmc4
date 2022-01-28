@@ -264,8 +264,7 @@ void pimcDriver::run()
 
 
     sTwoBodyCreator->registerGreenFunction<pimc::caoBernePropagator>("caoBerne");
-
-
+    sTwoBodyCreator->registerGreenFunction<pimc::testingCaoBernePropagator>("testingCaoBerne");    
 
     sC.addConstructor("twoBody",sTwoBodyCreator);
     sC.addConstructor("nullPotential",sNullC);

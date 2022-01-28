@@ -14,10 +14,10 @@ class cell
 
     void setCapacity(size_t nMaxParticles);
 
+
     public:
 
-    const auto & positions() const {return _positions;};
-
+    
     const auto size() const  {return _nParticles;}
 
     const auto capacity() const  {return _nMaxParticles;}
@@ -28,14 +28,16 @@ class cell
 
     const auto & indices() const { return _particleIndex;};
 
+    size_t push( int iParticle ) {
 
-    size_t push( int iParticle, Real x , Real y , Real z ) {
-        _positions(_nParticles,0)=x;
-        _positions(_nParticles,1)=y;
-        _positions(_nParticles,2)=z;
+        if (_nParticles>=_particleIndex.size() )
+        {
+           setCapacity(_nParticles + nBuffer);
+        }
         _particleIndex[_nParticles]=iParticle;
 
         _nParticles+=1;
+
 
         return _nParticles-1;
 
@@ -46,7 +48,6 @@ class cell
     {
         for(int d=0;d<getDimensions();d++)
         {
-            std::swap(_positions(ii,d),_positions(jj,d));
             std::swap(_particleIndex[ii],_particleIndex[jj]);
         }
     }
@@ -74,12 +75,13 @@ class cell
     size_t _nParticles;
     size_t _nMaxParticles;
 
-    Eigen::Tensor<Real,2 > _positions;
     std::vector<int > _particleIndex;
     std::vector< cell * > _neighbours;
     Eigen::Tensor<Real,2 > _displacements;
 
     std::array<int,getDimensions()> _index;
+
+    int nBuffer;
 
 
     /* std::Array<size_t,getDimensions()> index; */
@@ -90,8 +92,11 @@ class cell
 };
 
 
+inline auto pbc(Real x , Real L, Real LInverse)
+{
+    return ( x - std::round(x*LInverse )*L);
 
-
+}
 
 
 class simpleCellNeighbourList
@@ -110,6 +115,12 @@ class simpleCellNeighbourList
 
     void add( int  iParticle,   double x, double y, double z )
     {
+
+        x=pbc(x,_lBox[0], _lBoxInverse[0]);
+        y=pbc(y,_lBox[1], _lBoxInverse[1]);
+        z=pbc(z,_lBox[2], _lBoxInverse[2]);
+
+
         auto i = std::floor( (x - _left[0] )/_delta[0] );
         auto j = std::floor( (y - _left[1]) /_delta[1] );
         auto k = std::floor( (z - _left[2]) /_delta[2] );
@@ -117,7 +128,7 @@ class simpleCellNeighbourList
         auto I=index(i,j,k);
 
         cellIndexPerParticle[iParticle]=I;
-        subIndexPerParticle[iParticle]=cells[I]->push(iParticle,x,y,z);
+        subIndexPerParticle[iParticle]=cells[I]->push(iParticle);
 
         nParticles+=1;
 
@@ -182,8 +193,7 @@ class simpleCellNeighbourList
     std::array<Real,getDimensions() > _left;
     std::array<Real,getDimensions() > _right;
     std::array<Real,getDimensions() > _delta;
-    
-    
+    std::array<Real,getDimensions() > _lBoxInverse;
         
     std::array<size_t,getDimensions() > _nCells;
 

@@ -66,6 +66,7 @@ nParticles(0)
         _left[d]=-lBox[d]/2;
         _right[d]=lBox[d]/2;
         _delta[d]=_lBox[d]/_nCells[d];
+        _lBoxInverse[d]=1/_lBox[d];
     }
 
     cells.resize(nCellsTotal);
@@ -127,21 +128,20 @@ void simpleCellNeighbourList::setCapacity(size_t N)
 
     cellIndexPerParticle.resize( N );
     subIndexPerParticle.resize( N);
-
-
+    
     for ( auto cell : cells)
     {
-        cell->setCapacity(N);
+        //cell->setCapacity(N);
     }
-
+ 
 
 }
 
 
 cell::cell( size_t nMaxParticles) : _nMaxParticles(nMaxParticles),
-    _positions( nMaxParticles,getDimensions( )),
     _displacements( std::pow(3,getDimensions() ) - 1 ,getDimensions()   ),
     _nParticles(0),
+    nBuffer(10),
     _index{0,0,0} {
         int nNeighbours=std::pow(3,getDimensions()) -1;
 
@@ -151,11 +151,9 @@ cell::cell( size_t nMaxParticles) : _nMaxParticles(nMaxParticles),
 
 void cell::setCapacity(size_t N)
 {
-    _positions.resize( N, getDimensions());
     _particleIndex.resize(N);
     _nMaxParticles=N;
 }
-
 
 linkedCellParticles::linkedCellParticles( std::array<size_t,getDimensions()> nCells, std::array<Real,getDimensions() > lBox  ) :
 _nCells(nCells),

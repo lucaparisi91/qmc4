@@ -46,19 +46,18 @@ TEST( cell , basic)
 
     for(int i=0;i<N;i++)
     {
-        cell.push( i,positions(i,0) ,positions(i,1),positions(i,2)  );
+        cell.push( i)  ;
     }
 
     ASSERT_EQ(cell.size() , N );
 
-    const auto & cellPositions=cell.positions();
     const auto & indices=cell.indices();
 
     for(int i=0;i<N;i++)
     {
         for(int d=0;d<getDimensions();d++)
         {
-            ASSERT_NEAR(cellPositions(i,d) , positions(i,d) , TOL);
+            //ASSERT_NEAR(cellPositions(i,d) , positions(i,d) , TOL);
             ASSERT_EQ(indices[i],i);
         }
     }
@@ -76,7 +75,7 @@ TEST( cell , basic)
     {
         for(int d=0;d<getDimensions();d++)
         {
-            ASSERT_NEAR(cellPositions(i,d) , positions(indices[i],d) , TOL);
+            //ASSERT_NEAR(cellPositions(i,d) , positions(indices[i],d) , TOL);
         }
     }
 
@@ -146,12 +145,7 @@ TEST( simpleCellNeighbourList , basic)
 
 
 
-    const auto & positionsCell = updatedCell.positions();
-
-    ASSERT_EQ( positionsCell(0,0), testPos[0] );
-    ASSERT_EQ( positionsCell(0,1), testPos[1] );
-    ASSERT_EQ( positionsCell(0,2), testPos[2] );
-
+    
 
 
     linkedCells.remove(0);
@@ -209,8 +203,7 @@ TEST( tools , listIntersection)
 
     ASSERT_EQ(L1[0],1);
     ASSERT_EQ(L1[1],6);
-    ASSERT_EQ(L1[2],8);
-
+    ASSERT_EQ(L1[2],8);   
 }
 
 auto countDistances( const Eigen::Tensor<Real,3> & data,Real cutOff , int t , int iParticle , const pimc::range_t & particleRange , const pimc::geometry_t & geo)
@@ -241,7 +234,7 @@ auto countDistances( const Eigen::Tensor<Real,3> & data,Real cutOff , int t , in
         {
             n+=1;
             //std::cout << t << " " << i << " " << iParticle << std::endl;
-        } 
+        }
        
     }
 
@@ -378,6 +371,8 @@ protected:
         N=10;
         scatteringLength=0.01;
         _doCutOff=false;
+        nBurnsIn=0;
+
 
     };
 
@@ -414,6 +409,11 @@ protected:
     }
 
 
+    void SetNBurnsIn( int M)
+    {
+        nBurnsIn=M;
+    }
+
 
     void run()
     {
@@ -429,7 +429,6 @@ protected:
 
         pimc::geometryPBC_PIMC geo({lBox[0],lBox[1],lBox[2] });
 
-        pimc::linkedCellParticles linkedCellList( nCells, lBox);
 
 
 
@@ -467,12 +466,15 @@ protected:
         j["greenFunction"]["a"]=scatteringLength;
 
 
-        Real cutOff=lBox[0]*2;
 
+        Real cutOff=lBox[0]*2;
         if (_doCutOff)
-        {
-            cutOff=linkedCellList.cellLength(0);
-        }
+            {
+                cutOff=lBox[0]*1./nCells[0];
+            }
+    
+
+       
         j["greenFunction"]["cutOff"]=cutOff;
 
 
@@ -491,13 +493,11 @@ protected:
         int l= int(nBeads*0.6);
         pimc::levyMove levyMove(l,0);
 
-        int nBurnsIn=1000;
-
+        
          for(int n=0;n<nBurnsIn;n++)
         {
             levyMove.attemptMove(configurations,*S,randG);
         }
-
 
 
 
@@ -513,26 +513,45 @@ protected:
 
 
 
-
-
-        linkedCellList.setCapacity(N,nBeads);
-
-        linkedCellList.add( configurations.dataTensor(), {0,nBeads-1} , {0,N-1} );
-
         meshKernel->setGeometry(geo);
-
-
-
-
-
-
-
-
-         p = sG->evaluate(configurations, timeRange, iParticle);
         Real a = j["greenFunction"]["a"].get<Real>();
 
+        p=0;
+        p2=0;
+        int nSteps=1000;
 
-        p2=meshKernel->evaluate( configurations.dataTensor() , linkedCellList,{0,nBeads} , iParticle );
+        for(int n=0;n<nSteps;n++)
+        {
+            for(int nn=0;nn<10;nn++)
+            {
+                levyMove.attemptMove(configurations,*S,randG);
+            }
+            
+            pimc::linkedCellParticles linkedCellList( nCells, lBox);    
+
+           
+ 
+            linkedCellList.setCapacity(N,nBeads);
+            linkedCellList.add( configurations.dataTensor(), {0,nBeads-1} , {0,N-1} );
+
+            p += sG->evaluate(configurations, timeRange, iParticle);
+        
+            p2+=meshKernel->evaluate( configurations.dataTensor() , linkedCellList,{0,nBeads} , iParticle );
+
+        }
+        
+
+
+
+
+
+
+
+
+
+
+         
+
 
 
     }
@@ -557,6 +576,7 @@ protected:
     Real p2;
 
     bool _doCutOff;
+    int nBurnsIn;
 
 };
 
@@ -596,7 +616,7 @@ TEST_F( caoBerneGridded , nCells3)
 TEST_F( caoBerneGridded , cutOff)
 {
     Real na3=1e-6;
-    std::vector<int> Ns { 20, 100 , 200 , 500  };
+    std::vector<int> Ns { 100  };
     std::vector<int> nCells { 3 , 4 , 5 , 6  };
 
     Real T=0.1;
@@ -606,10 +626,14 @@ TEST_F( caoBerneGridded , cutOff)
 
     int nBeads=100;
 
+
     SetNBeads(nBeads);
     SetBeta(beta);
 
     SetDoCutOff(true);
+
+
+
 
     for (auto N : Ns )
     {
@@ -644,14 +668,14 @@ TEST_F( caoBerneGridded , cutOff)
 
     }
 
-
 }
 
 TEST_F( caoBerneGridded , accuracy)
 {
     Real na3=1e-6;
-    std::vector<int> Ns { 60  };
-    std::vector<int> nCells { 3 , 4 , 5 , 6  };
+    std::vector<int> Ns { 100  };
+    std::vector<int> nCells { 3 , 4 , 5 , 6 , 8 , 10 };
+
 
     Real T=0.1;
     Real zeta=2.612;
@@ -664,6 +688,9 @@ TEST_F( caoBerneGridded , accuracy)
     SetBeta(beta);
 
     SetDoCutOff(false);
+    
+    
+    SetNBurnsIn(1000);
 
     for (auto N : Ns )
     {
@@ -691,14 +718,12 @@ TEST_F( caoBerneGridded , accuracy)
             
             Real p=0;
             Real p2=0;
-            
-            for(int i=0;i<100;i++)
-            {
-                run();
-                p+= getNonGriddedResult();
-                p2+=getGriddedResult();
 
-            }
+           
+            run();
+            p= getNonGriddedResult();
+            p2=getGriddedResult();
+
             
 
 
