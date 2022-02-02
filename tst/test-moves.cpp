@@ -1678,3 +1678,53 @@ TEST_F( configurationsTest, semiCanonical_run )
   
 
 }
+
+
+TEST_F( configurationsTest, restrictInBox )
+{
+    std::array<Real,getDimensions() > lBox { 1, 1, 1};
+    Real beta=1;
+
+    int NA=20;
+    int NB=30;
+    int nBeads=100;
+
+    SetUp( {NA,NB}, nBeads,beta , lBox );
+
+    configurations.setRandom( { lBox[0] *5 ,lBox[1]*5,lBox[2]*5 } , randG );
+    Eigen::Tensor<Real,3> dataOld(configurations.dataTensor());
+    
+    restrictToBox(configurations,geo);
+
+    const auto & data = configurations.dataTensor();
+
+    const auto & groups=configurations.getGroups();
+
+
+    for (const auto & group : groups)
+    {
+        for(int i=group.iStart;i<=group.iEnd;i++)
+        {
+            const auto & chain = configurations.getChain(i);
+
+            for(int d=0;d<getDimensions();d++)
+            {    
+                ASSERT_LE( data(i,d,chain.tail+1) , lBox[d]/2);
+                ASSERT_GE( data(i,d,chain.tail+1) , -lBox[d]/2);
+            }
+
+            for(int t=0;t<M;t++)
+            {
+                for(int d=0;d<getDimensions();d++)
+                {
+                    auto newD=data(i,d,t+1) - data(i,d,t);
+                    auto oldD=dataOld(i,d,t+1) - dataOld(i,d,t);
+                    ASSERT_NEAR(newD,oldD, TOL);
+
+                }
+                
+            }
+        }
+    }
+
+}

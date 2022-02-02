@@ -505,6 +505,9 @@ void pimcDriver::run()
             }
             
         }
+        
+        restrictToBox( configurations, geo);
+
 
         std::cout << "Acceptance ratio: " << success*1./n << std::endl;
 

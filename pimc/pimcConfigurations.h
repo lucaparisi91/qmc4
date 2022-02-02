@@ -414,6 +414,7 @@ int nParticlesOnClose(const pimcConfigurations & configurations, int set);
 
 bool checkTimePeriodicBoundaryConditions( const pimcConfigurations & confs, const geometry_t & geo  );
 
+void restrictToBox( pimcConfigurations & confs, const geometry_t & geo);
 
 };
 

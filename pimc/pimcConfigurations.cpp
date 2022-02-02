@@ -1436,7 +1436,29 @@ bool checkTimePeriodicBoundaryConditions( const pimcConfigurations & confs, cons
 }
 
 
+void restrictToBox( pimcConfigurations & confs, const geometry_t & geo)
+{
+    const auto & groups = confs.getGroups();
+    auto & data = confs.dataTensor();
+    auto M = confs.nBeads();
+    
+    for(const auto & group : groups)
+    {
+        for(int i=group.iStart;i<=group.iEnd;i++)
+        {
+            const auto & chain = confs.getChain(i);
+            auto tTail = chain.tail;
+            std::array<Real,getDimensions() > delta;
+            for(int d=0;d<getDimensions();d++)
+            {
+                delta[d]=geo.difference( data(i,d,tTail + 1) - 0 ,  d ) - data(i,d,tTail + 1);
+            }
 
+            confs.translateData({tTail + 1 , M}, {i,i},delta);
+            
+        }
+    }
+}
 
 
 };

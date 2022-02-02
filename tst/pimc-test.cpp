@@ -14,6 +14,7 @@
 
 namespace fs = std::filesystem;
 
+
 TEST(distances,updateSingleParticleDistances)
 {
     pimc::geometryPBC_PIMC geo(10,10,10);
