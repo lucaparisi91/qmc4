@@ -184,6 +184,7 @@ class levyMove : public singleSetMove
 
 
 
+
     bool attemptMove(configurations_t & confs , firstOrderAction & S, randomGenerator_t & randG);
 
     private:
@@ -304,8 +305,7 @@ class fullSemiCanonicalOpenMove : public twoSetMove
 
     fullSemiCanonicalOpenMove(Real CA , int setA , int setB, int maxLength_=1 );
 
-    fullSemiCanonicalOpenMove( const json_t & j) : fullSemiCanonicalOpenMove(j["C"].get<Real>() ,j["setA"].get<int>() ,j["setB"].get<int>() ,j["reconstructionMaxLength"].get<int>() ) {}
-
+    fullSemiCanonicalOpenMove( const json_t & j);
 
     void setLength( int l1){setLengthCutRandom=false;lengthCut=l1;}
 
@@ -330,13 +330,13 @@ class fullSemiCanonicalOpenMove : public twoSetMove
 
     Eigen::Tensor<Real,2> buffer;
 
-
     int startingBead;
     int startingChain;
     bool setLengthCutRandom;
     bool setStartingChainRandom;
     int lengthCut;
     int _maxLength;
+
 };
 
 class fullSemiCanonicalCloseMove : public twoSetMove
@@ -345,8 +345,7 @@ class fullSemiCanonicalCloseMove : public twoSetMove
 
     fullSemiCanonicalCloseMove(Real CA , int setA , int setB, int maxLength_=1 );
 
-    fullSemiCanonicalCloseMove( const json_t & j) : fullSemiCanonicalCloseMove(j["C"].get<Real>() ,j["setA"].get<int>() ,j["setB"].get<int>() ,j["reconstructionMaxLength"].get<int>() ) {}
-
+    fullSemiCanonicalCloseMove( const json_t & j) ;
 
 
     void setLength( int l1){setLengthCutRandom=false;lengthCut=l1;}
@@ -379,6 +378,9 @@ class fullSemiCanonicalCloseMove : public twoSetMove
     bool setStartingChainRandom;
     int lengthCut;
     int _maxLength;
+
+    std::shared_ptr<configurationsRestriction> restriction;
+
 };
 
 
@@ -438,6 +440,9 @@ class createWormSemiCanonicalMove : public twoSetMove
     int startingChain;
     std::uniform_int_distribution<int> intDistribution;
 
+    std::shared_ptr<configurationsRestriction> restriction;
+
+
 
 };
 
@@ -464,10 +469,11 @@ class removeWormSemiCanonicalMove : public twoSetMove
 
 
     void setInitialUniformSampling( ) { _levy.setUniformParticleSampling(); }
-    
-    
+
 
     private:
+
+    
     
     std::array<int,2> sampleSets(randomGenerator_t & randG);
 
@@ -494,6 +500,11 @@ class removeWormSemiCanonicalMove : public twoSetMove
     int lengthCut;
     int startingChain;
     std::uniform_int_distribution<int> intDistribution;
+    
+
+    std::shared_ptr<pimc::configurationsRestriction> restriction;
+
+
 
 
 };
@@ -1020,14 +1031,13 @@ class advanceHeadTail : public twoSetMove
 
     advanceHeadTail(int maxAdvanceLength_,int setA, int setB );
 
-    advanceHeadTail(const json_t & j) : advanceHeadTail::advanceHeadTail(j["reconstructionMaxLength"].get<int>() ,j["setA"].get<int>(), j["setB"].get<int>() ) {}
+    advanceHeadTail(const json_t & j);
 
     bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG);
 
     void setRandomLength() {_setRandomLength=true;}
     void setFixedLength() {_setRandomLength=false;}
 
-    void setMaximumParticleNumber(int nMax) {_nMax=nMax;enforceMaxParticleNumber=true;}
 
     private:
 
@@ -1046,8 +1056,8 @@ class advanceHeadTail : public twoSetMove
     metropolis sampler;
     bool _setRandomLength;
 
-    int _nMax;
-    bool enforceMaxParticleNumber;
+    std::shared_ptr<configurationsRestriction > restriction;
+
 
 };
 
@@ -1059,21 +1069,21 @@ class recedeHeadTail : public twoSetMove
 
     recedeHeadTail(int maxAdvanceLength_,int setA, int setB );
 
-    recedeHeadTail(const json_t & j) : recedeHeadTail::recedeHeadTail(j["reconstructionMaxLength"].get<int>() ,j["setA"].get<int>(), j["setB"].get<int>() ) {}
-
+    recedeHeadTail(const json_t & j);
 
     bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG);
 
-
     void setRandomLength() {_setRandomLength=true;}
     void setFixedLength() {_setRandomLength=false;}
-    
-    void setMaximumParticleNumber(int nMax) {_nMax=nMax;enforceMaxParticleNumber=true;}
 
+    
 
     private:
 
     int sampleLength(randomGenerator_t & randG);
+
+
+    
 
 
     int _maxAdvanceLength;
@@ -1088,8 +1098,9 @@ class recedeHeadTail : public twoSetMove
     metropolis sampler;
     bool _setRandomLength;
 
-    int _nMax;
-    bool enforceMaxParticleNumber;
+    
+
+    std::shared_ptr<configurationsRestriction> restriction;
 
 };
 
@@ -1386,6 +1397,7 @@ class swapMove : public singleSetMove
     towerSampler particleSampler;
     bool _setRandomLength;
 };
+
 
 template<class T>
 move* __createMove(const json_t & j) {return new T(j);}

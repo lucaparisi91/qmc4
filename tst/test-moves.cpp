@@ -1728,3 +1728,135 @@ TEST_F( configurationsTest, restrictInBox )
     }
 
 }
+
+
+
+
+TEST_F( configurationsTest, restriction )
+{
+    std::array<Real,getDimensions() > lBox { 1, 1, 1};
+    Real beta=1;
+
+    int NA=20;
+    int NB=30;
+    int nBeads=10;
+
+    SetUp( {NA,NB}, nBeads,beta , lBox );
+
+    SetSeed(567);
+    configurations.setRandom( { lBox[0] ,lBox[1],lBox[2] } , randG );
+
+    configurations.fillHeads();
+
+    const auto & groups=configurations.getGroups();
+
+    auto j = R"(
+        {
+            "minParticleNumber" : [ 20, 29],
+            "sets": [0,1],
+            "maxParticleNumber" : [ 21, 30]
+        }
+            )"_json;
+
+
+    pimc::semiCanonicalconfigurationsRestriction constraint(j);
+
+    auto nAfter=constraint.nParticlesOnFullClose(configurations);
+
+    ASSERT_EQ(nAfter[0],NA);
+    ASSERT_EQ(nAfter[1],NB);
+
+    configurations.setHead(0,3);
+    configurations.setTail(1,5);
+    configurations.join(1,0);
+    
+    nAfter=constraint.nParticlesOnFullClose(configurations);
+
+    ASSERT_EQ(nAfter[0],NA-1);
+    ASSERT_EQ(nAfter[1],NB);
+
+
+    configurations.setHead(0,9);
+
+    nAfter=constraint.nParticlesOnFullClose(configurations);
+
+    ASSERT_EQ(nAfter[0],NA);
+    ASSERT_EQ(nAfter[1],NB);
+
+    configurations.setHeadTail( 0, 9 , -1);
+    configurations.setHeadTail(1,M,-1);
+    configurations.join(1,1);
+
+    ASSERT_EQ(nAfter[0],NA);
+    ASSERT_EQ(nAfter[1],NB);
+
+    constraint.setHeadShift(3 , 0 );
+
+    nAfter=constraint.nParticlesOnFullClose(configurations);
+
+
+    ASSERT_EQ(nAfter[0],NA + 1);
+    ASSERT_EQ(nAfter[1],NB);
+
+    configurations.setHeadTail( 0, 4 , -1);
+    nAfter=constraint.nParticlesOnFullClose(configurations);
+
+
+    ASSERT_EQ(nAfter[0],NA );
+    ASSERT_EQ(nAfter[1],NB);
+
+
+    configurations.setTail(groups[1].iStart, 4 - 1);
+    configurations.setHead(groups[1].iStart+1, 0);
+
+    configurations.join(groups[1].iStart,groups[1].iStart + 1);
+
+    nAfter=constraint.nParticlesOnFullClose(configurations);
+
+    ASSERT_EQ(nAfter[0],NA );
+    ASSERT_EQ(nAfter[1],NB-1);
+
+    configurations.setHead(0, 9);
+    configurations.setTail(groups[1].iStart, 9 - 1);
+
+     nAfter=constraint.nParticlesOnFullClose(configurations);
+
+    ASSERT_EQ(nAfter[0],NA + 1 );
+    ASSERT_EQ(nAfter[1],-1);
+
+    configurations.join(groups[1].iStart,groups[1].iStart + 2);
+    configurations.join(groups[1].iStart+2,groups[1].iStart + 1);
+
+
+    nAfter=constraint.nParticlesOnFullClose(configurations);
+
+    ASSERT_EQ(configurations.nParticles(1) , NB -2 );
+
+    ASSERT_EQ(nAfter[0],NA + 1 );
+    ASSERT_EQ(nAfter[1],NB-2);
+
+    constraint.setHeadShift(-3,0);
+    
+    nAfter=constraint.nParticlesOnFullClose(configurations);
+
+    ASSERT_EQ(nAfter[0],NA  );
+    ASSERT_EQ(nAfter[1],NB-1);
+
+    configurations.setHead(0,M);
+    configurations.setHead(1,2);
+    configurations.join(0,1);
+    configurations.setTail(groups[1].iStart,2-1);
+
+    nAfter=constraint.nParticlesOnFullClose(configurations);
+
+    ASSERT_EQ(nAfter[0],NA - 1  );
+    ASSERT_EQ(nAfter[1],NB );
+
+    configurations.join(groups[1].iStart,groups[1].iStart + 1);
+    configurations.join(groups[1].iStart + 2,groups[1].iStart + 2);
+
+    ASSERT_EQ(nAfter[0],NA - 1  );
+    ASSERT_EQ(nAfter[1],NB );
+
+
+}

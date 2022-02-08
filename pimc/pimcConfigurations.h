@@ -416,6 +416,211 @@ bool checkTimePeriodicBoundaryConditions( const pimcConfigurations & confs, cons
 
 void restrictToBox( pimcConfigurations & confs, const geometry_t & geo);
 
+int nParticlesOnCloseAfterHeadShift(const pimcConfigurations & configurations, int set, int headShift);
+
+
+struct configurationsRestriction
+{
+    public:
+
+    virtual bool check(const pimcConfigurations & pimc){return true;};
+
+    private:
+
+
 };
+
+
+
+struct semiCanonicalconfigurationsRestriction : public configurationsRestriction
+{
+    public:
+
+    semiCanonicalconfigurationsRestriction(std::array<int,2> sets, std::array<int,2> nMin,std::array<int,2> nMax);
+
+
+    semiCanonicalconfigurationsRestriction( const json_t & j);
+
+
+    bool check(const pimcConfigurations & confs) override;
+
+
+    virtual void setHeadShift(int shift, int set);
+
+
+    std::array<int,2>  nParticlesOnFullClose( const pimcConfigurations & confs);
+
+
+    private:
+
+    std::array<int , 2> _nMin;
+    std::array<int , 2> _nMax;
+    std::array<int , 2> _sets;
+    std::array<int,2> _shift;
+
+    
+};
+
+struct particleRestriction : public configurationsRestriction
+{
+
+    particleRestriction(const json_t & j);
+
+
+    virtual bool check( const pimcConfigurations & confs);
+
+    const auto & nMin() const { return _nMin;}
+    const auto & nMax() const { return _nMax;}
+    const auto & sets() const { return _sets;}
+
+
+    protected:
+    std::vector<int> _nMin;
+    std::vector<int> _nMax;
+    std::vector<int> _sets;
+    
+};
+
+
+struct wormsOpenRestriction : public particleRestriction
+{
+
+    wormsOpenRestriction( const json_t & j ) : particleRestriction::particleRestriction(j)
+    {
+        auto setToOpen=j["setA"].get<int>();
+        for(int i=0;i<_nMin.size();i++)
+        {
+            if (_sets[i] != setToOpen)
+            {
+                _nMax[i]-=1;
+            }
+        }
+
+    }
+
+
+    virtual bool check( const pimcConfigurations & confs) {return true;}
+
+
+    private:
+
+};
+
+struct wormsCloseRestriction : public particleRestriction
+{
+
+    wormsCloseRestriction( const json_t & j ) : particleRestriction::particleRestriction(j)
+    {
+        setToClose=j["setA"].get<int>();
+        iSetToClose=-1;
+
+        for (int i=0;i<_sets.size();i++)
+        {
+            if (_sets[i]==setToClose)
+            {
+                iSetToClose=i;
+            }
+        }
+    }
+
+    virtual bool check( const pimcConfigurations & confs) override;
+
+
+    private:
+
+    int setToClose;
+    int iSetToClose;
+
+};
+
+
+struct fullCloseRestriction : public particleRestriction
+{
+
+    fullCloseRestriction( const json_t & j ) : particleRestriction::particleRestriction(j)
+    {
+        setToClose=j["setA"].get<int>();
+        iSetToClose=-1;
+
+        for (int i=0;i<_sets.size();i++)
+        {
+            if (_sets[i]==setToClose)
+            {
+                iSetToClose=i;
+            }
+        }
+    }
+
+    virtual bool check( const pimcConfigurations & confs) override;
+
+    private:
+
+    int setToClose;
+    int iSetToClose;
+
+};
+
+
+
+struct advanceRestriction : public particleRestriction
+{
+
+    advanceRestriction( const json_t & j ) : particleRestriction::particleRestriction(j)
+    {
+        setA=j["setA"].get<int>();
+        iSetA=-1;
+
+        for (int i=0;i<_sets.size();i++)
+        {
+            if (_sets[i]==setA)
+            {
+                iSetA=i;
+            }
+        }
+    }
+
+    virtual bool check( const pimcConfigurations & confs) override;
+
+    private:
+
+    int setA;
+    int iSetA;
+
+};
+
+struct recedeRestriction : public particleRestriction
+{
+    recedeRestriction( const json_t & j ) : particleRestriction::particleRestriction(j)
+    {
+        setA=j["setA"].get<int>();
+        iSetA=-1;
+
+        for (int i=0;i<_sets.size();i++)
+        {
+            if (_sets[i]==setA)
+            {
+                iSetA=i;
+            }
+        }
+
+
+    }
+
+
+    virtual bool check( const pimcConfigurations & confs) override;
+
+    private:
+
+    int setA;
+    int iSetA;
+
+};
+
+
+
+};
+
+
+
 
 #endif

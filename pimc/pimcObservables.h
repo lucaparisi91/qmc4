@@ -8,6 +8,7 @@
 #include "accumulators.h"
 #include "nConnectedChains.h"
 
+
 namespace pimc
 {
 
@@ -451,6 +452,36 @@ class pairCorrelation : public histogramEstimator
     std::vector<double> buffer;
 
 };
+
+
+class magnetizationDistribution : public observable
+{
+    public:
+
+    magnetizationDistribution( const json_t & j);
+    
+    virtual void accumulate(configurations_t & configurations, firstOrderAction & S) override;
+
+    virtual void out(size_t t) override;
+
+    void clear() override;
+
+    ~magnetizationDistribution();
+
+    private:
+    
+    std::vector<Real> _Ms;
+    size_t n;
+    int _mMin;
+    int _mMax;
+    int setA;
+    int setB;
+    std::ofstream f;
+    std::string _label;
+
+};
+
+
 
 
 class openRatio 

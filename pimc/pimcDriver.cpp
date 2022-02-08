@@ -358,17 +358,18 @@ void pimcDriver::run()
     
     pimcObservablesFactory obFactory(nBeads, nMaxParticles);
 
-    obFactory.registerObservable<virialEnergyEstimator>("virialEnergy");
-    obFactory.registerObservable<thermodynamicEnergyEstimator>("thermalEnergy");
-    obFactory.registerObservable<particleNumberEstimator>("nParticles");
-    obFactory.registerObservable<magnetizationSquaredEstimator>("magnetizationSquared");
-    obFactory.registerObservable<magnetizationEstimator>("magnetization");
+    obFactory.registerEstimator<virialEnergyEstimator>("virialEnergy");
+    obFactory.registerEstimator<thermodynamicEnergyEstimator>("thermalEnergy");
+    obFactory.registerEstimator<particleNumberEstimator>("nParticles");
+    obFactory.registerEstimator<magnetizationSquaredEstimator>("magnetizationSquared");
+    obFactory.registerEstimator<magnetizationEstimator>("magnetization");
 
-    obFactory.registerObservable<pairCorrelation>("pairCorrelation");
-    obFactory.registerObservable< particleNumberSquaredEstimator>("nParticlesSquared");
+    obFactory.registerEstimator<pairCorrelation>("pairCorrelation");
+    obFactory.registerEstimator< particleNumberSquaredEstimator>("nParticlesSquared");
 
-            
+    obFactory.registerObservable<magnetizationDistribution>("magnetizationDistribution");
 
+    
     if (j.find("observables") == j.end())
     {
         throw invalidInput("No abservables have been defined");
@@ -491,7 +492,7 @@ void pimcDriver::run()
 
             if (!configurations.isOpen() )
             {
-                
+
                 for (auto & O : observables)
                 {
                     O->accumulate(configurations,S);

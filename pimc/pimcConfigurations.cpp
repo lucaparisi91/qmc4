@@ -340,6 +340,7 @@ int pimcConfigurations::pushChain( int iGroup)
     return pushChain(group);
 }
 
+
 void pimcConfigurations::removeChain( int iChain)
 {
         assert(iChain != -1 );
@@ -1364,6 +1365,70 @@ int nParticlesOnClose(const pimcConfigurations & configurations, int set)
     
 }
 
+int nParticlesOnCloseAfterHeadShift(const pimcConfigurations & configurations, int set, int headShift)
+{
+    int nParticles=configurations.nParticles(set);
+    int M = configurations.nBeads();
+
+    if ( configurations.getGroups()[set].isOpen() )
+    {
+        const auto & group = configurations.getGroups()[set];
+        int iChainHead=group.heads[0];
+        int iChainTail=group.tails[0];
+        int tHead = configurations.getChain(iChainHead).head;
+        int tTail = configurations.getChain(iChainTail).tail;
+
+        tHead=tHead + headShift;
+        if (tHead >= M )
+        {
+            tHead-=M;
+            iChainHead=group.iEnd + 1;
+
+        }
+        else if (tHead < 0)
+        {
+            tHead+=M;
+            iChainHead=configurations.getChain(iChainHead).prev;
+
+            if ((iChainHead==-1) or ( (configurations.getChain(iChainHead).tail + 1) >= tHead) )
+            {
+                return -1;
+            }
+        }
+
+        
+        if (iChainTail == iChainHead)
+        {
+            nParticles+=1;
+            if (tHead - (tTail + 1 ) >=M)
+            {
+                nParticles+=1;
+            }
+        }
+        else
+        {
+            if (tHead >= (tTail + 1) )
+            {
+                nParticles+=2;
+            }
+            else
+            {
+                nParticles+=1;
+            }
+        }
+
+    }
+    else
+    {
+        return -1;
+    }
+
+    
+    return nParticles;
+    
+}
+
+
 
 
 void pimcConfigurations::setRandom( const std::array<Real,DIMENSIONS> & lBox,randomGenerator_t & randG)
@@ -1455,13 +1520,363 @@ void restrictToBox( pimcConfigurations & confs, const geometry_t & geo)
             }
 
             confs.translateData({tTail + 1 , M}, {i,i},delta);
-            
+
         }
     }
 }
 
 
+ semiCanonicalconfigurationsRestriction::semiCanonicalconfigurationsRestriction( std::array<int,2> sets, std::array<int,2> nMin,std::array<int,2> nMax) :
+ _nMin(nMin),
+ _nMax(nMax),
+ _sets(sets),
+ _shift({0,0})
+ {
+
+ }
+
+ semiCanonicalconfigurationsRestriction::semiCanonicalconfigurationsRestriction( const json_t & j) :
+ _shift( {0,0})
+ {
+
+     for(int i=0;i<2;i++)
+     {
+         _nMin[i]=j["minParticleNumber"][i].get<int>();
+         _nMax[i]=j["maxParticleNumber"][i].get<int>();
+         _sets[i]=j["sets"][i].get<int>();
+     }
+
+ }
+
+
+
+std::array<int,2> semiCanonicalconfigurationsRestriction::nParticlesOnFullClose(const pimcConfigurations & configurations)
+{
+    int M = configurations.nBeads();
+    const auto & groups = configurations.getGroups();
+    std::array<int,2> nAfter { -1,-1};
+
+
+    for (int iSet=0 ; iSet< _sets.size();iSet++)
+    {
+        int set=_sets[iSet];
+        
+        int nParticles=configurations.nParticles(set);
+        const auto & group=groups[set];
+        bool valid=true;
+        if ( group.isOpen() )
+        {
+           
+            const auto & group = configurations.getGroups()[set];
+            int iChainHead=group.heads[0];
+            int iChainTail=group.tails[0];
+            int tHead = configurations.getChain(iChainHead).head;
+            int tTail = configurations.getChain(iChainTail).tail;
+
+            // shift head
+
+            
+            {
+                tHead=tHead + _shift[iSet];
+                if (tHead >= M )
+                {
+                    tHead-=M;
+                    
+                    if (iChainHead != iChainTail)
+                    {
+                        nParticles+=1;
+                    }
+
+                    iChainHead=group.iEnd + 1;
+
+                }
+                else if (tHead < 0)
+                {
+                    tHead+=M;
+                    iChainHead=configurations.getChain(iChainHead).prev;
+
+                    if (iChainHead != iChainTail)
+                    {
+                        nParticles-=1;
+                    }
+                    
+                    if ((iChainHead==-1) or ( (configurations.getChain(iChainHead).tail + 1) >= tHead) )
+                    {
+                        valid=false;
+                    }
+                }
+            }
+
+
+            {
+                tTail=tTail + _shift[(iSet + 1)%2];
+
+                if ( tTail + 1 >=M)
+                {
+                    tTail-=M;
+                    iChainTail=configurations.getChain(iChainTail).next;
+
+                    if (iChainTail != iChainHead)
+                    {
+                        nParticles-=1;
+                    }
+
+                    if ((iChainTail==-1) or ( (configurations.getChain(iChainTail).head ) <= (tTail + 1)) )
+                    {
+                        valid=false;
+                    }
+                }
+                else if (tTail +1 < 0)
+                {
+                    tTail +=M;
+
+                    if (iChainHead != iChainTail)
+                    {
+                        nParticles+=1;
+                    }
+
+
+                    iChainTail=group.iEnd + 1;
+
+
+                }
+            }
+
+
+            if (valid)
+            {
+
+            
+
+
+                if (iChainTail == iChainHead)
+                {
+                    nParticles+=1;
+                    if (tHead - (tTail + 1 ) >=M)
+                    {
+                        nParticles+=1;
+                    }
+                }
+                else
+                {
+                    if (tHead >= (tTail + 1) )
+                    {
+                        nParticles+=2;
+                    }
+                    else
+                    {
+                        nParticles+=1;
+                    }
+                }
+                
+            }
+
+           
+        }
+        if (valid)
+        {
+            nAfter[iSet]=nParticles;
+        }
+         
+    }
+
+return nAfter;
+
 };
 
+
+bool semiCanonicalconfigurationsRestriction::check(const pimcConfigurations & confs)
+{
+    auto nAfter=nParticlesOnFullClose(confs);
+    bool pass=true;
+
+    for (int i=0;i<2;i++)
+    {
+        pass=pass and ( nAfter[i] >= _nMin[i] ) and (nAfter[i] <= _nMax[i] );
+    }
+
+    return pass;
+
+}
+
+void semiCanonicalconfigurationsRestriction::setHeadShift(int shift, int set)
+{
+    if (_sets[0] == set )
+    {
+        _shift[0]=shift;
+    }
+    else if (_sets[1] == set )
+    {
+        _shift[1]=shift;
+    }
+}
+
+
+particleRestriction::particleRestriction(const json_t & j)
+{
+        _nMin=j["minParticleNumber"].get<std::vector<int> >();
+        _nMax=j["maxParticleNumber"].get<std::vector<int> >();
+        _sets=j["sets"].get<std::vector<int> >();
+}
+
+
+bool particleRestriction::check(const pimcConfigurations & configurations)
+{
+    bool pass=true;
+
+    for (int i=0;i<_nMin.size();i++)
+    {
+        auto set = _sets[i];
+        auto nC = configurations.nParticles(set);
+
+        if (not configurations.isOpen(set) )
+        {
+            pass=pass and (nC>=_nMin[i]) and (nC<=_nMax[i] );
+        }
+
+    }
+
+    return pass;
+}
+
+
+bool wormsCloseRestriction::check( const pimcConfigurations & configurations) 
+{
+
+    if (iSetToClose == -1)
+    {
+        return  true;
+    }
+
+    const auto & group = configurations.getGroups()[setToClose];
+    int iChainHead=group.heads[0];
+    int iChainTail=group.tails[0];
+    int tHead = configurations.getChain(iChainHead).head;
+    int tTail = configurations.getChain(iChainTail).tail;
+
+
+    int nBNew= configurations.nParticles(setToClose);
+
+    if (iChainHead == iChainTail)
+    {
+        nBNew+=1;
+    }
+    else
+    {
+        if (tHead < tTail + 1)
+        {
+            nBNew+=1;
+        }
+        else
+        {
+            nBNew+=2;
+        };
+
+    }
+    
+
+    if ( (nBNew <= _nMax[iSetToClose]) and (nBNew >= _nMin[iSetToClose] ) )
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+
+}
+
+bool fullCloseRestriction::check( const pimcConfigurations & configurations) 
+{
+
+    if (iSetToClose == -1)
+    {
+        return true;
+    }
+
+    const auto & group = configurations.getGroups()[setToClose];
+    int iChainHead=group.heads[0];
+    int iChainTail=group.tails[0];
+    int tHead = configurations.getChain(iChainHead).head;
+    int tTail = configurations.getChain(iChainTail).tail;
+
+
+    int nBNew= configurations.nParticles(setToClose);
+
+    if (iChainHead == iChainTail)
+    {
+        nBNew+=1;
+    }
+    else
+    {
+        if (tHead < tTail + 1)
+        {
+            nBNew+=1;
+        }
+        else
+        {
+            nBNew+=2;
+        };
+
+    }
+    
+
+    if ( (nBNew <= _nMax[iSetToClose]) and (nBNew >= _nMin[iSetToClose] ) )
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+
+}
+
+
+bool advanceRestriction::check( const pimcConfigurations & configurations) 
+{
+
+    if (iSetA == -1)
+    {
+        return true;
+    }
+
+    int nA= configurations.nParticles(iSetA);
+
+    if ( nA >= _nMax[iSetA])
+    {
+        return false;
+    }
+    else{
+        return true;
+    }
+
+}
+
+
+bool recedeRestriction::check( const pimcConfigurations & configurations ) 
+{
+
+    if (iSetA == -1)
+    {
+        return true;
+    }
+
+    int nA= configurations.nParticles(iSetA);
+
+    if ( nA <  _nMin[iSetA] - 1)
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+
+}
+
+
+
+};
 
 

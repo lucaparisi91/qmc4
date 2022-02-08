@@ -1,7 +1,8 @@
 #include "pimcObservables.h"
+#include <fstream>
 namespace pimc
 {
-    
+
 Real thermodynamicEnergyEstimator::operator()(configurations_t & confs, firstOrderAction & S)
 {
     auto & geo = S.getGeometry();
@@ -17,7 +18,7 @@ Real thermodynamicEnergyEstimator::operator()(configurations_t & confs, firstOrd
     sV/=confs.nBeads();
 
     Real e= sV - sA +  getDimensions()/(2.*kA.getTimeStep())*confs.nParticles();
-
+    
     return e;
 }
 
@@ -253,8 +254,6 @@ Real pairCorrelation::getNormalizationFactor(const configurations_t & configurat
   
   return _normalizationFactor;
 }
-
-
 
 void pairCorrelation::operator()(configurations_t & configurations, firstOrderAction & S,  accumulator_t & histAcc)
 {
@@ -583,6 +582,58 @@ n(0) , filename("ratio.dat")
 openRatio::~openRatio()
 {
     f.close();
+}
+
+
+magnetizationDistribution::magnetizationDistribution( const json_t & j)
+{
+    _mMin=j["min"].get<int>();
+    _mMax=j["max"].get<int>();
+    setA=j["sets"][0].get<int>();
+    setB=j["sets"][1].get<int>();
+
+    _Ms.resize( _mMax - _mMin + 1,0);
+    _label=j["label"].get<std::string>();
+    f.open(_label + ".dat",std::ios_base::app);
+    n=0;
+
+}
+
+
+void magnetizationDistribution::accumulate(configurations_t & configurations, firstOrderAction & S)
+{
+    auto M=std::abs(configurations.nParticles(setA) - configurations.nParticles(setB) );
+    if ( (M>=_mMin) and (M<=_mMax) )
+    {
+        _Ms[ M - _mMin ]+=1;
+    }
+    n+=1;
+}
+
+void magnetizationDistribution::out( size_t t)
+{
+    if (n !=0)
+    {
+        for(int i=0;i<_Ms.size();i++)
+        {
+            f << t << "\t" << _mMin + i << "\t" << _Ms[i]/n << std::endl;
+        }
+    }
+
+    f << std::flush;
+    
+}
+
+void magnetizationDistribution::clear( )
+{
+    
+    n=0;
+    std::fill(_Ms.begin(),_Ms.end(),0);
+}
+
+magnetizationDistribution::~magnetizationDistribution( )
+{
+    f.close();   
 }
 
 
