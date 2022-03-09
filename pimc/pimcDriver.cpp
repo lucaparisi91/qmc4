@@ -15,9 +15,7 @@
 #include <csignal>
 
 
-
 namespace fs = std::filesystem;
-
 
 namespace pimc
 {
@@ -32,16 +30,13 @@ namespace pimc
         }
     }
 
+    Real getTimeStep(json_t & j)
+    {
+        int nBeads= j["nBeads"].get<Real>();
+        Real beta= j["inverseTemperature"].get<Real>();
 
-
-
-Real getTimeStep(json_t & j)
-{
-    int nBeads= j["nBeads"].get<Real>();
-    Real beta= j["inverseTemperature"].get<Real>();
-
-    return beta/nBeads;
-}
+        return beta/nBeads;
+    }
 
 pimcDriver::pimcDriver(const json_t & j_) : j(j_),
 chemicalPotential({}),
@@ -488,6 +483,7 @@ void pimcDriver::run()
                 {success+=1;}
             }
             
+
             openRatioOb.accumulate(configurations);
 
             if (!configurations.isOpen() )

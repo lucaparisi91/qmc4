@@ -14,9 +14,6 @@ timers & timers::getInstance()
 
 timers*  timers::_singleton = nullptr;
 
-
-
-
 std::string timers::report() const
 {
     std::stringstream ss;

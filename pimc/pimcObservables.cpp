@@ -18,7 +18,7 @@ Real thermodynamicEnergyEstimator::operator()(configurations_t & confs, firstOrd
     sV/=confs.nBeads();
 
     Real e= sV - sA +  getDimensions()/(2.*kA.getTimeStep())*confs.nParticles();
-    
+
     return e;
 }
 
@@ -215,7 +215,6 @@ Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderActio
     Real e1 = confs.nParticles()*   getDimensions()/(2*beta);
     return e1 + e2  + e3 + e4;
 
-
 }
 
 
@@ -224,6 +223,7 @@ setA(setA_),setB(setB_)
 {
     
 }
+
 
 Real pairCorrelation::getNormalizationFactor(const configurations_t & configurations, const firstOrderAction & S , const accumulator_t & acc) const
 {
@@ -584,7 +584,6 @@ openRatio::~openRatio()
     f.close();
 }
 
-
 magnetizationDistribution::magnetizationDistribution( const json_t & j)
 {
     _mMin=j["min"].get<int>();
@@ -596,7 +595,6 @@ magnetizationDistribution::magnetizationDistribution( const json_t & j)
     _label=j["label"].get<std::string>();
     f.open(_label + ".dat",std::ios_base::app);
     n=0;
-
 }
 
 
@@ -621,7 +619,6 @@ void magnetizationDistribution::out( size_t t)
     }
 
     f << std::flush;
-    
 }
 
 void magnetizationDistribution::clear( )

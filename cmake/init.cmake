@@ -22,10 +22,7 @@ if ( ${CMAKE_BUILD_TYPE} MATCHES Debug)
 endif()
 
 
-
-find_package(MPI REQUIRED)
 find_package(Boost REQUIRED)
-find_package(HDF5 COMPONENTS C HL REQUIRED)
 
 
 set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${CMAKE_CXX_COMPILE_FLAGS_ADDITIONAL} )
@@ -35,21 +32,23 @@ set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS_ADDITIONAL} )
 
 function(include_qmc_external_directories target)
 
+
+
 target_include_directories("${target}" SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})
-target_include_directories(${target} SYSTEM PUBLIC ${PROJECT_SOURCE_DIR}/external/eigen ${PROJECT_SOURCE_DIR}/external/json/single_include)
-target_include_directories(${target} SYSTEM PUBLIC ${HDF5_INCLUDE_DIR})
+target_include_directories( ${target} PRIVATE ${PROJECT_SOURCE_DIR}/external/json/single_include)
 target_include_directories(${target} PUBLIC ${PROJECT_SOURCE_DIR}/external)
-target_include_directories(${target} SYSTEM PUBLIC ${MPI_CXX_INCLUDE_DIRS})
 
 endfunction()
 
 function(link_qmc_external_libraries target)
 
+string(REPLACE ":" " -L"  LIB_FLAGS "$ENV{LIBPATH}" )
+
+
 #target_link_libraries (${target} PUBLIC eigen)
-target_link_libraries( ${target} PUBLIC ${HDF5_CXX_LIBRARIES} ${HDF5_LIBRARIES})
-target_link_libraries(${target} PUBLIC MPI::MPI_CXX)
-target_include_directories(${target} PUBLIC ${PROJECT_SOURCE_DIR}/external/eigen )
+target_link_libraries(${target} PRIVATE hdf5)
 target_link_libraries(${target} PUBLIC  particleKernels_lib )
+set_target_properties(${target} PROPERTIES LINK_FLAGS "-L ${LIB_FLAGS}" )
 
 
 endfunction()

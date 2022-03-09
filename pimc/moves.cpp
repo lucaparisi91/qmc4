@@ -3,9 +3,6 @@
 #include "qmcExceptions.h"
 #include "toolsPimcTest.h"
 
-
-
-
 namespace pimc
 {      
     std::array<int,2> timeSliceGenerator::operator()(randomGenerator_t & randG, int nBeads , int maxBeadLength)
