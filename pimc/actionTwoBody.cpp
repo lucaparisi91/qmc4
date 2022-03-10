@@ -308,9 +308,7 @@ void actionTwoBody::addGradient(const configurations_t & configurations,const st
 
         _kernel->addForceRectangular(configurations.dataTensor(), timeRange , rangeB, groupA.range(),  gradientBuffer);
 
-
     }
-
 
 }
 

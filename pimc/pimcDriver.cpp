@@ -14,7 +14,6 @@
 #include "propagators.h"
 #include <csignal>
 
-
 namespace fs = std::filesystem;
 
 namespace pimc
@@ -249,23 +248,14 @@ void pimcDriver::run()
     sTwoBodyCreator->setNBeads(nBeads);
     sTwoBodyCreator->setNMaxParticles(nChains);
 
-
-    
-    
-    
-
     sTwoBodyCreator->registerPotential<pimc::gaussianPotential>("gaussian");
     sTwoBodyCreator->registerPotential<pimc::isotropicHarmonicPotential>("harmonic");
 
-
     sTwoBodyCreator->registerGreenFunction<pimc::caoBernePropagator>("caoBerne");
-
-
+    sTwoBodyCreator->registerGreenFunction<pimc::caoBernePropagatorTruncated>("caoBerneTruncated");
 
     sC.addConstructor("twoBody",sTwoBodyCreator);
     sC.addConstructor("nullPotential",sNullC);
-    
-
 
     //sC.registerPotential<isotropicHarmonicPotential>();
     //sC.registerPotential<gaussianPotential>();
@@ -328,7 +318,8 @@ void pimcDriver::run()
         configurations.fillHeads();
     }
     int iAttemptInitialCondition=0;
-    
+
+
     while (not S.checkConstraints(configurations) )
     {
         configurations.setRandom( { lBoxSample[0] ,lBoxSample[1],lBoxSample[2] } , randG );
@@ -458,6 +449,9 @@ void pimcDriver::run()
 
     }
 
+
+    configurations.saveHDF5("configurations/sample"+std::to_string(0) + ".hdf5" );
+
     // start the simulation
     std::cout << "Start." << std::endl << std::flush;
 
@@ -466,7 +460,6 @@ void pimcDriver::run()
     int n=0;
 
     pimc::openRatio  openRatioOb( configurations.getGroups().size() ) ;
-
 
     for (int i=0;(i< nBlocks) & (!pimc_main_is_interrupted); i++)
     {

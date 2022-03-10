@@ -962,7 +962,7 @@ class sumAction : public action
                 return false;
             }
         }
-
+        
         return true;
     }
     virtual bool checkConstraints(const configurations_t & pimcConfigurations)

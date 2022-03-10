@@ -170,7 +170,7 @@ class actionTwoBody : public action
 
     
     virtual bool checkConstraints(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange);
-
+    
 
 
 
