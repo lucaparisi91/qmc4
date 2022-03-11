@@ -48,7 +48,11 @@ string(REPLACE ":" " -L"  LIB_FLAGS "$ENV{LIBPATH}" )
 #target_link_libraries (${target} PUBLIC eigen)
 target_link_libraries(${target} PRIVATE hdf5)
 target_link_libraries(${target} PUBLIC  particleKernels_lib )
-set_target_properties(${target} PROPERTIES LINK_FLAGS "-L ${LIB_FLAGS}" )
+
+if ( NOT (LIB_FLAGS STREQUAL "") )
+  set_target_properties(${target} PROPERTIES LINK_FLAGS "-L ${LIB_FLAGS}" )
+endif()
+
 
 
 endfunction()
