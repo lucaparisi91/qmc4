@@ -151,7 +151,7 @@ public:
         return acc.weight();
     }
 
-
+    
     virtual void out(size_t iteration) 
     {
         auto av = acc.average();
@@ -160,7 +160,7 @@ public:
         {
             for(int i=0;i<acc.size();i++ )
             {
-                f << iteration << delim <<  acc.x(i) << delim << av(i)/( acc.x(i)*acc.x(i) ) <<  std::endl;
+                f << iteration << delim <<  acc.x(i) << delim << av(i) <<  std::endl;
             }
             
         }
@@ -452,6 +452,30 @@ class pairCorrelation : public histogramEstimator
     std::vector<double> buffer;
 
 };
+
+
+class angleEstimator : public histogramEstimator
+{
+    public:
+
+    angleEstimator(int setA,int setB);
+
+    angleEstimator(const json_t & j) : angleEstimator(j["setA"
+    ].get<int>() , j["setB"].get<int>()  ) {}
+
+
+
+
+    void operator()(configurations_t & configurations, firstOrderAction & S,accumulator_t & acc);
+
+    private:
+    
+    int setA;
+    int setB;
+    std::vector<double> buffer;
+
+};
+
 
 
 class magnetizationDistribution : public observable

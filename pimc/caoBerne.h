@@ -5,6 +5,7 @@
 #include "traits.h"
 #include <memory>
 
+
 namespace pimc
 {
     class caoBernePropagator

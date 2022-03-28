@@ -616,7 +616,7 @@ struct recedeRestriction : public particleRestriction
 
 };
 
-
+void generateRandomMinimumDistance( pimcConfigurations & configurations, Real a,randomGenerator_t & randG,const geometry_t & geo);
 
 };
 

@@ -1429,8 +1429,6 @@ int nParticlesOnCloseAfterHeadShift(const pimcConfigurations & configurations, i
 }
 
 
-
-
 void pimcConfigurations::setRandom( const std::array<Real,DIMENSIONS> & lBox,randomGenerator_t & randG)
 {
     std::uniform_real_distribution<double> uniformDistribution(0.0,1.0);
@@ -1444,8 +1442,7 @@ void pimcConfigurations::setRandom( const std::array<Real,DIMENSIONS> & lBox,ran
                 data(i,d,t)=(uniformDistribution(randG)-0.5 )*lBox[d];
             }
     
-    fillHeads();
-    
+    fillHeads();   
 }
 
 
@@ -1876,7 +1873,54 @@ bool recedeRestriction::check( const pimcConfigurations & configurations )
 }
 
 
+void generateRandomMinimumDistance( pimcConfigurations & configurations, Real a,randomGenerator_t & randG,const geometry_t & geo)
+{
+    const auto & groups = configurations.getGroups();
+    std::array<Real,3> lBox { geo.getLBox(0),geo.getLBox(1),geo.getLBox(2) };
+    
+    auto & data=configurations.dataTensor();
+    std::uniform_real_distribution<Real> uniformDistribution;
+    
+    for(int iGroup=0;iGroup<groups.size();iGroup++)
+        for (int t=0;t<=configurations.nBeads();t++)
+            {
+                for (int i=groups[iGroup].iStart;i<=groups[iGroup].iEnd;i++)
+                {
+                    bool accepted=true;
+                    do 
+                    {
+                        accepted=true;
+                        for  (int d=0;d<DIMENSIONS;d++)
+                        {
+                            data(i,d,t)=(uniformDistribution(randG)-0.5 )*lBox[d];
+                        }
+                        std::array<Real,getDimensions()> diff;
+
+                        for(int jGroup=0;jGroup<=iGroup;jGroup++)                                        
+                            for( int j=groups[jGroup].iStart;j<=groups[jGroup].iEnd and 
+                            (not (j>=i and jGroup==iGroup) );j++)
+                            {
+
+                                Real r2=0;
+                                for(int d=0;d<DIMENSIONS;d++)
+                                {
+                                    diff[d]=geo.difference( data(i,d,t) - data(j,d,t),d);
+                                    r2+=diff[d]*diff[d];
+                                }
+                                if (r2 <= a*a)
+                                {
+                                    accepted=false;
+                                    break;
+                                }
+
+                            }
+                    }
+                    while ( ! accepted);
+                }
+            }
+
+}
+
+
 
 };
-
-

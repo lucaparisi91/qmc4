@@ -224,6 +224,12 @@ setA(setA_),setB(setB_)
     
 }
 
+angleEstimator::angleEstimator(int setA_, int setB_) :
+setA(setA_),setB(setB_)
+{
+    
+}
+
 
 Real pairCorrelation::getNormalizationFactor(const configurations_t & configurations, const firstOrderAction & S , const accumulator_t & acc) const
 {
@@ -265,6 +271,63 @@ void pairCorrelation::operator()(configurations_t & configurations, firstOrderAc
     else
     {
         accumulateDistinguishable(configurations,S,histAcc);
+    }
+}
+
+void angleEstimator::operator()(configurations_t & confs, firstOrderAction & S,  accumulator_t & acc)
+{
+    if (setA == setB)
+    {
+        const auto & groupA = confs.getGroups()[setA];
+        const auto & data = confs.dataTensor();
+        const auto & geo = S.getGeometry();
+
+        auto N = groupA.iEnd - groupA.iStart + 1;
+        
+        for(int t=0;t<confs.nBeads();t++)
+        {
+            for(int i=groupA.iStart;i<=groupA.iEnd;i++)
+                for(int j=groupA.iStart;j<i;j++)
+                {
+                    std::array<Real,DIMENSIONS> r,rNext;
+                    Real cosTeta=0;
+                    Real r2=0 , r2Next=0;
+
+                    for (int d=0;d<getDimensions();d++)
+                        {
+                            r[d]=geo.difference( data(i,d,t) - data(j,d,t)  ,d );
+                            rNext[d]=geo.difference( data(i,d,t+1) - data(j,d,t+1)  ,d );
+
+                            r2+=r[d]*r[d];
+                            r2Next+=rNext[d]*rNext[d];
+                            cosTeta+=(r[d]*rNext[d] );
+                        }
+                    
+                    r2= std::sqrt(r2);
+                    r2Next= std::sqrt(r2Next);
+                    if (r2*r2Next != 0 )
+                    {
+                        cosTeta/=(r2*r2Next);
+                        //std::cout << cosTeta << std::endl;
+
+                        if( 
+                            ( cosTeta > acc.minx() ) and  
+                             ( cosTeta < acc.maxx() )
+                            )
+                            {
+                                acc.accumulate(1,cosTeta);
+                            }
+                    }
+                    
+                }
+        }
+
+        acc.weight()+=confs.nBeads()*N*(N-1)/2.;
+
+    }
+    else
+    {
+        throw std::runtime_error("angle estimator not supported for different sets A and B");
     }
 }
 

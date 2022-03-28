@@ -5326,6 +5326,88 @@ TEST(configurations, forces)
 
 }
 
+
+TEST( init, minimumDistance )
+{
+    int seed = 356;
+    const int N1 = 100;
+    const int N2 = 200;
+
+    const int M = 50;
+    Real a=0.1;
+
+    pimc::particleGroup groupA{ 0 , N1-1, N1, 1.0};
+    pimc::particleGroup groupB{ N1+1 , N1 + N2, N1 + N2 + 1, 1.0};
+
+
+    pimc::pimcConfigurations configurations(M , getDimensions() , {groupA});
+
+    pimc::geometryPBC_PIMC geo(1,1,1);
+
+    randomGenerator_t randG(seed);
+    const auto & data = configurations.dataTensor();
+
+    generateRandomMinimumDistance(configurations,a,randG,geo);
+
+    bool accepted=true;
+    const auto & groups = configurations.getGroups();
+
+    for(const auto & group : groups )
+    {
+        for (int t=0;t<configurations.nBeads();t++)
+        {
+            for (int i=group.iStart;i<=group.iEnd;i++)
+            {
+                for(int j=group.iStart;j<i;j++)
+                {
+                    Real r2=0;
+                    std::array<Real,getDimensions()> diff;
+                    for(int d=0;d<DIMENSIONS;d++)
+                    {
+                        diff[d]=geo.difference( data(i,d,t) - data(j,d,t),d);
+                        r2+=diff[d]*diff[d];
+                    }
+                    if (r2 <= a*a)
+                    {
+                        accepted=false;
+                        break;
+                    } 
+                }
+            }
+        }
+    }
+
+
+    for (int t=0;t<configurations.nBeads();t++)
+    {
+        for (int i=groups[0].iStart;i<=groups[0].iEnd;i++)
+        {
+            for (int j=groups[1].iStart;j<=groups[1].iEnd;j++)
+            {
+                Real r2=0;
+                std::array<Real,getDimensions()> diff;
+                for(int d=0;d<DIMENSIONS;d++)
+                {
+                    diff[d]=geo.difference( data(i,d,t) - data(j,d,t),d);
+                    r2+=diff[d]*diff[d];
+                }
+                if (r2 <= a*a )
+                {
+                    accepted=false;
+                    break;
+                } 
+            }
+        }
+    }
+
+    ASSERT_TRUE(accepted);
+
+}
+
+
+
+
+
 #include "../pimc/potentials.h"
 
 

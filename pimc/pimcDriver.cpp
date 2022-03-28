@@ -286,60 +286,63 @@ void pimcDriver::run()
         configurations.setChemicalPotential(chemicalPotential);
     }
 
-    std::array<Real,3> lBoxSample;
 
+    std::array<Real,3> lBoxSample;
+    Real minimumDistance=0;
     if (j.find("randomInitialCondition") != j.end() )
     {
-        for(int d=0;d<getDimensions();d++)
+        auto jI = j["randomInitialCondition"];
+        if ( jI.find("lBox") != jI.end() )
         {
-            lBoxSample[d]=j["randomInitialCondition"]["lBox"][d].get<Real>();
+            for(int d=0;d<getDimensions();d++)
+            {
+                lBoxSample[d]=j["randomInitialCondition"]["lBox"][d].get<Real>();
+            }
         }
-    }
-    else
-    {
-        for(int d=0;d<getDimensions();d++)
+        else
         {
-            lBoxSample[d]=geo.getLBox(d);
+            for(int d=0;d<getDimensions();d++)
+            {
+                lBoxSample[d]=geo.getLBox(d);
+            }
         }
+
+        if ( jI.find("minimumDistance") != jI.end() )
+        {
+            minimumDistance=jI["minimumDistance"].get<Real>();
+        }
+
+        
+        
     }
+
+    std::cout << "Minimum distance" << minimumDistance <<std::endl;
 
     // sets a random initial condition
     std::cout << "Generating initial configurations" << std::endl;
-    {
-    std::uniform_real_distribution<double> uniformDistribution(0.0,1.0);
+    
 
-        auto & data=configurations.dataTensor();
-        for (int t=0;t<data.dimensions()[2];t++)
-            for (int i=0;i<data.dimensions()[0];i++)
-                for  (int d=0;d<DIMENSIONS;d++)
-                {
-                    data(i,d,t)=(uniformDistribution(randG)-0.5 )*lBoxSample[d];
-                }
-        configurations.fillHeads();
-    }
-    int iAttemptInitialCondition=0;
-
-
-    while (not S.checkConstraints(configurations) )
-    {
-        configurations.setRandom( { lBoxSample[0] ,lBoxSample[1],lBoxSample[2] } , randG );
-        iAttemptInitialCondition++;
-
-        if (iAttemptInitialCondition > 100000)
-        {
-            throw std::runtime_error("Max iteration reached in generating the initial condition");
-        }
-    }
-
+    generateRandomMinimumDistance(  configurations, minimumDistance,randG,geo);
     configurations.fillHeads();
+    
+    
+    
+
+
+   
+
+    if (not S.checkConstraints(configurations) )
+    {
+        throw std::runtime_error("Initial condition does not satisfy action requirements");
+
+    }
 
     if (loadCheckPoint )
     {
         configurations=pimc::pimcConfigurations::loadHDF5(checkPointFile);
     }
 
-
-
+    
     std::vector<std::shared_ptr<observable> > observables;
     
     pimcObservablesFactory obFactory(nBeads, nMaxParticles);
@@ -351,6 +354,8 @@ void pimcDriver::run()
     obFactory.registerEstimator<magnetizationEstimator>("magnetization");
 
     obFactory.registerEstimator<pairCorrelation>("pairCorrelation");
+    obFactory.registerEstimator<angleEstimator>("angleEstimator");
+
     obFactory.registerEstimator< particleNumberSquaredEstimator>("nParticlesSquared");
 
     obFactory.registerObservable<magnetizationDistribution>("magnetizationDistribution");
