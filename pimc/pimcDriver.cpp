@@ -320,7 +320,7 @@ void pimcDriver::run()
 
     // sets a random initial condition
     std::cout << "Generating initial configurations" << std::endl;
-    
+
 
     generateRandomMinimumDistance(  configurations, minimumDistance,randG,geo);
     configurations.fillHeads();
@@ -347,6 +347,13 @@ void pimcDriver::run()
     obFactory.registerEstimator<particleNumberEstimator>("nParticles");
     obFactory.registerEstimator<magnetizationSquaredEstimator>("magnetizationSquared");
     obFactory.registerEstimator<magnetizationEstimator>("magnetization");
+    obFactory.registerEstimator<thermodynamicEnergyEstimatorMagnetization>("thermodynamicEnergyMagnetization");
+    obFactory.registerEstimator<virialEnergyEstimatorMagnetization>("virialEnergyMagnetization");
+    
+
+    
+
+
 
     obFactory.registerEstimator<pairCorrelation>("pairCorrelation");
     obFactory.registerEstimator<angleEstimator>("angleEstimator");
@@ -366,11 +373,8 @@ void pimcDriver::run()
     
     }
     
-    auto eO=obFactory.getEnergyObservable();
-    auto & eEst=*(eO->getEstimator());
-
-    std::cout << "Energy initial: " << eEst(configurations,S) << std::endl;
-
+    
+    
 
 
    /*  pimc::levyMove freeMoves(5);
@@ -413,7 +417,6 @@ void pimcDriver::run()
    
 
 
-    pimc::thermodynamicEnergyEstimator energyEstimator;
     Real e=0;
     Real e2=0;
 
@@ -502,14 +505,14 @@ void pimcDriver::run()
         std::cout << "Acceptance ratio: " << success*1./n << std::endl;
 
         //std::cout << e << std::endl;
-        if (eO != nullptr )
+   /*      if (eO != nullptr )
         {
             if (eO->weight() != 0 )
             {
                 std::cout << "Energy: " << eO->average() << std::endl;
             }
         }
-
+ */
         if (nClosed == stepsPerBlock)
         {
             for (auto & O : observables)

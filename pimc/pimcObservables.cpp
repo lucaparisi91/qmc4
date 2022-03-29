@@ -341,7 +341,7 @@ void pairCorrelation::accumulateUnDistinguishable(configurations_t & confs, firs
     const auto & geo = S.getGeometry();
 
     auto norm = getNormalizationFactor(confs,S,acc);
-    
+
     for(int t=0;t<confs.nBeads();t++)
     {
         for(int i=groupA.iStart;i<=groupA.iEnd;i++)
@@ -694,6 +694,22 @@ void magnetizationDistribution::clear( )
 magnetizationDistribution::~magnetizationDistribution( )
 {
     f.close();   
+}
+
+
+void thermodynamicEnergyEstimatorMagnetization::operator()(configurations_t & configurations, firstOrderAction & S, accumulator_t & acc)
+{
+    int M=std::abs(configurations.nParticles(setA) - configurations.nParticles(setB) );
+    acc.accumulate( energyEst(configurations,S) , M  );
+
+}
+
+
+void virialEnergyEstimatorMagnetization::operator()(configurations_t & configurations, firstOrderAction & S, accumulator_t & acc)
+{
+    int M=std::abs(configurations.nParticles(setA) - configurations.nParticles(setB) );
+    acc.accumulate( energyEst(configurations,S) , M  );
+    
 }
 
 

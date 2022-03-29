@@ -30,7 +30,7 @@ class vectorEstimator
     public:
     using observable_t = vectorObservable;
     using accumulator_t = vectorAccumulator<Real>;
-    
+
     virtual void operator()(configurations_t & configurations, firstOrderAction & S,  accumulator_t & histAcc) = 0;
     
 };
@@ -215,22 +215,20 @@ class vectorObservable : public observable
 {
 public:
 
-    using estimator_t = histogramEstimator;
+    using estimator_t = vectorEstimator;
 
-    vectorObservable(std::shared_ptr<vectorEstimator> ob_ , std::string label_,size_t size  ) : label(label_),filename(label_ + ".dat"),delim(" "){
+    vectorObservable(std::shared_ptr<vectorEstimator> ob_ , std::string label_ , size_t size ) : label(label_),filename(label_ + ".dat"),delim(" "){
         ob=ob_;
         f.open(filename,std::fstream::app);
         acc.resize(size,0);
     }
 
-     vectorObservable(std::shared_ptr<vectorEstimator> ob_ , const json_t & j) : vectorObservable(ob_,j["label"].get<std::string>() , j["bins"].get<size_t>() ) {}
-
+    vectorObservable(std::shared_ptr<vectorEstimator> ob_ , const json_t & j) : vectorObservable( ob_, j["label"].get<std::string>(),j["size"].get<size_t>() ) {}
 
     virtual void accumulate(configurations_t & configurations, firstOrderAction & S)
     {
         (*ob)(configurations,S,acc);
     }
-
     
     virtual void out(size_t iteration) 
     {
@@ -280,7 +278,7 @@ public:
 
 class thermodynamicEnergyEstimator : public scalarEstimator 
 {
-    
+
     public:
     
     thermodynamicEnergyEstimator(){}
@@ -290,6 +288,29 @@ class thermodynamicEnergyEstimator : public scalarEstimator
 
     virtual Real operator()(configurations_t & configurations, firstOrderAction & S);
 };
+
+class thermodynamicEnergyEstimatorMagnetization : public vectorEstimator 
+{
+    public:
+
+    using accumulator_t = vectorAccumulator<Real>;
+
+    thermodynamicEnergyEstimatorMagnetization(){
+        setA=0;
+        setB=1;
+    }
+
+    thermodynamicEnergyEstimatorMagnetization(const json_t & j) : energyEst(j)   {setA=0;setB=1;}
+
+    virtual void operator()(configurations_t & configurations, firstOrderAction & S, accumulator_t & acc);
+
+    private:
+    int setA;
+    int setB;
+    thermodynamicEnergyEstimator energyEst;
+};
+
+
 
 
 
@@ -617,6 +638,22 @@ class openRatio
 
 };
 
+class virialEnergyEstimatorMagnetization : public vectorEstimator 
+{
+    public:
+
+    using accumulator_t = vectorAccumulator<Real>;
+    
+
+    virialEnergyEstimatorMagnetization(const json_t & j) : energyEst(j)   {setA=0;setB=1;}
+
+    virtual void operator()(configurations_t & configurations, firstOrderAction & S, accumulator_t & acc);
+
+    private:
+    int setA;
+    int setB;
+    virialEnergyEstimator energyEst;
+};
 
 
 };
