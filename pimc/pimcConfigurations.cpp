@@ -1872,7 +1872,6 @@ bool recedeRestriction::check( const pimcConfigurations & configurations )
 
 }
 
-
 void generateRandomMinimumDistance( pimcConfigurations & configurations, Real a,randomGenerator_t & randG,const geometry_t & geo)
 {
     const auto & groups = configurations.getGroups();
@@ -1880,7 +1879,7 @@ void generateRandomMinimumDistance( pimcConfigurations & configurations, Real a,
     
     auto & data=configurations.dataTensor();
     std::uniform_real_distribution<Real> uniformDistribution;
-    
+
     for(int iGroup=0;iGroup<groups.size();iGroup++)
         for (int t=0;t<=configurations.nBeads();t++)
             {

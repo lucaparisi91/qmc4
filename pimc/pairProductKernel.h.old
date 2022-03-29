@@ -29,7 +29,7 @@ namespace pimc
                             for(int d=0;d<DIMENSIONS;d++)
                             {
                                 delta[d]=geometry().difference( tn(i,d,t) - tn(j,d,t) ,d );
-                                deltaNext[d] = -(  - delta[d] - ( tn(i,d,t+1) - tn(i,d,t) ) +  tn(j,d,t+1) - tn(j,d,t)); 
+                                deltaNext[d] =  - delta[d] - ( tn(i,d,t+1) - tn(i,d,t) ) +  tn(j,d,t+1) - tn(j,d,t); 
                             }
 
                             sum+=greenFunction->logEvaluate( {delta[0],delta[1],delta[2] },{ deltaNext[0],deltaNext[1], deltaNext[2]} ) ;
@@ -58,7 +58,7 @@ namespace pimc
                                 for(int d=0;d<DIMENSIONS;d++)
                                 {
                                     delta[d]=geometry().difference( tn(i,d,t) - tn(j,d,t) ,d );
-                                    deltaNext[d] = -( - delta[d] - ( tn(i,d,t+1) - tn(i,d,t) ) +  tn(j,d,t+1) - tn(j,d,t)); 
+                                    deltaNext[d] =  - delta[d] - ( tn(i,d,t+1) - tn(i,d,t) ) +  tn(j,d,t+1) - tn(j,d,t); 
                                 }
 
                                 sum+=greenFunction->logEvaluate( { delta[0],delta[1],delta[2]},{deltaNext[0], deltaNext[1],deltaNext[2]}) ;
@@ -85,7 +85,7 @@ namespace pimc
                             for(int d=0;d<DIMENSIONS;d++)
                             {
                                 delta[d]=geometry().difference( tn(i,d,t) - tn(j,d,t) ,d );
-                                deltaNext[d] = -( - delta[d] - ( tn(i,d,t+1) - tn(i,d,t) ) + ( tn(j,d,t+1) - tn(j,d,t) )); 
+                                deltaNext[d] =  - delta[d] - ( tn(i,d,t+1) - tn(i,d,t) ) + ( tn(j,d,t+1) - tn(j,d,t) ); 
                             }
 
                             sum+=greenFunction->logTimeDerivative( 
@@ -115,7 +115,7 @@ namespace pimc
                         for(int d=0;d<DIMENSIONS;d++)
                         {
                             delta[d]=geometry().difference( tn(i,d,t) - tn(j,d,t) ,d );
-                            deltaNext[d] = -(  - delta[d] - ( tn(i,d,t+1) - tn(i,d,t) ) + ( tn(j,d,t+1) - tn(j,d,t) )); 
+                            deltaNext[d] =  - delta[d] - ( tn(i,d,t+1) - tn(i,d,t) ) + ( tn(j,d,t+1) - tn(j,d,t) ); 
                         }
 
                         sum+=greenFunction->logEvaluate( 
@@ -149,7 +149,7 @@ namespace pimc
                         for(int d=0;d<DIMENSIONS;d++)
                         {
                             delta[d]=geometry().difference( tn(i,d,t) - tn(j,d,t) ,d );
-                            deltaNext[d] = -(  - delta[d] - ( tn(i,d,t+1) - tn(i,d,t) ) + ( tn(j,d,t+1) - tn(j,d,t) )); 
+                            deltaNext[d] =  - delta[d] - ( tn(i,d,t+1) - tn(i,d,t) ) + ( tn(j,d,t+1) - tn(j,d,t) ); 
                         }
                             sum+=greenFunction->logTimeDerivative( { delta[0],delta[1],delta[2]},{deltaNext[0], deltaNext[1],deltaNext[2]} ) ;
                         
@@ -159,83 +159,77 @@ namespace pimc
             }
             return sum;
         }
- virtual void addForceRectangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces) 
-        {
-            
 
+        virtual void addForceRectangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces) 
+        {
+            std::array<Real,DIMENSIONS> delta,deltaNext;
 
             for (int t=timeRange[0];t<=timeRange[1];t++)
             {
-                int k=0;
                 for ( int i=rangeA[0];i<=rangeA[1];i++)
                     for ( int j=rangeB[0];j<=rangeB[1];j++)
                     {
-
-
-                        std::array<Real,DIMENSIONS> delta,deltaNext;
-
-                        for(int d=0;d<DIMENSIONS;d++)
-                            {
-                                    delta[d]=geometry().difference( tn(i,d,t) - tn(j,d,t) ,d );
-                                    deltaNext[d] = -( - delta[d] - ( tn(i,d,t+1) - tn(i,d,t) ) + ( tn(j,d,t+1) - tn(j,d,t) )); 
-                            }
-
                         for(int d=0;d<getDimensions();d++)
                         {
-                            Real left= 
-                            greenFunction->logGradientLeft(  { delta[0],delta[1],delta[2]},{deltaNext[0], deltaNext[1],deltaNext[2]},d);
 
-                            Real right= greenFunction->logGradientRight(  { delta[0],delta[1],delta[2]},{deltaNext[0], deltaNext[1],deltaNext[2]},d);
+                            
+                            delta[d]=geometry().difference( tn(i,d,t) - tn(j,d,t) ,d );
+                            deltaNext[d] =  - delta[d] - ( tn(i,d,t+1) - tn(i,d,t) ) + ( tn(j,d,t+1) - tn(j,d,t) );
+
+
+                            Real left =         greenFunction->logGradientLeft( 
+                                { delta[0],delta[1],delta[2] },{deltaNext[0], deltaNext[1],deltaNext[2] }
+                                ,d );
+
+                            Real right= greenFunction->logGradientRight( 
+                                { delta[0],delta[1],delta[2]},{deltaNext[0], deltaNext[1],deltaNext[2]}
+                                ,d);
                             
                             forces(i,d,t)+= left;
                             forces(j,d,t)+= -left;
                             forces(i,d,t+1)+= right;
                             forces(j,d,t+1)+= -right;
                         }
-
-                        
                     }
-            }
-
+             }
 
         }
 
         virtual void addForceTriangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, Eigen::Tensor<Real,3> & forces) 
         {
 
-            
+            std::array<Real,DIMENSIONS> delta,deltaNext;
+
             for (int t=timeRange[0];t<=timeRange[1];t++)
             {
-                int k=0;
                 for ( int i=rangeA[0];i<=rangeA[1];i++)
                     for ( int j=rangeB[0];j<i;j++)
                     {
-                        std::array<Real,DIMENSIONS> delta,deltaNext;
 
                         for(int d=0;d<DIMENSIONS;d++)
-                            {
-                                    delta[d]=geometry().difference( tn(i,d,t) - tn(j,d,t) ,d );
-                                    deltaNext[d] = -( - delta[d] - ( tn(i,d,t+1) - tn(i,d,t) ) + ( tn(j,d,t+1) - tn(j,d,t) )); 
-                            }
-
-                        for(int d=0;d<getDimensions();d++)
                         {
-                            Real left= 
-                            greenFunction->logGradientLeft(  { delta[0],delta[1],delta[2]},{deltaNext[0], deltaNext[1],deltaNext[2]},d);
 
-                            Real right= greenFunction->logGradientRight(  { delta[0],delta[1],delta[2]},{deltaNext[0], deltaNext[1],deltaNext[2]},d);
+                            delta[d]=geometry().difference( tn(i,d,t) - tn(j,d,t) ,d );
+                            deltaNext[d] =  - delta[d] - ( tn(i,d,t+1) - tn(i,d,t) ) + ( tn(j,d,t+1) - tn(j,d,t) );
+                            
+
+                            Real left =         greenFunction->logGradientLeft( 
+                                { delta[0],delta[1],delta[2] },{deltaNext[0], deltaNext[1],deltaNext[2] }
+                                ,d );
+
+                            Real right= greenFunction->logGradientRight( 
+                                { delta[0],delta[1],delta[2]},{deltaNext[0], deltaNext[1],deltaNext[2]}
+                                ,d);
                             
                             forces(i,d,t)+= left;
                             forces(j,d,t)+= -left;
                             forces(i,d,t+1)+= right;
                             forces(j,d,t+1)+= -right;
                         }
-                        
+
                     }
             }
         }
-
-        
 
     Real evaluateRectangular(const Eigen::Tensor<Real,3> & tn, const  std::array<int,2> & timeRange, const std::array<int,2> & rangeA, const std::array<int,2> & rangeB, const mask_t & mask)
         {
@@ -258,7 +252,7 @@ namespace pimc
                                 for(int d=0;d<DIMENSIONS;d++)
                                 {
                                     delta[d]=geometry().difference( tn(i,d,t) - tn(j,d,t) ,d );
-                                    deltaNext[d] = -( - delta[d] - ( tn(i,d,t+1) - tn(i,d,t) ) + ( tn(j,d,t+1) - tn(j,d,t) )); 
+                                    deltaNext[d] =  - delta[d] - ( tn(i,d,t+1) - tn(i,d,t) ) + ( tn(j,d,t+1) - tn(j,d,t) ); 
                                 }
 
                                 sum+=greenFunction->logEvaluate( 

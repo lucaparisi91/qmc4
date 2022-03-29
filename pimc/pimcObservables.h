@@ -13,6 +13,7 @@ namespace pimc
 {
 
 class scalarObservable;
+class vectorObservable;
 
 class scalarEstimator
 {
@@ -23,6 +24,19 @@ class scalarEstimator
 
 
 };
+
+class vectorEstimator
+{
+    public:
+    using observable_t = vectorObservable;
+    using accumulator_t = vectorAccumulator<Real>;
+    
+    virtual void operator()(configurations_t & configurations, firstOrderAction & S,  accumulator_t & histAcc) = 0;
+    
+};
+
+
+
 
 class histogramObservable;
 
@@ -193,6 +207,75 @@ public:
     std::shared_ptr<histogramEstimator> ob;
     
 };
+
+
+
+
+class vectorObservable : public observable
+{
+public:
+
+    using estimator_t = histogramEstimator;
+
+    vectorObservable(std::shared_ptr<vectorEstimator> ob_ , std::string label_,size_t size  ) : label(label_),filename(label_ + ".dat"),delim(" "){
+        ob=ob_;
+        f.open(filename,std::fstream::app);
+        acc.resize(size,0);
+    }
+
+     vectorObservable(std::shared_ptr<vectorEstimator> ob_ , const json_t & j) : vectorObservable(ob_,j["label"].get<std::string>() , j["bins"].get<size_t>() ) {}
+
+
+    virtual void accumulate(configurations_t & configurations, firstOrderAction & S)
+    {
+        (*ob)(configurations,S,acc);
+    }
+
+    
+    virtual void out(size_t iteration) 
+    {
+        auto av = acc.average();
+
+        for(int i=0;i<acc.size();i++ )
+        {
+                if ( acc.weights()(i) != 0 )
+                {
+                    f << iteration << delim << i  << delim << av(i) <<  std::endl;
+                }
+        }
+
+    }
+
+
+    virtual void clear()
+    {
+        acc.clear();
+    }
+
+    ~vectorObservable()
+    {
+        f.close();
+    }
+
+    auto average() const
+    {
+        return acc.average();
+    }
+
+   
+    private:
+
+    vectorAccumulator<Real> acc;
+    std::ofstream f;
+    std::string filename;
+    std::string label;
+    std::string delim;
+    std::shared_ptr<vectorEstimator> ob;
+    
+};
+
+
+
 
 
 class thermodynamicEnergyEstimator : public scalarEstimator 

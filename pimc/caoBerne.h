@@ -29,8 +29,10 @@ namespace pimc
                             (r1*r2 + a*a -a*(r1+r2) )*(1+r1Dotr2/(r1*r2))/(2*D*tau)
                         );
             
-
-            return -log(value);    
+            {
+                return -log(value);
+            }
+                
 
         }
 

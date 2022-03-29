@@ -324,11 +324,6 @@ void pimcDriver::run()
 
     generateRandomMinimumDistance(  configurations, minimumDistance,randG,geo);
     configurations.fillHeads();
-    
-    
-    
-
-
    
 
     if (not S.checkConstraints(configurations) )
