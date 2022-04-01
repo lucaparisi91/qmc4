@@ -350,11 +350,6 @@ void pimcDriver::run()
     obFactory.registerEstimator<thermodynamicEnergyEstimatorMagnetization>("thermodynamicEnergyMagnetization");
     obFactory.registerEstimator<virialEnergyEstimatorMagnetization>("virialEnergyMagnetization");
     
-
-    
-
-
-
     obFactory.registerEstimator<pairCorrelation>("pairCorrelation");
     obFactory.registerEstimator<angleEstimator>("angleEstimator");
 

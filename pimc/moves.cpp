@@ -265,11 +265,6 @@ bool swapMove::attemptCanonicalMove(configurations_t & confs, firstOrderAction &
 }
 
 
-
-
-
-
-
 bool swapMove::attemptTestMove(configurations_t & confs, firstOrderAction & S,randomGenerator_t & randG )
 {
        if ( ! confs.isOpen(getSet()) )
@@ -4284,8 +4279,6 @@ bool advanceHead::attemptMove(configurations_t & confs , firstOrderAction & S,ra
     confsSampler.sampleFreeParticlePosition(headPosition,startPosition,timeStep*l,randG,mass);
 
     assert(l>0);
-
-
 
     for (int d=0;d<getDimensions();d++)
     {

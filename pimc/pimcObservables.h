@@ -643,7 +643,7 @@ class virialEnergyEstimatorMagnetization : public vectorEstimator
     public:
 
     using accumulator_t = vectorAccumulator<Real>;
-    
+
 
     virialEnergyEstimatorMagnetization(const json_t & j) : energyEst(j)   {setA=0;setB=1;}
 
@@ -654,6 +654,8 @@ class virialEnergyEstimatorMagnetization : public vectorEstimator
     int setB;
     virialEnergyEstimator energyEst;
 };
+
+
 
 
 };
