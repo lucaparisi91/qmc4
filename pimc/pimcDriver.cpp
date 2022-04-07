@@ -448,7 +448,6 @@ void pimcDriver::run()
     }
 
 
-    configurations.saveHDF5("configurations/sample"+std::to_string(0) + ".hdf5" );
 
     // start the simulation
     std::cout << "Start." << std::endl << std::flush;
@@ -495,8 +494,7 @@ void pimcDriver::run()
         }
         
         restrictToBox( configurations, geo);
-
-
+        
         std::cout << "Acceptance ratio: " << success*1./n << std::endl;
 
         //std::cout << e << std::endl;

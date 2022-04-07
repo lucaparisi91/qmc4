@@ -11,7 +11,6 @@
 #include <filesystem>
 #include "../pimc/forces.h"
 #include "testConfigurations.h"
-
 namespace fs = std::filesystem;
 
 
@@ -410,12 +409,6 @@ TEST(configurations, IO)
     pimc::particleGroup groupB{ NA+1 , NA+NB , NA + NB + 1 , 1.0};
 
     std::srand ( 567);
-
-
-  
-
-    
-
     
 
 
@@ -979,7 +972,7 @@ TEST(action,oneBodyGrandCanonical)
 
 TEST(run,free_harmonic_oscillator)
 {   
-        GTEST_SKIP();
+    GTEST_SKIP();
 
     int N=1;
     int M=10;
