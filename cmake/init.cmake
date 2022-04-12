@@ -7,26 +7,10 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-if ( ${CMAKE_BUILD_TYPE} MATCHES Debug)
-  set(CMAKE_CXX_COMPILE_FLAGS_ADDITIONAL " -pg -Wfatal-errors")
-  set(CMAKE_CXX_LINK_FLAGS_ADDITIONAL " -pg ")
-
-  
-  elseif (${CMAKE_BUILD_TYPE} MATCHES Release) 
-  set(CMAKE_CXX_COMPILE_FLAGS_ADDITIONAL " -DNDEBUG -pg -Wfatal-errors")
-  set(CMAKE_CXX_LINK_FLAGS_ADDITIONAL "-pg ")
-
-  else()
-  message(FATAL_ERROR "Unrecognized build type: " ${CMAKE_BUILD_TYPE}  )
-
-endif()
-
 
 find_package(Boost REQUIRED)
 
 
-set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${CMAKE_CXX_COMPILE_FLAGS_ADDITIONAL} )
-set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS_ADDITIONAL} )
 
 
 
@@ -70,4 +54,17 @@ mark_as_advanced(
 endfunction()
 
 
-message("Compile Flags: " ${CMAKE_CXX_COMPILE_FLAGS} )
+add_compile_options(
+  -Wfatal-errors
+       $<$<CONFIG:RELEASE>:-O3>
+       $<$<CONFIG:DEBUG>:-Og>
+       $<$<CONFIG:DEBUG>:-g>
+)
+
+add_link_options(
+       $<$<CONFIG:DEBUG>:-g>
+)
+add_compile_definitions(
+        $<$<CONFIG:RELEASE>:NDEBUG>
+        $<$<CONFIG:RELEASE>:BOOST_DISABLE_ASSERTS>
+)

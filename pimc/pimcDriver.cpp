@@ -195,8 +195,6 @@ doCheckPoint(false)
     }
 }
 
-
-
 void pimcDriver::run()
 {
     // build action 

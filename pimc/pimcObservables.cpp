@@ -658,12 +658,30 @@ magnetizationDistribution::magnetizationDistribution( const json_t & j)
     _label=j["label"].get<std::string>();
     f.open(_label + ".dat",std::ios_base::app);
     n=0;
+
+    if (_mMin < 0 )
+    {
+        recordAbsoluteValue=false;
+    }
+    else
+    {
+        recordAbsoluteValue=true;
+    }
+
+
 }
 
 
 void magnetizationDistribution::accumulate(configurations_t & configurations, firstOrderAction & S)
 {
-    auto M=std::abs(configurations.nParticles(setA) - configurations.nParticles(setB) );
+    int M=configurations.nParticles(setA) - configurations.nParticles(setB) ;
+
+    if ( recordAbsoluteValue)
+    {
+        M=std::abs(M);
+    }
+
+
     if ( (M>=_mMin) and (M<=_mMax) )
     {
         _Ms[ M - _mMin ]+=1;

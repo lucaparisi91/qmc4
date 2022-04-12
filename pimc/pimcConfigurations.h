@@ -466,7 +466,6 @@ struct particleRestriction : public configurationsRestriction
 
     particleRestriction(const json_t & j);
 
-
     virtual bool check( const pimcConfigurations & confs);
 
     const auto & nMin() const { return _nMin;}
@@ -577,7 +576,10 @@ struct advanceRestriction : public particleRestriction
                 iSetA=i;
             }
         }
+        _l=0;
     }
+
+    void setLength(int l) {_l=l;}
 
     virtual bool check( const pimcConfigurations & confs) override;
 
@@ -585,6 +587,7 @@ struct advanceRestriction : public particleRestriction
 
     int setA;
     int iSetA;
+    int _l;
 
 };
 
@@ -602,20 +605,27 @@ struct recedeRestriction : public particleRestriction
                 iSetA=i;
             }
         }
-
+        _l=0;
 
     }
 
 
     virtual bool check( const pimcConfigurations & confs) override;
 
+    void setLength(int l) {_l=l;}
+
+
     private:
 
     int setA;
     int iSetA;
+    int _l;
 
 };
 
+
+
+int nParticlesAfterHeadShift(const pimcConfigurations & configurations, int set, int headShift);
 void generateRandomMinimumDistance( pimcConfigurations & configurations, Real a,randomGenerator_t & randG,const geometry_t & geo);
 
 };

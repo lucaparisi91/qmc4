@@ -2852,8 +2852,6 @@ bool createWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOr
 
     auto [setA, setB ] = sampleSets(randG);
 
-
-
     Real timeStep = S.getTimeStep();
     _levy.setReconstructorBoundaries(pimc::chainBoundary::free,pimc::chainBoundary::free);
 
@@ -4354,7 +4352,8 @@ advanceHeadTail::advanceHeadTail(int maxAdvanceLength_,int setA, int setB) :
 _maxAdvanceLength(maxAdvanceLength_) , _levy((maxAdvanceLength_+2)),gauss(0,1),uniformRealNumber(0,1),twoSetMove::twoSetMove(setA,setB)
 {
     setRandomLength();
-    restriction=std::make_shared<pimc::configurationsRestriction>();
+    restriction=NULL;
+    
 
 }
 
@@ -4378,7 +4377,7 @@ recedeHeadTail::recedeHeadTail(int maxAdvanceLength_,int setA, int setB) :
 _maxAdvanceLength(maxAdvanceLength_) , _levy((maxAdvanceLength_+2)),gauss(0,1),uniformRealNumber(0,1),twoSetMove::twoSetMove(setA,setB)
 {
     setRandomLength();
-    restriction=std::make_shared<pimc::configurationsRestriction>();
+    restriction=NULL;
 
 }
 
@@ -4393,6 +4392,7 @@ recedeHeadTail::recedeHeadTail(const json_t & j) : recedeHeadTail::recedeHeadTai
     }
 
  }
+
 
 int advanceHeadTail::sampleLength(randomGenerator_t & randG) 
 {
@@ -4470,13 +4470,18 @@ bool recedeHeadTail::attemptMove(configurations_t & confs , firstOrderAction & S
             return false;
         }
     }
+    
+    if (restriction != NULL)
+    {
+        restriction->setLength(l);
+        if (not restriction->check(confs)  )
+    {
+        return false;
+    }
 
+    }
 
-  if (not restriction->check(confs))
-  {
-      return false;
-  }
-
+  
 
 /*     //**************************** TMP code *************
     {
@@ -4542,7 +4547,7 @@ bool recedeHeadTail::attemptMove(configurations_t & confs , firstOrderAction & S
 
 
     auto deltaMu= confs.getChemicalPotential(getSetA()) - confs.getChemicalPotential( getSetB() );
-
+    
 
     auto propRatio = -deltaS -  deltaMu*l*timeStep;
     bool accept=sampler.acceptLog(propRatio,randG);
@@ -4648,11 +4653,16 @@ bool advanceHeadTail::attemptMove(configurations_t & confs , firstOrderAction & 
         }
     }
 
-    if (not restriction->check(confs)  )
+    if (restriction != NULL)
+    {
+        restriction->setLength(l);
+        if (not restriction->check(confs)  )
     {
         return false;
     }
 
+    }
+    
 
     Real deltaS=0;
     

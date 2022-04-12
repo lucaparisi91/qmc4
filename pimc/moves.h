@@ -1055,8 +1055,8 @@ class advanceHeadTail : public twoSetMove
     levyReconstructor _levy;
     metropolis sampler;
     bool _setRandomLength;
-
-    std::shared_ptr<configurationsRestriction > restriction;
+    
+    std::shared_ptr<advanceRestriction > restriction;
 
 
 };
@@ -1100,7 +1100,7 @@ class recedeHeadTail : public twoSetMove
 
     
 
-    std::shared_ptr<configurationsRestriction> restriction;
+    std::shared_ptr<pimc::recedeRestriction> restriction;
 
 };
 

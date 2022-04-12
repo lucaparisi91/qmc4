@@ -606,6 +606,8 @@ class magnetizationDistribution : public observable
     int setB;
     std::ofstream f;
     std::string _label;
+    bool recordAbsoluteValue;
+    
 
 };
 

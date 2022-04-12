@@ -1429,6 +1429,68 @@ int nParticlesOnCloseAfterHeadShift(const pimcConfigurations & configurations, i
 }
 
 
+int nParticlesAfterHeadShift(const pimcConfigurations & configurations, int set, int headShift)
+{
+    int nParticles=configurations.nParticles(set);
+    int M = configurations.nBeads();
+
+    const auto & group = configurations.getGroups()[set];
+    int iChainHead=group.heads[0];
+    int iChainTail=group.tails[0];
+    int tHead = configurations.getChain(iChainHead).head;
+    int tTail = configurations.getChain(iChainTail).tail;
+
+    tHead=tHead + headShift;
+    
+    if ( (tHead >= M ) and (iChainHead != iChainTail) )        {
+            nParticles+=1;
+        }
+        else if (tHead < 0)
+        {
+
+            iChainHead=configurations.getChain(iChainHead).prev;
+
+            if (iChainHead != iChainTail)
+            {
+                nParticles-=1;
+            }
+        }
+    
+    return nParticles;
+    
+}
+
+int nParticlesAfterTailShift(const pimcConfigurations & configurations, int set, int tailShift)
+{
+    int nParticles=configurations.nParticles(set);
+    int M = configurations.nBeads();
+
+    const auto & group = configurations.getGroups()[set];
+    int iChainHead=group.heads[0];
+    int iChainTail=group.tails[0];
+    int tTail = configurations.getChain(iChainTail).tail;
+
+    tTail =tTail + tailShift;
+    
+    if ( (tTail +1 < 0 ) and (iChainHead != iChainTail) )        {
+            nParticles+=1;
+        }
+        else if (tTail + 1 >=M)
+        {
+
+            iChainTail=configurations.getChain(iChainTail).next;
+
+            if (iChainHead != iChainTail)
+            {
+                nParticles-=1;
+            }
+        }
+    
+    return nParticles;
+    
+}
+
+
 void pimcConfigurations::setRandom( const std::array<Real,DIMENSIONS> & lBox,randomGenerator_t & randG)
 {
     std::uniform_real_distribution<double> uniformDistribution(0.0,1.0);
@@ -1833,18 +1895,18 @@ bool fullCloseRestriction::check( const pimcConfigurations & configurations)
 bool advanceRestriction::check( const pimcConfigurations & configurations) 
 {
 
-    if (iSetA == -1)
-    {
-        return true;
-    }
+    int setB= (setA + 1)%2;
+    int iSetB= (iSetA + 1)%2;
+    
+    int nAfterA=nParticlesAfterHeadShift(configurations,setA,_l);
+    int nAfterB=nParticlesAfterTailShift(configurations,setB,_l);
 
-    int nA= configurations.nParticles(iSetA);
-
-    if ( nA >= _nMax[iSetA])
+    if ( ( nAfterA > _nMax[iSetA] ) or (nAfterB <_nMin[iSetB]-2) )
     {
         return false;
     }
-    else{
+    else
+    {
         return true;
     }
 
@@ -1854,14 +1916,14 @@ bool advanceRestriction::check( const pimcConfigurations & configurations)
 bool recedeRestriction::check( const pimcConfigurations & configurations ) 
 {
 
-    if (iSetA == -1)
-    {
-        return true;
-    }
+    int setB= (setA + 1)%2;
+    int iSetB= (iSetA + 1)%2;
+    
+    int nAfterA=nParticlesAfterHeadShift(configurations,setA,-_l);
+    int nAfterB=nParticlesAfterTailShift(configurations,setB,-_l);
 
-    int nA= configurations.nParticles(iSetA);
 
-    if ( nA <  _nMin[iSetA] - 1)
+    if ( ( nAfterB > _nMax[iSetB] ) or ( nAfterA < _nMin[iSetA]-2) )
     {
         return false;
     }
