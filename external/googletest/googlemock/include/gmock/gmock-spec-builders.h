@@ -58,8 +58,8 @@
 
 // GOOGLETEST_CM0002 DO NOT DELETE
 
-#ifndef GMOCK_INCLUDE_GMOCK_GMOCK_SPEC_BUILDERS_H_
-#define GMOCK_INCLUDE_GMOCK_GMOCK_SPEC_BUILDERS_H_
+#ifndef GOOGLEMOCK_INCLUDE_GMOCK_GMOCK_SPEC_BUILDERS_H_
+#define GOOGLEMOCK_INCLUDE_GMOCK_GMOCK_SPEC_BUILDERS_H_
 
 #include <functional>
 #include <map>
@@ -107,6 +107,14 @@ template <typename F> class TypedExpectation;
 
 // Helper class for testing the Expectation class template.
 class ExpectationTester;
+
+// Helper classes for implementing NiceMock, StrictMock, and NaggyMock.
+template <typename MockClass>
+class NiceMockImpl;
+template <typename MockClass>
+class StrictMockImpl;
+template <typename MockClass>
+class NaggyMockImpl;
 
 // Protects the mock object registry (in class Mock), all function
 // mockers, and all expectations.
@@ -413,14 +421,12 @@ class GTEST_API_ Mock {
   template <typename F>
   friend class internal::FunctionMocker;
 
-  template <typename M>
-  friend class NiceMock;
-
-  template <typename M>
-  friend class NaggyMock;
-
-  template <typename M>
-  friend class StrictMock;
+  template <typename MockClass>
+  friend class internal::NiceMockImpl;
+  template <typename MockClass>
+  friend class internal::NaggyMockImpl;
+  template <typename MockClass>
+  friend class internal::StrictMockImpl;
 
   // Tells Google Mock to allow uninteresting calls on the given mock
   // object.
@@ -499,7 +505,10 @@ class GTEST_API_ Expectation {
  public:
   // Constructs a null object that doesn't reference any expectation.
   Expectation();
-
+  Expectation(Expectation&&) = default;
+  Expectation(const Expectation&) = default;
+  Expectation& operator=(Expectation&&) = default;
+  Expectation& operator=(const Expectation&) = default;
   ~Expectation();
 
   // This single-argument ctor must not be explicit, in order to support the
@@ -879,8 +888,6 @@ class GTEST_API_ ExpectationBase {
   Clause last_clause_;
   mutable bool action_count_checked_;  // Under mutex_.
   mutable Mutex mutex_;  // Protects action_count_checked_.
-
-  GTEST_DISALLOW_ASSIGN_(ExpectationBase);
 };  // class ExpectationBase
 
 // Impements an expectation for the given function type.
@@ -1295,8 +1302,6 @@ class MockSpec {
   internal::FunctionMocker<F>* const function_mocker_;
   // The argument matchers specified in the spec.
   ArgumentMatcherTuple matchers_;
-
-  GTEST_DISALLOW_ASSIGN_(MockSpec);
 };  // class MockSpec
 
 // Wrapper type for generically holding an ordinary value or lvalue reference.
@@ -1833,12 +1838,12 @@ corresponding to the provided F argument.
 It makes use of MockFunction easier by allowing it to accept more F arguments
 than just function signatures.
 
-Specializations provided here cover only a signature type itself and
-std::function. However, if need be it can be easily extended to cover also other
-types (like for example boost::function).
+Specializations provided here cover a signature type itself and any template
+that can be parameterized with a signature, including std::function and
+boost::function.
 */
 
-template <typename F>
+template <typename F, typename = void>
 struct SignatureOf;
 
 template <typename R, typename... Args>
@@ -1846,8 +1851,10 @@ struct SignatureOf<R(Args...)> {
   using type = R(Args...);
 };
 
-template <typename F>
-struct SignatureOf<std::function<F>> : SignatureOf<F> {};
+template <template <typename> class C, typename F>
+struct SignatureOf<C<F>,
+                   typename std::enable_if<std::is_function<F>::value>::type>
+    : SignatureOf<F> {};
 
 template <typename F>
 using SignatureOfT = typename SignatureOf<F>::type;
@@ -2028,4 +2035,4 @@ GTEST_DISABLE_MSC_WARNINGS_POP_()  //  4251
 #define EXPECT_CALL(obj, call) \
   GMOCK_ON_CALL_IMPL_(obj, InternalExpectedAt, call)
 
-#endif  // GMOCK_INCLUDE_GMOCK_GMOCK_SPEC_BUILDERS_H_
+#endif  // GOOGLEMOCK_INCLUDE_GMOCK_GMOCK_SPEC_BUILDERS_H_

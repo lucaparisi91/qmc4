@@ -11,7 +11,7 @@
 namespace fs = std::filesystem;
 
 
-TEST_F( configurationsTest, semiOpenMove)
+TEST_F( configurationsTest, DISABLED_semiOpenMove)
 {
 
     int nBeads=10;
@@ -111,7 +111,7 @@ TEST_F( configurationsTest, semiOpenMove)
     ASSERT_GT(nAccepted,0);
 }
 
-TEST_F( configurationsTest, semiOpenCloseMove )
+TEST_F( configurationsTest, DISABLED_semiOpenCloseMove )
 {
 
     auto j= R"(
@@ -300,7 +300,7 @@ TEST_F( configurationsTest, semiOpenCloseMove )
 }
 
 
-TEST_F( configurationsTest, advanceRecedeHeadTail_run )
+TEST_F( configurationsTest, DISABLED_advanceRecedeHeadTail_run )
 {
     auto j= R"(
         {
@@ -531,7 +531,7 @@ TEST_F( configurationsTest, advanceRecedeHeadTail_run )
 }
 
 
-TEST_F( configurationsTest, semiFullOpenClose_run )
+TEST_F( configurationsTest, DISABLED_semiFullOpenClose_run )
 {
 
     auto j= R"(
@@ -772,7 +772,7 @@ TEST_F( configurationsTest, semiFullOpenClose_run )
 
 }
 
-TEST_F( configurationsTest, levyConstructor_run )
+TEST_F( configurationsTest, DISABLED_levyConstructor_run )
 {
     int N=1;
     int nBeads=10;
@@ -839,7 +839,7 @@ TEST_F( configurationsTest, levyConstructor_run )
 }
 
 
-TEST_F( configurationsTest, createRemoveWormSemiCanonical_run )
+TEST_F( configurationsTest, DISABLED_createRemoveWormSemiCanonical_run )
 {
 
     auto j= R"(
@@ -1106,7 +1106,7 @@ bool checkHeadTailMatch( const pimc::configurations_t & confs, int setA, int set
 
 #include "../pimc/exampleActions.h"
 
-TEST_F( configurationsTest, semiCanonical_run )
+TEST_F( configurationsTest, DISABLED_semiCanonical_run )
 {
 
     auto j= R"(

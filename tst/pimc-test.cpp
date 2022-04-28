@@ -970,10 +970,9 @@ TEST(action,oneBodyGrandCanonical)
 
 
 
-TEST(run,free_harmonic_oscillator)
+TEST(run,DISABLED_free_harmonic_oscillator)
 {   
-    GTEST_SKIP();
-
+    
     int N=1;
     int M=10;
     Real Beta = 1;
@@ -1151,9 +1150,9 @@ TEST(run,free_harmonic_oscillator)
 
 
 
-TEST_F(configurationsTest,openCloseGrandCanonical_distributionReconstructedChain)
+TEST_F(configurationsTest,DISABLED_openCloseGrandCanonical_distributionReconstructedChain)
 {
-    GTEST_SKIP();
+    //GTEST_SKIP();
 
     Real C=1;
     int t0=80;
@@ -1222,9 +1221,9 @@ TEST_F(configurationsTest,openCloseGrandCanonical_distributionReconstructedChain
 }
 
 
-TEST_F(configurationsTest,openChain)
+TEST_F(configurationsTest,DISABLED_openChain)
 {
-    GTEST_SKIP();
+    //GTEST_SKIP();
 
     Real C=1;
     int nBeads=10;
@@ -1279,9 +1278,9 @@ TEST_F(configurationsTest,openChain)
 
 
 
-TEST_F(configurationsTest,openChain_swap)
+TEST_F(configurationsTest,DISABLED_openChain_swap)
 {
-    GTEST_SKIP();
+    //GTEST_SKIP();
     Real C=1;
     int nBeads=10;
     SetUp(3,nBeads,1,{ DLIST(3000 , 3000 , 3000) });
@@ -1401,9 +1400,9 @@ TEST_F(configurationsTest,openChain_swap)
 
 }
 
-TEST_F(configurationsTest,openChain_advanceRecedeHead)
+TEST_F(configurationsTest,DISABLED_openChain_advanceRecedeHead)
 {
-        GTEST_SKIP();
+        //GTEST_SKIP();
 
     Real C=1;
     int nBeads=10;
@@ -1539,10 +1538,10 @@ TEST_F(configurationsTest,openChain_advanceRecedeHead)
 
 }
 
-TEST_F(configurationsTest,openChain_freeAdvanceRecede)
+TEST_F(configurationsTest,DISABLED_openChain_freeAdvanceRecede)
 {
 
-        GTEST_SKIP();
+    //GTEST_SKIP();
 
     Real C=1;
     int nBeads=10;
@@ -1651,9 +1650,9 @@ TEST_F(configurationsTest,openChain_freeAdvanceRecede)
 
 }
 
-TEST_F(configurationsTest,levyReconstructor)
+TEST_F(configurationsTest,DISABLED_levyReconstructor)
 {
-    GTEST_SKIP();
+    //GTEST_SKIP();
 
     int nBeads=10;
     int l = 5;
@@ -1730,9 +1729,9 @@ TEST_F(configurationsTest,levyReconstructor)
 
 
 
-TEST_F(configurationsTest,closedChains)
+TEST_F(configurationsTest,DISABLED_closedChains)
 {
-        GTEST_SKIP();
+        //GTEST_SKIP();
     Real C=1e-3;
     int nBeads=10;
     SetUp(12,nBeads,1);
@@ -1885,9 +1884,9 @@ TEST_F(configurationsTest,closedChains)
 
 }
 
-TEST_F(configurationsTest, openCloseSemiGrandCanonical)
+TEST_F(configurationsTest, DISABLED_openCloseSemiGrandCanonical)
 {
-        GTEST_SKIP();
+    //GTEST_SKIP();
 
     Real C=1e-3;
     int nBeads=10;
@@ -2075,9 +2074,9 @@ TEST_F(configurationsTest, openCloseSemiGrandCanonical)
 
 }
 
-TEST_F(configurationsTest, harmonicOscillatorMixture)
+TEST_F(configurationsTest, DISABLED_harmonicOscillatorMixture)
 {
-    GTEST_SKIP();
+    //GTEST_SKIP();
     Real C=1e-5;
     int nBeads=10;
     int N [] = {2 , 2};
@@ -2284,9 +2283,9 @@ TEST_F(configurationsTest, harmonicOscillatorMixture)
 
 }
 
-TEST_F(configurationsTest, advanceRecedeSemiGrandCanonical)
+TEST_F(configurationsTest, DISABLED_advanceRecedeSemiGrandCanonical)
 {
-        GTEST_SKIP();
+        //GTEST_SKIP();
     Real C=1e-3;
     int nBeads=10;
     SetUp( {2,2} ,nBeads,1);
@@ -2453,9 +2452,9 @@ TEST_F(configurationsTest, advanceRecedeSemiGrandCanonical)
 
 #include "../pimc/nConnectedChains.h"
 
-TEST_F(configurationsTest,closedChain_twoBody)
+TEST_F(configurationsTest,DISABLED_closedChain_twoBody)
 {
-    GTEST_SKIP();
+    //GTEST_SKIP();
     Real C=1e-1;
     int nBeads=10;
     int N=1;
@@ -2763,9 +2762,9 @@ TEST_F(configurationsTest,closedChain_twoBody)
 
 }
 
-TEST_F(configurationsTest,createRemoveWorm)
+TEST_F(configurationsTest,DISABLED_createRemoveWorm)
 {
-        GTEST_SKIP();
+        //GTEST_SKIP();
 
     Real C=1;
     int nBeads=10;
@@ -3052,9 +3051,9 @@ TEST_F(configurationsTest,createRemoveWorm)
 
 }
 
-TEST_F(configurationsTest,swap_twoBody)
+TEST_F(configurationsTest,DISABLED_swap_twoBody)
 {
-        GTEST_SKIP();
+    //GTEST_SKIP();
 
     Real C=1e-3;
     int nBeads=10;
@@ -3262,9 +3261,9 @@ TEST_F(configurationsTest,swap_twoBody)
 
 }
 
-TEST_F(configurationsTest,driver)
+TEST_F(configurationsTest,DISABLED_driver)
 {
-        GTEST_SKIP();
+    //GTEST_SKIP();
 
     Real C=1e-3;
     int nBeads=10;
@@ -3693,9 +3692,9 @@ TEST_F(configurationsTest,driver)
 } */
 
 
-TEST_F(configurationsTest,closedChain_free)
+TEST_F(configurationsTest,DISABLED_closedChain_free)
 {
-        GTEST_SKIP();
+        //GTEST_SKIP();
 
     Real C=1;
     int nBeads=10;
@@ -3748,9 +3747,9 @@ TEST_F(configurationsTest,closedChain_free)
 }
 
 
-TEST_F(configurationsTest,closedChain_harmonic)
+TEST_F(configurationsTest,DISABLED_closedChain_harmonic)
 {
-        GTEST_SKIP();
+        //GTEST_SKIP();
 
     Real C=1;
     int nBeads=10;
@@ -3822,9 +3821,10 @@ TEST_F(configurationsTest,closedChain_harmonic)
 
 }
 
-TEST_F(configurationsTest,openClosedChain_harmonic)
+
+TEST_F(configurationsTest,DISABLED_openClosedChain_harmonic)
 {
-        GTEST_SKIP();
+    //GTEST_SKIP();
 
     Real C=1;
     int nBeads=10;
@@ -4014,11 +4014,9 @@ TEST_F(configurationsTest,openClosedChain_harmonic)
 
 }
 
-
-TEST_F(configurationsTest,createRemove_harmonic)
+TEST_F(configurationsTest,DISABLED_createRemove_harmonic)
 {
-        GTEST_SKIP();
-
+    //    GTEST_SKIP();
     Real C=1;
     int nBeads=10;
     int order =2;
@@ -4152,9 +4150,9 @@ TEST_F(configurationsTest,createRemove_harmonic)
 }
 
 
-TEST_F(configurationsTest,openClosedChain_free)
+TEST_F(configurationsTest,DISABLED_openClosedChain_free)
 {
-        GTEST_SKIP();
+    //GTEST_SKIP();
 
     Real C=1e-1;
     int nBeads=10;
@@ -4272,9 +4270,10 @@ TEST_F(configurationsTest,openClosedChain_free)
 }
 
 
-TEST_F(configurationsTest,openChain_harmonic)
+
+TEST_F(configurationsTest,DISABLED_openChain_harmonic)
 {
-        GTEST_SKIP();
+    //GTEST_SKIP();
 
     Real C=1;
     int nBeads=10;
@@ -4370,12 +4369,9 @@ TEST_F(configurationsTest,openChain_harmonic)
 
 
 
-
-
-
-TEST_F(configurationsTest,openClosedChain)
+TEST_F(configurationsTest,DISABLED_openClosedChain)
 {
-        GTEST_SKIP();
+    //GTEST_SKIP();
 
     Real C=1;
     int nBeads=10;
@@ -4458,9 +4454,9 @@ TEST_F(configurationsTest,openClosedChain)
 
 
 
-TEST_F(configurationsTest,advanceRecedeGrandCanonical_distributionReconstructedChain)
+TEST_F(configurationsTest,DISABLED_advanceRecedeGrandCanonical_distributionReconstructedChain)
 {
-        GTEST_SKIP();
+    // GTEST_SKIP();
 
     Real C=1;
     int l =40;
@@ -4525,9 +4521,9 @@ TEST_F(configurationsTest,advanceRecedeGrandCanonical_distributionReconstructedC
 
 }
 
-TEST_F(configurationsTest,swapGrandCanonical_distributionReconstructedChain)
+TEST_F(configurationsTest,DISABLED_swapGrandCanonical_distributionReconstructedChain)
 {
-        GTEST_SKIP();
+        //GTEST_SKIP();
 
     Real C=1;
     int l =40;
@@ -4620,9 +4616,9 @@ TEST_F(configurationsTest,swapGrandCanonical_distributionReconstructedChain)
 }
 
 
-TEST(moves,openCloseGrandCanonical)
+TEST(moves,DISABLED_openCloseGrandCanonical)
 {   
-    GTEST_SKIP();
+    //GTEST_SKIP();
     int N=1;
     int M=100;
     Real Beta = 1;
@@ -4771,9 +4767,9 @@ TEST(moves,openCloseGrandCanonical)
 }
 
 
-TEST(run,free_harmonic_oscillator_grandCanonical)
+TEST(run,DISABLED_free_harmonic_oscillator_grandCanonical)
 {   
-        GTEST_SKIP();
+        //GTEST_SKIP();
 
     int N=1;
     int M=20;
@@ -5046,9 +5042,9 @@ TEST(run,free_harmonic_oscillator_grandCanonical)
 
 
 
-TEST(run,free)
+TEST(run,DISABLED_free)
 {   
-    GTEST_SKIP();
+    //GTEST_SKIP();
 
     Real density=0.15884256651199277;
     int N=10;
@@ -5261,7 +5257,7 @@ TEST(run,free)
 
 
 
-TEST(configurations, forces)
+TEST(configurations, DISABLED_forces)
 {
     const int N = 10;
     const int M = 50;
@@ -5320,7 +5316,7 @@ TEST(configurations, forces)
 }
 
 
-TEST( init, minimumDistance )
+TEST( init, DISABLED_minimumDistance )
 {
     int seed = 356;
     const int N1 = 100;

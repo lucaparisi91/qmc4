@@ -442,10 +442,8 @@ void pimcDriver::run()
         std::cout << "-----Set: " << i << ", closed sector------"<<std::endl;
 
         std::cout << reportMoves(tab.getClosedSectorTable(i)) ;
-
+        
     }
-
-
 
     // start the simulation
     std::cout << "Start." << std::endl << std::flush;

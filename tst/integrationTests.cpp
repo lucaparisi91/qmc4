@@ -670,12 +670,12 @@ void twoBodyTest::accumulate()
 }
 
 
-TEST_F(twoBodyTest,pbc)
+TEST_F(twoBodyTest,DISABLED_pbc)
 {
-        GTEST_SKIP();
+        //GTEST_SKIP();
 
 
-    GTEST_SKIP();
+    
     Real C=1e-2;
     int nBeads=10;
     int N=2;
@@ -773,9 +773,9 @@ TEST_F(twoBodyTest,pbc)
 }
 
 
-TEST_F(harmonicTrapTest, twoBodyActionKernel2_grandCanonical )
+TEST_F(harmonicTrapTest, DISABLED_twoBodyActionKernel2_grandCanonical )
 {
-        GTEST_SKIP();
+        //GTEST_SKIP();
 
     Real C=1;
     int nBeads=10;
@@ -871,9 +871,10 @@ TEST_F(harmonicTrapTest, twoBodyActionKernel2_grandCanonical )
 
 }
 
-TEST_F( harmonicTrapTest ,mixture_twoBody)
+
+TEST_F( harmonicTrapTest ,DISABLED_mixture_twoBody)
 {
-        GTEST_SKIP();
+    //GTEST_SKIP();
 
     Real C=1e-3;
     int nBeads=10;
@@ -1210,9 +1211,9 @@ TEST_F( harmonicTrapTest ,mixture_twoBody)
 
 }
 
-TEST_F( harmonicTrapTest, caoBernePropagator )
+TEST_F( harmonicTrapTest, DISABLED_caoBernePropagator )
 {
-        GTEST_SKIP();
+        //GTEST_SKIP();
 
     Real C=1e-3;
     int nBeads=10;

@@ -490,16 +490,17 @@ TEST(CombineTest, CombineWithMaxNumberOfParameters) {
 class NonDefaultConstructAssignString {
  public:
   NonDefaultConstructAssignString(const std::string& s) : str_(s) {}
+  NonDefaultConstructAssignString() = delete;
+  NonDefaultConstructAssignString(const NonDefaultConstructAssignString&) =
+      default;
+  NonDefaultConstructAssignString& operator=(
+      const NonDefaultConstructAssignString&) = delete;
+  ~NonDefaultConstructAssignString() = default;
 
   const std::string& str() const { return str_; }
 
  private:
   std::string str_;
-
-  // Not default constructible
-  NonDefaultConstructAssignString();
-  // Not assignable
-  void operator=(const NonDefaultConstructAssignString&);
 };
 
 TEST(CombineTest, NonDefaultConstructAssign) {
@@ -834,14 +835,14 @@ TEST(MacroNameing, LookupNames) {
     }
   }
 
-  // Check that the expected form of the test suit name actualy exists.
+  // Check that the expected form of the test suit name actually exists.
   EXPECT_NE(  //
       know_suite_names.find("FortyTwo/MacroNamingTest"),
       know_suite_names.end());
   EXPECT_NE(
       know_suite_names.find("MacroNamingTestNonParametrized"),
       know_suite_names.end());
-  // Check that the expected form of the test name actualy exists.
+  // Check that the expected form of the test name actually exists.
   EXPECT_NE(  //
       know_test_names.find("FortyTwo/MacroNamingTest.FooSomeTestName/0"),
       know_test_names.end());
