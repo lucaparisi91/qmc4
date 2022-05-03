@@ -44,7 +44,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Generate a TCL script for vmd visualization of the molecule')
     parser.add_argument('inputFiles', type=str, nargs='+',
                     help='File names of the pdb files to convert')
-    parser.add_argument('M', type=int,
+    parser.add_argument('--M', type=int,
                     help='Number of beads in each simulation')
     
     parser.add_argument('--out', type=str,

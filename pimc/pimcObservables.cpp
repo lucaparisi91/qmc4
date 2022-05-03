@@ -1,7 +1,8 @@
 #include "pimcObservables.h"
+#include <fstream>
 namespace pimc
 {
-    
+
 Real thermodynamicEnergyEstimator::operator()(configurations_t & confs, firstOrderAction & S)
 {
     auto & geo = S.getGeometry();
@@ -218,7 +219,6 @@ Real virialEnergyEstimator::operator()(configurations_t & confs, firstOrderActio
     Real e1 = confs.nParticles()*   getDimensions()/(2*beta);
     return e1 + e2  + e3 + e4;
 
-
 }
 
 
@@ -227,6 +227,13 @@ setA(setA_),setB(setB_)
 {
     
 }
+
+angleEstimator::angleEstimator(int setA_, int setB_) :
+setA(setA_),setB(setB_)
+{
+    
+}
+
 
 Real pairCorrelation::getNormalizationFactor(const configurations_t & configurations, const firstOrderAction & S , const accumulator_t & acc) const
 {
@@ -258,8 +265,6 @@ Real pairCorrelation::getNormalizationFactor(const configurations_t & configurat
   return _normalizationFactor;
 }
 
-
-
 void pairCorrelation::operator()(configurations_t & configurations, firstOrderAction & S,  accumulator_t & histAcc)
 {
 
@@ -273,6 +278,63 @@ void pairCorrelation::operator()(configurations_t & configurations, firstOrderAc
     }
 }
 
+void angleEstimator::operator()(configurations_t & confs, firstOrderAction & S,  accumulator_t & acc)
+{
+    if (setA == setB)
+    {
+        const auto & groupA = confs.getGroups()[setA];
+        const auto & data = confs.dataTensor();
+        const auto & geo = S.getGeometry();
+
+        auto N = groupA.iEnd - groupA.iStart + 1;
+        
+        for(int t=0;t<confs.nBeads();t++)
+        {
+            for(int i=groupA.iStart;i<=groupA.iEnd;i++)
+                for(int j=groupA.iStart;j<i;j++)
+                {
+                    std::array<Real,DIMENSIONS> r,rNext;
+                    Real cosTeta=0;
+                    Real r2=0 , r2Next=0;
+
+                    for (int d=0;d<getDimensions();d++)
+                        {
+                            r[d]=geo.difference( data(i,d,t) - data(j,d,t)  ,d );
+                            rNext[d]=geo.difference( data(i,d,t+1) - data(j,d,t+1)  ,d );
+
+                            r2+=r[d]*r[d];
+                            r2Next+=rNext[d]*rNext[d];
+                            cosTeta+=(r[d]*rNext[d] );
+                        }
+                    
+                    r2= std::sqrt(r2);
+                    r2Next= std::sqrt(r2Next);
+                    if (r2*r2Next != 0 )
+                    {
+                        cosTeta/=(r2*r2Next);
+                        //std::cout << cosTeta << std::endl;
+
+                        if( 
+                            ( cosTeta > acc.minx() ) and  
+                             ( cosTeta < acc.maxx() )
+                            )
+                            {
+                                acc.accumulate(1,cosTeta);
+                            }
+                    }
+                    
+                }
+        }
+
+        acc.weight()+=confs.nBeads()*N*(N-1)/2.;
+
+    }
+    else
+    {
+        throw std::runtime_error("angle estimator not supported for different sets A and B");
+    }
+}
+
 
 
 void pairCorrelation::accumulateUnDistinguishable(configurations_t & confs, firstOrderAction & S,  accumulator_t & acc)
@@ -283,7 +345,7 @@ void pairCorrelation::accumulateUnDistinguishable(configurations_t & confs, firs
     const auto & geo = S.getGeometry();
 
     auto norm = getNormalizationFactor(confs,S,acc);
-    
+
     for(int t=0;t<confs.nBeads();t++)
     {
         for(int i=groupA.iStart;i<=groupA.iEnd;i++)
@@ -587,6 +649,89 @@ n(0) , filename("ratio.dat")
 openRatio::~openRatio()
 {
     f.close();
+}
+
+magnetizationDistribution::magnetizationDistribution( const json_t & j)
+{
+    _mMin=j["min"].get<int>();
+    _mMax=j["max"].get<int>();
+    setA=j["sets"][0].get<int>();
+    setB=j["sets"][1].get<int>();
+
+    _Ms.resize( _mMax - _mMin + 1,0);
+    _label=j["label"].get<std::string>();
+    f.open(_label + ".dat",std::ios_base::app);
+    n=0;
+
+    if (_mMin < 0 )
+    {
+        recordAbsoluteValue=false;
+    }
+    else
+    {
+        recordAbsoluteValue=true;
+    }
+
+
+}
+
+
+void magnetizationDistribution::accumulate(configurations_t & configurations, firstOrderAction & S)
+{
+    int M=configurations.nParticles(setA) - configurations.nParticles(setB) ;
+
+    if ( recordAbsoluteValue)
+    {
+        M=std::abs(M);
+    }
+
+
+    if ( (M>=_mMin) and (M<=_mMax) )
+    {
+        _Ms[ M - _mMin ]+=1;
+    }
+    n+=1;
+}
+
+void magnetizationDistribution::out( size_t t)
+{
+    if (n !=0)
+    {
+        for(int i=0;i<_Ms.size();i++)
+        {
+            f << t << "\t" << _mMin + i << "\t" << _Ms[i]/n << std::endl;
+        }
+    }
+
+    f << std::flush;
+}
+
+void magnetizationDistribution::clear( )
+{
+    
+    n=0;
+    std::fill(_Ms.begin(),_Ms.end(),0);
+}
+
+magnetizationDistribution::~magnetizationDistribution( )
+{
+    f.close();   
+}
+
+
+void thermodynamicEnergyEstimatorMagnetization::operator()(configurations_t & configurations, firstOrderAction & S, accumulator_t & acc)
+{
+    int M=std::abs(configurations.nParticles(setA) - configurations.nParticles(setB) );
+    acc.accumulate( energyEst(configurations,S) , M  );
+
+}
+
+
+void virialEnergyEstimatorMagnetization::operator()(configurations_t & configurations, firstOrderAction & S, accumulator_t & acc)
+{
+    int M=std::abs(configurations.nParticles(setA) - configurations.nParticles(setB) );
+    acc.accumulate( energyEst(configurations,S) , M  );
+    
 }
 
 

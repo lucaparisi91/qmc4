@@ -1,5 +1,4 @@
 
-
 #include "particleContainer.h"
 #include <array>
 #include <cmath>
@@ -9,6 +8,7 @@
 #include <sstream>
 #include <algorithm>
 #include <memory.h>
+#include "../pimcConfigurations.h"
 
 namespace pimc
 {
@@ -33,7 +33,6 @@ void indicesFromIndexFortranStorage(int* im, int cellIndex,const int* sizes)
 
 
     im[2]=cellIndex;
-
 
 }
 
@@ -68,6 +67,7 @@ nParticles(0)
         _delta[d]=_lBox[d]/_nCells[d];
         _lBoxInverse[d]=1/_lBox[d];
     }
+
 
     cells.resize(nCellsTotal);
 
@@ -128,7 +128,9 @@ void simpleCellNeighbourList::setCapacity(size_t N)
 
     cellIndexPerParticle.resize( N );
     subIndexPerParticle.resize( N);
-    
+    isParticleRemoved.resize(N,true);
+
+
     for ( auto cell : cells)
     {
         //cell->setCapacity(N);
@@ -155,6 +157,7 @@ void cell::setCapacity(size_t N)
     _nMaxParticles=N;
 }
 
+
 linkedCellParticles::linkedCellParticles( std::array<size_t,getDimensions()> nCells, std::array<Real,getDimensions() > lBox  ) :
 _nCells(nCells),
 _lBox(lBox)
@@ -176,6 +179,7 @@ void linkedCellParticles::setCapacity(size_t N,size_t M)
 
 }
 
+
 void linkedCellParticles::add( const Eigen::Tensor<Real,3> & data, const range_t &  timeRange,const  range_t & particleRange)
 {
 
@@ -188,20 +192,47 @@ void linkedCellParticles::add( const Eigen::Tensor<Real,3> & data, const range_t
     }
 }
 
-void linkedCellParticles::remove(  const range_t &  timeRange,const  range_t & particleRange)
-{
 
-    for (int t=timeRange[0]; t<=timeRange[1];t++)
+void linkedCellParticles::add( const Eigen::Tensor<Real,3> & data, const  mask_t & mask, const range_t &  timeRange,const  range_t & particleRange)
+{
+    for (int t=timeRange[0]; t<=timeRange[1]+1;t++)
     {
         for(int i=particleRange[0];i<=particleRange[1];i++)
         {
-            particles[t]->remove(i);
+            if ( mask(i,t) == 1 )
+            {
+                particles[t]->add(i, data(i,0,t),data(i,1,t),data(i,2,t));
+            }
         }
     }
 }
 
 
+void linkedCellParticles::update( const Eigen::Tensor<Real,3> & data, const range_t &  timeRange,const  range_t & particleRange)
+{
+    remove(timeRange,particleRange);
+    add(data,timeRange,particleRange);
 
+}
+
+void linkedCellParticles::update( const Eigen::Tensor<Real,3> & data, const mask_t & mask, const range_t &  timeRange,const  range_t & particleRange)
+{
+    remove(timeRange,particleRange);
+    add(data,mask,timeRange,particleRange);
+}
+
+
+void linkedCellParticles::remove(  const range_t &  timeRange,const  range_t & particleRange)
+{
+    for (int t=timeRange[0]; t<=timeRange[1]+1;t++)
+    {
+        for(int i=particleRange[0];i<=particleRange[1];i++)
+        {
+            
+            particles[t]->remove(i);
+        }
+    }
+}
 
 
 

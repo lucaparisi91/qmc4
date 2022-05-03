@@ -31,8 +31,8 @@
 // This file contains purely Google Test's internal implementation.  Please
 // DO NOT #INCLUDE IT IN A USER PROGRAM.
 
-#ifndef GTEST_SRC_GTEST_INTERNAL_INL_H_
-#define GTEST_SRC_GTEST_INTERNAL_INL_H_
+#ifndef GOOGLETEST_SRC_GTEST_INTERNAL_INL_H_
+#define GOOGLETEST_SRC_GTEST_INTERNAL_INL_H_
 
 #ifndef _WIN32_WCE
 # include <errno.h>
@@ -88,6 +88,7 @@ const char kFailFast[] = "fail_fast";
 const char kFilterFlag[] = "filter";
 const char kListTestsFlag[] = "list_tests";
 const char kOutputFlag[] = "output";
+const char kBriefFlag[] = "brief";
 const char kPrintTimeFlag[] = "print_time";
 const char kPrintUTF8Flag[] = "print_utf8";
 const char kRandomSeedFlag[] = "random_seed";
@@ -170,6 +171,7 @@ class GTestFlagSaver {
     internal_run_death_test_ = GTEST_FLAG(internal_run_death_test);
     list_tests_ = GTEST_FLAG(list_tests);
     output_ = GTEST_FLAG(output);
+    brief_ = GTEST_FLAG(brief);
     print_time_ = GTEST_FLAG(print_time);
     print_utf8_ = GTEST_FLAG(print_utf8);
     random_seed_ = GTEST_FLAG(random_seed);
@@ -193,6 +195,7 @@ class GTestFlagSaver {
     GTEST_FLAG(internal_run_death_test) = internal_run_death_test_;
     GTEST_FLAG(list_tests) = list_tests_;
     GTEST_FLAG(output) = output_;
+    GTEST_FLAG(brief) = brief_;
     GTEST_FLAG(print_time) = print_time_;
     GTEST_FLAG(print_utf8) = print_utf8_;
     GTEST_FLAG(random_seed) = random_seed_;
@@ -216,6 +219,7 @@ class GTestFlagSaver {
   std::string internal_run_death_test_;
   bool list_tests_;
   std::string output_;
+  bool brief_;
   bool print_time_;
   bool print_utf8_;
   int32_t random_seed_;
@@ -389,13 +393,6 @@ class GTEST_API_ UnitTestOptions {
   static std::string GetAbsolutePathToOutputFile();
 
   // Functions for processing the gtest_filter flag.
-
-  // Returns true if and only if the wildcard pattern matches the string.
-  // The first ':' or '\0' character in pattern marks the end of it.
-  //
-  // This recursive algorithm isn't very efficient, but is clear and
-  // works well enough for matching test names, which are short.
-  static bool PatternMatchesString(const char *pattern, const char *str);
 
   // Returns true if and only if the user-specified filter matches the test
   // suite name and the test name.
@@ -651,10 +648,10 @@ class GTEST_API_ UnitTestImpl {
   // Arguments:
   //
   //   test_suite_name: name of the test suite
-  //   type_param:     the name of the test's type parameter, or NULL if
-  //                   this is not a typed or a type-parameterized test.
-  //   set_up_tc:      pointer to the function that sets up the test suite
-  //   tear_down_tc:   pointer to the function that tears down the test suite
+  //   type_param:      the name of the test's type parameter, or NULL if
+  //                    this is not a typed or a type-parameterized test.
+  //   set_up_tc:       pointer to the function that sets up the test suite
+  //   tear_down_tc:    pointer to the function that tears down the test suite
   TestSuite* GetTestSuite(const char* test_suite_name, const char* type_param,
                           internal::SetUpTestSuiteFunc set_up_tc,
                           internal::TearDownTestSuiteFunc tear_down_tc);
@@ -678,6 +675,7 @@ class GTEST_API_ UnitTestImpl {
   void AddTestInfo(internal::SetUpTestSuiteFunc set_up_tc,
                    internal::TearDownTestSuiteFunc tear_down_tc,
                    TestInfo* test_info) {
+#if GTEST_HAS_DEATH_TEST
     // In order to support thread-safe death tests, we need to
     // remember the original working directory when the test program
     // was first invoked.  We cannot do this in RUN_ALL_TESTS(), as
@@ -690,6 +688,7 @@ class GTEST_API_ UnitTestImpl {
       GTEST_CHECK_(!original_working_dir_.IsEmpty())
           << "Failed to get the current working directory.";
     }
+#endif  // GTEST_HAS_DEATH_TEST
 
     GetTestSuite(test_info->test_suite_name(), test_info->type_param(),
                  set_up_tc, tear_down_tc)
@@ -1165,13 +1164,13 @@ class StreamingListener : public EmptyTestEventListener {
   }
 
   // Note that "event=TestCaseStart" is a wire format and has to remain
-  // "case" for compatibilty
+  // "case" for compatibility
   void OnTestCaseStart(const TestCase& test_case) override {
     SendLn(std::string("event=TestCaseStart&name=") + test_case.name());
   }
 
   // Note that "event=TestCaseEnd" is a wire format and has to remain
-  // "case" for compatibilty
+  // "case" for compatibility
   void OnTestCaseEnd(const TestCase& test_case) override {
     SendLn("event=TestCaseEnd&passed=" + FormatBool(test_case.Passed()) +
            "&elapsed_time=" + StreamableToString(test_case.elapsed_time()) +
@@ -1219,4 +1218,4 @@ class StreamingListener : public EmptyTestEventListener {
 
 GTEST_DISABLE_MSC_WARNINGS_POP_()  //  4251
 
-#endif  // GTEST_SRC_GTEST_INTERNAL_INL_H_
+#endif  // GOOGLETEST_SRC_GTEST_INTERNAL_INL_H_

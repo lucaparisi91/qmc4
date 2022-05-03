@@ -7,6 +7,7 @@
 #include <iostream>
 #include "geometryPMC.h"
 
+#include "particleContainer/particleContainer.h"
 
 namespace fs = std::filesystem;
 
@@ -175,7 +176,8 @@ pimcConfigurations::pimcConfigurations(
     _data(getTotalSize(particleGroups_),dimensions,2*(timeSlices+1) ),// contains a copy for buffer operations
      _tags(getTotalSize(particleGroups_), timeSlices ),
     _nParticles(getNParticles(particleGroups_)),// number of chains without the padding
-    mu(0)
+    mu(0),
+    _acc( std::make_shared<accelerationStructure>())
 {
     _chains.resize(N);
 
@@ -340,6 +342,7 @@ int pimcConfigurations::pushChain( int iGroup)
     auto & group = particleGroups[iGroup];
     return pushChain(group);
 }
+
 
 void pimcConfigurations::removeChain( int iChain)
 {
@@ -1365,6 +1368,130 @@ int nParticlesOnClose(const pimcConfigurations & configurations, int set)
     
 }
 
+int nParticlesOnCloseAfterHeadShift(const pimcConfigurations & configurations, int set, int headShift)
+{
+    int nParticles=configurations.nParticles(set);
+    int M = configurations.nBeads();
+
+    if ( configurations.getGroups()[set].isOpen() )
+    {
+        const auto & group = configurations.getGroups()[set];
+        int iChainHead=group.heads[0];
+        int iChainTail=group.tails[0];
+        int tHead = configurations.getChain(iChainHead).head;
+        int tTail = configurations.getChain(iChainTail).tail;
+
+        tHead=tHead + headShift;
+        if (tHead >= M )
+        {
+            tHead-=M;
+            iChainHead=group.iEnd + 1;
+
+        }
+        else if (tHead < 0)
+        {
+            tHead+=M;
+            iChainHead=configurations.getChain(iChainHead).prev;
+
+            if ((iChainHead==-1) or ( (configurations.getChain(iChainHead).tail + 1) >= tHead) )
+            {
+                return -1;
+            }
+        }
+
+        
+        if (iChainTail == iChainHead)
+        {
+            nParticles+=1;
+            if (tHead - (tTail + 1 ) >=M)
+            {
+                nParticles+=1;
+            }
+        }
+        else
+        {
+            if (tHead >= (tTail + 1) )
+            {
+                nParticles+=2;
+            }
+            else
+            {
+                nParticles+=1;
+            }
+        }
+
+    }
+    else
+    {
+        return -1;
+    }
+
+    
+    return nParticles;
+    
+}
+
+
+int nParticlesAfterHeadShift(const pimcConfigurations & configurations, int set, int headShift)
+{
+    int nParticles=configurations.nParticles(set);
+    int M = configurations.nBeads();
+
+    const auto & group = configurations.getGroups()[set];
+    int iChainHead=group.heads[0];
+    int iChainTail=group.tails[0];
+    int tHead = configurations.getChain(iChainHead).head;
+    int tTail = configurations.getChain(iChainTail).tail;
+
+    tHead=tHead + headShift;
+    
+    if ( (tHead >= M ) and (iChainHead != iChainTail) )        {
+            nParticles+=1;
+        }
+        else if (tHead < 0)
+        {
+
+            iChainHead=configurations.getChain(iChainHead).prev;
+
+            if (iChainHead != iChainTail)
+            {
+                nParticles-=1;
+            }
+        }
+    
+    return nParticles;
+    
+}
+
+int nParticlesAfterTailShift(const pimcConfigurations & configurations, int set, int tailShift)
+{
+    int nParticles=configurations.nParticles(set);
+    int M = configurations.nBeads();
+
+    const auto & group = configurations.getGroups()[set];
+    int iChainHead=group.heads[0];
+    int iChainTail=group.tails[0];
+    int tTail = configurations.getChain(iChainTail).tail;
+
+    tTail =tTail + tailShift;
+    
+    if ( (tTail +1 < 0 ) and (iChainHead != iChainTail) )        {
+            nParticles+=1;
+        }
+        else if (tTail + 1 >=M)
+        {
+
+            iChainTail=configurations.getChain(iChainTail).next;
+
+            if (iChainHead != iChainTail)
+            {
+                nParticles-=1;
+            }
+        }
+    
+    return nParticles;
+    
+}
 
 
 void pimcConfigurations::setRandom( const std::array<Real,DIMENSIONS> & lBox,randomGenerator_t & randG)
@@ -1380,8 +1507,7 @@ void pimcConfigurations::setRandom( const std::array<Real,DIMENSIONS> & lBox,ran
                 data(i,d,t)=(uniformDistribution(randG)-0.5 )*lBox[d];
             }
     
-    fillHeads();
-    
+    fillHeads();   
 }
 
 
@@ -1437,10 +1563,446 @@ bool checkTimePeriodicBoundaryConditions( const pimcConfigurations & confs, cons
 }
 
 
+void restrictToBox( pimcConfigurations & confs, const geometry_t & geo)
+{
+    const auto & groups = confs.getGroups();
+    auto & data = confs.dataTensor();
+    auto M = confs.nBeads();
+    
+    for(const auto & group : groups)
+    {
+        for(int i=group.iStart;i<=group.iEnd;i++)
+        {
+            const auto & chain = confs.getChain(i);
+            auto tTail = chain.tail;
+            std::array<Real,getDimensions() > delta;
+            for(int d=0;d<getDimensions();d++)
+            {
+                delta[d]=geo.difference( data(i,d,tTail + 1) - 0 ,  d ) - data(i,d,tTail + 1);
+            }
+
+            confs.translateData({tTail + 1 , M}, {i,i},delta);
+
+        }
+    }
+}
 
 
+ semiCanonicalconfigurationsRestriction::semiCanonicalconfigurationsRestriction( std::array<int,2> sets, std::array<int,2> nMin,std::array<int,2> nMax) :
+ _nMin(nMin),
+ _nMax(nMax),
+ _sets(sets),
+ _shift({0,0})
+ {
+
+ }
+
+ semiCanonicalconfigurationsRestriction::semiCanonicalconfigurationsRestriction( const json_t & j) :
+ _shift( {0,0})
+ {
+
+     for(int i=0;i<2;i++)
+     {
+         _nMin[i]=j["minParticleNumber"][i].get<int>();
+         _nMax[i]=j["maxParticleNumber"][i].get<int>();
+         _sets[i]=j["sets"][i].get<int>();
+     }
+
+ }
+
+
+
+std::array<int,2> semiCanonicalconfigurationsRestriction::nParticlesOnFullClose(const pimcConfigurations & configurations)
+{
+    int M = configurations.nBeads();
+    const auto & groups = configurations.getGroups();
+    std::array<int,2> nAfter { -1,-1};
+
+
+    for (int iSet=0 ; iSet< _sets.size();iSet++)
+    {
+        int set=_sets[iSet];
+        
+        int nParticles=configurations.nParticles(set);
+        const auto & group=groups[set];
+        bool valid=true;
+        if ( group.isOpen() )
+        {
+           
+            const auto & group = configurations.getGroups()[set];
+            int iChainHead=group.heads[0];
+            int iChainTail=group.tails[0];
+            int tHead = configurations.getChain(iChainHead).head;
+            int tTail = configurations.getChain(iChainTail).tail;
+
+            // shift head
+
+            
+            {
+                tHead=tHead + _shift[iSet];
+                if (tHead >= M )
+                {
+                    tHead-=M;
+                    
+                    if (iChainHead != iChainTail)
+                    {
+                        nParticles+=1;
+                    }
+
+                    iChainHead=group.iEnd + 1;
+
+                }
+                else if (tHead < 0)
+                {
+                    tHead+=M;
+                    iChainHead=configurations.getChain(iChainHead).prev;
+
+                    if (iChainHead != iChainTail)
+                    {
+                        nParticles-=1;
+                    }
+                    
+                    if ((iChainHead==-1) or ( (configurations.getChain(iChainHead).tail + 1) >= tHead) )
+                    {
+                        valid=false;
+                    }
+                }
+            }
+
+
+            {
+                tTail=tTail + _shift[(iSet + 1)%2];
+
+                if ( tTail + 1 >=M)
+                {
+                    tTail-=M;
+                    iChainTail=configurations.getChain(iChainTail).next;
+
+                    if (iChainTail != iChainHead)
+                    {
+                        nParticles-=1;
+                    }
+
+                    if ((iChainTail==-1) or ( (configurations.getChain(iChainTail).head ) <= (tTail + 1)) )
+                    {
+                        valid=false;
+                    }
+                }
+                else if (tTail +1 < 0)
+                {
+                    tTail +=M;
+
+                    if (iChainHead != iChainTail)
+                    {
+                        nParticles+=1;
+                    }
+
+
+                    iChainTail=group.iEnd + 1;
+
+
+                }
+            }
+
+
+            if (valid)
+            {
+
+            
+
+
+                if (iChainTail == iChainHead)
+                {
+                    nParticles+=1;
+                    if (tHead - (tTail + 1 ) >=M)
+                    {
+                        nParticles+=1;
+                    }
+                }
+                else
+                {
+                    if (tHead >= (tTail + 1) )
+                    {
+                        nParticles+=2;
+                    }
+                    else
+                    {
+                        nParticles+=1;
+                    }
+                }
+                
+            }
+
+           
+        }
+        if (valid)
+        {
+            nAfter[iSet]=nParticles;
+        }
+         
+    }
+
+return nAfter;
 
 };
 
 
+bool semiCanonicalconfigurationsRestriction::check(const pimcConfigurations & confs)
+{
+    auto nAfter=nParticlesOnFullClose(confs);
+    bool pass=true;
 
+    for (int i=0;i<2;i++)
+    {
+        pass=pass and ( nAfter[i] >= _nMin[i] ) and (nAfter[i] <= _nMax[i] );
+    }
+
+    return pass;
+
+}
+
+void semiCanonicalconfigurationsRestriction::setHeadShift(int shift, int set)
+{
+    if (_sets[0] == set )
+    {
+        _shift[0]=shift;
+    }
+    else if (_sets[1] == set )
+    {
+        _shift[1]=shift;
+    }
+}
+
+
+particleRestriction::particleRestriction(const json_t & j)
+{
+        _nMin=j["minParticleNumber"].get<std::vector<int> >();
+        _nMax=j["maxParticleNumber"].get<std::vector<int> >();
+        _sets=j["sets"].get<std::vector<int> >();
+}
+
+
+bool particleRestriction::check(const pimcConfigurations & configurations)
+{
+    bool pass=true;
+
+    for (int i=0;i<_nMin.size();i++)
+    {
+        auto set = _sets[i];
+        auto nC = configurations.nParticles(set);
+
+        if (not configurations.isOpen(set) )
+        {
+            pass=pass and (nC>=_nMin[i]) and (nC<=_nMax[i] );
+        }
+
+    }
+
+    return pass;
+}
+
+
+bool wormsCloseRestriction::check( const pimcConfigurations & configurations) 
+{
+
+    if (iSetToClose == -1)
+    {
+        return  true;
+    }
+
+    const auto & group = configurations.getGroups()[setToClose];
+    int iChainHead=group.heads[0];
+    int iChainTail=group.tails[0];
+    int tHead = configurations.getChain(iChainHead).head;
+    int tTail = configurations.getChain(iChainTail).tail;
+
+
+    int nBNew= configurations.nParticles(setToClose);
+
+    if (iChainHead == iChainTail)
+    {
+        nBNew+=1;
+    }
+    else
+    {
+        if (tHead < tTail + 1)
+        {
+            nBNew+=1;
+        }
+        else
+        {
+            nBNew+=2;
+        };
+
+    }
+    
+
+    if ( (nBNew <= _nMax[iSetToClose]) and (nBNew >= _nMin[iSetToClose] ) )
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+
+}
+
+bool fullCloseRestriction::check( const pimcConfigurations & configurations) 
+{
+
+    if (iSetToClose == -1)
+    {
+        return true;
+    }
+
+    const auto & group = configurations.getGroups()[setToClose];
+    int iChainHead=group.heads[0];
+    int iChainTail=group.tails[0];
+    int tHead = configurations.getChain(iChainHead).head;
+    int tTail = configurations.getChain(iChainTail).tail;
+
+
+    int nBNew= configurations.nParticles(setToClose);
+
+    if (iChainHead == iChainTail)
+    {
+        nBNew+=1;
+    }
+    else
+    {
+        if (tHead < tTail + 1)
+        {
+            nBNew+=1;
+        }
+        else
+        {
+            nBNew+=2;
+        };
+
+    }
+    
+
+    if ( (nBNew <= _nMax[iSetToClose]) and (nBNew >= _nMin[iSetToClose] ) )
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+
+}
+
+
+bool advanceRestriction::check( const pimcConfigurations & configurations) 
+{
+
+    int setB= (setA + 1)%2;
+    int iSetB= (iSetA + 1)%2;
+    
+    int nAfterA=nParticlesAfterHeadShift(configurations,setA,_l);
+    int nAfterB=nParticlesAfterTailShift(configurations,setB,_l);
+
+    if ( ( nAfterA > _nMax[iSetA] ) or (nAfterB <_nMin[iSetB]-2) )
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+
+}
+
+
+bool recedeRestriction::check( const pimcConfigurations & configurations ) 
+{
+
+    int setB= (setA + 1)%2;
+    int iSetB= (iSetA + 1)%2;
+    
+    int nAfterA=nParticlesAfterHeadShift(configurations,setA,-_l);
+    int nAfterB=nParticlesAfterTailShift(configurations,setB,-_l);
+
+
+    if ( ( nAfterB > _nMax[iSetB] ) or ( nAfterA < _nMin[iSetA]-2) )
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+
+}
+
+void generateRandomMinimumDistance( pimcConfigurations & configurations, Real a,randomGenerator_t & randG,const geometry_t & geo)
+{
+    const auto & groups = configurations.getGroups();
+    std::array<Real,3> lBox { geo.getLBox(0),geo.getLBox(1),geo.getLBox(2) };
+    
+    auto & data=configurations.dataTensor();
+    std::uniform_real_distribution<Real> uniformDistribution;
+
+    for(int iGroup=0;iGroup<groups.size();iGroup++)
+        for (int t=0;t<=configurations.nBeads();t++)
+            {
+                for (int i=groups[iGroup].iStart;i<=groups[iGroup].iEnd;i++)
+                {
+                    bool accepted=true;
+                    do 
+                    {
+                        accepted=true;
+                        for  (int d=0;d<DIMENSIONS;d++)
+                        {
+                            data(i,d,t)=(uniformDistribution(randG)-0.5 )*lBox[d];
+                        }
+                        std::array<Real,getDimensions()> diff;
+
+                        for(int jGroup=0;jGroup<=iGroup;jGroup++)                                        
+                            for( int j=groups[jGroup].iStart;j<=groups[jGroup].iEnd and 
+                            (not (j>=i and jGroup==iGroup) );j++)
+                            {
+
+                                Real r2=0;
+                                for(int d=0;d<DIMENSIONS;d++)
+                                {
+                                    diff[d]=geo.difference( data(i,d,t) - data(j,d,t),d);
+                                    r2+=diff[d]*diff[d];
+                                }
+                                if (r2 <= a*a)
+                                {
+                                    accepted=false;
+                                    break;
+                                }
+
+                            }
+                    }
+                    while ( ! accepted);
+                }
+            }
+
+}
+
+
+void linkedCellAccelerationStructure::update( const pimcConfigurations & confs,const range_t & range, const range_t & particleRange)
+{
+       if (confs.getEnsamble() == ensamble_t::canonical)
+        {
+            _acc->update(confs.dataTensor(),range,particleRange);
+        }
+        else
+        {            
+            _acc->update(confs.dataTensor(),confs.getTags(),range,particleRange);
+
+
+        }
+    
+}
+
+
+
+
+
+};

@@ -11,8 +11,8 @@
 #include <filesystem>
 #include "../pimc/forces.h"
 #include "testConfigurations.h"
-
 namespace fs = std::filesystem;
+
 
 TEST(distances,updateSingleParticleDistances)
 {
@@ -409,12 +409,6 @@ TEST(configurations, IO)
     pimc::particleGroup groupB{ NA+1 , NA+NB , NA + NB + 1 , 1.0};
 
     std::srand ( 567);
-
-
-  
-
-    
-
     
 
 
@@ -978,8 +972,8 @@ TEST(action,oneBodyGrandCanonical)
 
 TEST(run,free_harmonic_oscillator)
 {   
-        GTEST_SKIP();
-
+    
+    GTEST_SKIP();
     int N=1;
     int M=10;
     Real Beta = 1;
@@ -1283,8 +1277,6 @@ TEST_F(configurationsTest,openChain)
 }
 
 
-
-
 TEST_F(configurationsTest,openChain_swap)
 {
     GTEST_SKIP();
@@ -1409,7 +1401,7 @@ TEST_F(configurationsTest,openChain_swap)
 
 TEST_F(configurationsTest,openChain_advanceRecedeHead)
 {
-        GTEST_SKIP();
+    GTEST_SKIP();
 
     Real C=1;
     int nBeads=10;
@@ -1548,7 +1540,7 @@ TEST_F(configurationsTest,openChain_advanceRecedeHead)
 TEST_F(configurationsTest,openChain_freeAdvanceRecede)
 {
 
-        GTEST_SKIP();
+    GTEST_SKIP();
 
     Real C=1;
     int nBeads=10;
@@ -1738,7 +1730,7 @@ TEST_F(configurationsTest,levyReconstructor)
 
 TEST_F(configurationsTest,closedChains)
 {
-        GTEST_SKIP();
+    GTEST_SKIP();
     Real C=1e-3;
     int nBeads=10;
     SetUp(12,nBeads,1);
@@ -1893,7 +1885,7 @@ TEST_F(configurationsTest,closedChains)
 
 TEST_F(configurationsTest, openCloseSemiGrandCanonical)
 {
-        GTEST_SKIP();
+    GTEST_SKIP();
 
     Real C=1e-3;
     int nBeads=10;
@@ -2292,7 +2284,7 @@ TEST_F(configurationsTest, harmonicOscillatorMixture)
 
 TEST_F(configurationsTest, advanceRecedeSemiGrandCanonical)
 {
-        GTEST_SKIP();
+    GTEST_SKIP();
     Real C=1e-3;
     int nBeads=10;
     SetUp( {2,2} ,nBeads,1);
@@ -2769,9 +2761,9 @@ TEST_F(configurationsTest,closedChain_twoBody)
 
 }
 
-TEST_F(configurationsTest,createRemoveWorm)
+TEST_F(configurationsTest, createRemoveWorm)
 {
-        GTEST_SKIP();
+    GTEST_SKIP();
 
     Real C=1;
     int nBeads=10;
@@ -3060,7 +3052,7 @@ TEST_F(configurationsTest,createRemoveWorm)
 
 TEST_F(configurationsTest,swap_twoBody)
 {
-        GTEST_SKIP();
+    GTEST_SKIP();
 
     Real C=1e-3;
     int nBeads=10;
@@ -3270,7 +3262,7 @@ TEST_F(configurationsTest,swap_twoBody)
 
 TEST_F(configurationsTest,driver)
 {
-        GTEST_SKIP();
+    GTEST_SKIP();
 
     Real C=1e-3;
     int nBeads=10;
@@ -3699,9 +3691,9 @@ TEST_F(configurationsTest,driver)
 } */
 
 
-TEST_F(configurationsTest,closedChain_free)
+TEST_F(configurationsTest, closedChain_free)
 {
-        GTEST_SKIP();
+    GTEST_SKIP();
 
     Real C=1;
     int nBeads=10;
@@ -3756,7 +3748,7 @@ TEST_F(configurationsTest,closedChain_free)
 
 TEST_F(configurationsTest,closedChain_harmonic)
 {
-        GTEST_SKIP();
+    GTEST_SKIP();
 
     Real C=1;
     int nBeads=10;
@@ -3828,9 +3820,10 @@ TEST_F(configurationsTest,closedChain_harmonic)
 
 }
 
+
 TEST_F(configurationsTest,openClosedChain_harmonic)
 {
-        GTEST_SKIP();
+    GTEST_SKIP();
 
     Real C=1;
     int nBeads=10;
@@ -4020,11 +4013,9 @@ TEST_F(configurationsTest,openClosedChain_harmonic)
 
 }
 
-
 TEST_F(configurationsTest,createRemove_harmonic)
 {
-        GTEST_SKIP();
-
+    GTEST_SKIP();
     Real C=1;
     int nBeads=10;
     int order =2;
@@ -4160,7 +4151,7 @@ TEST_F(configurationsTest,createRemove_harmonic)
 
 TEST_F(configurationsTest,openClosedChain_free)
 {
-        GTEST_SKIP();
+    GTEST_SKIP();
 
     Real C=1e-1;
     int nBeads=10;
@@ -4278,9 +4269,10 @@ TEST_F(configurationsTest,openClosedChain_free)
 }
 
 
+
 TEST_F(configurationsTest,openChain_harmonic)
 {
-        GTEST_SKIP();
+    GTEST_SKIP();
 
     Real C=1;
     int nBeads=10;
@@ -4376,12 +4368,9 @@ TEST_F(configurationsTest,openChain_harmonic)
 
 
 
-
-
-
 TEST_F(configurationsTest,openClosedChain)
 {
-        GTEST_SKIP();
+    GTEST_SKIP();
 
     Real C=1;
     int nBeads=10;
@@ -4466,7 +4455,7 @@ TEST_F(configurationsTest,openClosedChain)
 
 TEST_F(configurationsTest,advanceRecedeGrandCanonical_distributionReconstructedChain)
 {
-        GTEST_SKIP();
+    GTEST_SKIP();
 
     Real C=1;
     int l =40;
@@ -4533,7 +4522,7 @@ TEST_F(configurationsTest,advanceRecedeGrandCanonical_distributionReconstructedC
 
 TEST_F(configurationsTest,swapGrandCanonical_distributionReconstructedChain)
 {
-        GTEST_SKIP();
+    GTEST_SKIP();
 
     Real C=1;
     int l =40;
@@ -4779,7 +4768,7 @@ TEST(moves,openCloseGrandCanonical)
 
 TEST(run,free_harmonic_oscillator_grandCanonical)
 {   
-        GTEST_SKIP();
+    GTEST_SKIP();
 
     int N=1;
     int M=20;
@@ -5261,13 +5250,7 @@ TEST(run,free)
 
 
 
-
-
-
-
-
-
-TEST(configurations, forces)
+TEST(configurations, DISABLED_forces)
 {
     const int N = 10;
     const int M = 50;
@@ -5324,6 +5307,88 @@ TEST(configurations, forces)
 
 
 }
+
+
+TEST( init, DISABLED_minimumDistance )
+{
+    int seed = 356;
+    const int N1 = 100;
+    const int N2 = 200;
+
+    const int M = 50;
+    Real a=0.1;
+
+    pimc::particleGroup groupA{ 0 , N1-1, N1, 1.0};
+    pimc::particleGroup groupB{ N1+1 , N1 + N2, N1 + N2 + 1, 1.0};
+
+
+    pimc::pimcConfigurations configurations(M , getDimensions() , {groupA});
+
+    pimc::geometryPBC_PIMC geo(1,1,1);
+
+    randomGenerator_t randG(seed);
+    const auto & data = configurations.dataTensor();
+
+    generateRandomMinimumDistance(configurations,a,randG,geo);
+
+    bool accepted=true;
+    const auto & groups = configurations.getGroups();
+
+    for(const auto & group : groups )
+    {
+        for (int t=0;t<configurations.nBeads();t++)
+        {
+            for (int i=group.iStart;i<=group.iEnd;i++)
+            {
+                for(int j=group.iStart;j<i;j++)
+                {
+                    Real r2=0;
+                    std::array<Real,getDimensions()> diff;
+                    for(int d=0;d<DIMENSIONS;d++)
+                    {
+                        diff[d]=geo.difference( data(i,d,t) - data(j,d,t),d);
+                        r2+=diff[d]*diff[d];
+                    }
+                    if (r2 <= a*a)
+                    {
+                        accepted=false;
+                        break;
+                    } 
+                }
+            }
+        }
+    }
+
+
+    for (int t=0;t<configurations.nBeads();t++)
+    {
+        for (int i=groups[0].iStart;i<=groups[0].iEnd;i++)
+        {
+            for (int j=groups[1].iStart;j<=groups[1].iEnd;j++)
+            {
+                Real r2=0;
+                std::array<Real,getDimensions()> diff;
+                for(int d=0;d<DIMENSIONS;d++)
+                {
+                    diff[d]=geo.difference( data(i,d,t) - data(j,d,t),d);
+                    r2+=diff[d]*diff[d];
+                }
+                if (r2 <= a*a )
+                {
+                    accepted=false;
+                    break;
+                } 
+            }
+        }
+    }
+
+    ASSERT_TRUE(accepted);
+
+}
+
+
+
+
 
 #include "../pimc/potentials.h"
 

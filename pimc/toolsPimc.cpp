@@ -3,7 +3,7 @@
 
 namespace pimc
 {
-    
+
 std::array<std::array<int,2>, 2> splitPeriodicTimeSlice(const std::array<int,2> & timeSlice, int nBeads)
     {
         auto [t0,t1] = timeSlice;
@@ -77,6 +77,7 @@ int getTotParticlesFromJson(const json_t & j)
 
     return std::accumulate(nParticles.begin(),nParticles.end(),0);
 }
+
 
 range_t intersectRanges(const range_t & rangeA,const range_t & rangeB )
     {

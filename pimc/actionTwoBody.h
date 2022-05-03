@@ -94,6 +94,8 @@ struct twoBodySkippingEvaluationPolicy : public twoBodyEvaluationPolicy
 
 
 
+
+
 class actionTwoBody : public action
 {
     using range_t = std::array<int,2>;
@@ -134,6 +136,7 @@ class actionTwoBody : public action
         return evaluate(configurations,timeRange,{iParticle,iParticle});
     }
 
+
     Real evaluate(const configurations_t & configurations,const std::array<int,2> & timeRange, const std::array<int,2> & particleRange);
     
 
@@ -170,7 +173,7 @@ class actionTwoBody : public action
 
     
     virtual bool checkConstraints(const configurations_t & pimcConfigurations,const std::array<int,2> & timeRange,const  std::array<int,2> & particleRange);
-
+    
 
 
 
@@ -193,11 +196,6 @@ class actionTwoBody : public action
 
 
 };
-
-
-
-
-
 
 
 }

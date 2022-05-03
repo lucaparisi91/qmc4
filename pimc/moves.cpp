@@ -2,6 +2,7 @@
 #include "action.h"
 #include "qmcExceptions.h"
 #include "toolsPimcTest.h"
+
 namespace pimc
 {      
     std::array<int,2> timeSliceGenerator::operator()(randomGenerator_t & randG, int nBeads , int maxBeadLength)
@@ -13,6 +14,7 @@ namespace pimc
 
         return {t0,t1};
     }
+
 
     
 levyMove::levyMove(int maxBeadLength_,int set) : _levy(maxBeadLength_) , uniformRealNumber(0,1),maxBeadLength(maxBeadLength_) , buffer(( maxBeadLength_+1)*2,getDimensions() ) ,singleSetMove::singleSetMove(set)
@@ -263,11 +265,6 @@ bool swapMove::attemptCanonicalMove(configurations_t & confs, firstOrderAction &
 }
 
 
-
-
-
-
-
 bool swapMove::attemptTestMove(configurations_t & confs, firstOrderAction & S,randomGenerator_t & randG )
 {
        if ( ! confs.isOpen(getSet()) )
@@ -375,6 +372,24 @@ bool swapMove::attemptTestMove(configurations_t & confs, firstOrderAction & S,ra
 
 bool swapMove::attemptGrandCanonicalMove(configurations_t & confs, firstOrderAction & S,randomGenerator_t & randG)
 {
+
+
+    std::array<int,2> minN { 32, 31};
+    std::array<int,2> maxN { 33, 32};
+
+    bool ok=true;
+    {
+        int _n=nParticlesOnClose(  confs, getSet() );
+
+        if ( ( (_n < minN[getSet()] ) or (_n > maxN[getSet()]  ) )  and confs.getGroups()[0].isOpen() and confs.getGroups()[1].isOpen() )
+        {
+            ok=false;
+        }
+
+    }
+
+
+
     if ( ! confs.isOpen(getSet()) )
     {
         throw invalidState("Swap move can only be done in the G sector.");
@@ -622,6 +637,20 @@ bool swapMove::attemptGrandCanonicalMove(configurations_t & confs, firstOrderAct
 
     assert(group.isOpen());
 
+   
+
+
+    ok=true;
+    {
+        int _n=nParticlesOnClose(  confs, getSet() );
+
+        if ( (_n < minN[getSet()] ) or (_n > maxN[getSet()]  ) )
+        {
+            ok=false;
+        }
+
+    }
+
 
     return accept;
 }
@@ -758,7 +787,10 @@ startingChain(-1),
 setStartingChainRandom(true),
 intDistribution(0,1),
 twoSetMove(setA,setB)
-{}
+{
+
+    restriction=std::make_shared<pimc::configurationsRestriction>();
+}
 
 createWormSemiCanonicalMove::createWormSemiCanonicalMove( const json_t &  j ) : createWormSemiCanonicalMove(j["CA"].get<Real>() ,j["CB"].get<Real>(),j["setA"].get<int>() ,j["setB"].get<int>(),j["reconstructionMaxLength"].get<int>() ) {
     if ( j.find("initialBeadSampling") != j.end() )
@@ -786,6 +818,14 @@ createWormSemiCanonicalMove::createWormSemiCanonicalMove( const json_t &  j ) : 
     }
 
 
+     if ( j.find("restriction")  != j.end())
+    {
+        json_t jRestriction = j["restriction"];
+        jRestriction["setA"]=getSetA();
+        restriction=std::make_shared<pimc::wormsOpenRestriction>( jRestriction );
+    }
+
+
 }
 
 
@@ -799,10 +839,12 @@ startingChain(-1),
 setStartingChainRandom(true),
 intDistribution(0,1),
 twoSetMove(setA,setB)
-{}
-
+{
+      restriction=std::make_shared<pimc::configurationsRestriction>();
+}
 
 removeWormSemiCanonicalMove::removeWormSemiCanonicalMove( const json_t &  j ) : removeWormSemiCanonicalMove(j["CA"].get<Real>() ,j["CB"].get<Real>(),j["setA"].get<int>() ,j["setB"].get<int>(),j["reconstructionMaxLength"].get<int>() ) {
+
     if ( j.find("initialBeadSampling") != j.end() )
     {
         auto samplingKind = j["initialBeadSampling"]["kind"].get<std::string>();
@@ -819,14 +861,16 @@ removeWormSemiCanonicalMove::removeWormSemiCanonicalMove( const json_t &  j ) : 
         else
         {
             throw std::runtime_error("Unkown initialBeadSampling");
-            
+
         }
     }
-    else
+
+    if ( j.find("restriction")  != j.end())
     {
-
+        json_t jRestriction = j["restriction"];
+        jRestriction["setA"]=getSetA();
+        restriction=std::make_shared<pimc::wormsCloseRestriction>( jRestriction );
     }
-
 
 }
 
@@ -1197,7 +1241,6 @@ bool semiCloseMove::attemptMove(configurations_t & confs , firstOrderAction & S,
     int tStart = -1000;
     int iChainStart=-100;
 
-
     if (tHead-l >= 0)
     {
         tStart=timeRange[0];
@@ -1319,7 +1362,15 @@ length(-1),
 startingChain(-1),
 setStartingChainRandom(true),
 twoSetMove(setA,setB)
-{}
+{
+
+}
+
+fullSemiCanonicalOpenMove::fullSemiCanonicalOpenMove( const json_t & j) : fullSemiCanonicalOpenMove(j["C"].get<Real>() ,j["setA"].get<int>() ,j["setB"].get<int>() ,j["reconstructionMaxLength"].get<int>() ) {
+
+    
+}
+
 
 fullSemiCanonicalCloseMove::fullSemiCanonicalCloseMove(Real C_ , int setA , int setB , int maxLength_ ) : C(C_), _levy(maxLength_+2 )  ,buffer( maxLength_+ 2,getDimensions() ), _maxLength(maxLength_),
 gauss(0,1),uniformRealNumber(0,1),
@@ -1329,7 +1380,26 @@ length(-1),
 startingChain(-1),
 setStartingChainRandom(true),
 twoSetMove(setA,setB)
-{}
+{
+    restriction=std::make_shared<pimc::configurationsRestriction>();
+
+}
+
+
+fullSemiCanonicalCloseMove::fullSemiCanonicalCloseMove( const json_t & j) : fullSemiCanonicalCloseMove(j["C"].get<Real>() ,j["setA"].get<int>() ,j["setB"].get<int>() ,j["reconstructionMaxLength"].get<int>() ) {
+
+    if ( j.find("restriction")  != j.end())
+    {
+        json_t jRestriction ( j["restriction"]);
+        jRestriction["setA"]=getSetA();
+
+        restriction=std::make_shared<pimc::fullCloseRestriction>( jRestriction );
+    }
+
+}
+
+
+
 
 Real fullSemiCanonicalOpenMove::openCloseRatioCoefficient(int N, int M){
         Real coeff=C;
@@ -1359,6 +1429,23 @@ Real fullSemiCanonicalOpenMove::openCloseRatioCoefficient(int N, int M){
         return false;
     }
 
+    
+
+     std::array<int,2> minN { 32, 31};
+     std::array<int,2> maxN { 33, 32};
+    bool ok=true;
+    {
+        int _n=nParticlesOnClose(  confs, getSetA() );
+        //std::cout << _n << std::endl;
+
+
+        if ( (_n < minN[getSetA()] ) or (_n > maxN[getSetA()]  ) )
+        {
+            ok=false;
+        }
+
+    }
+
     _levy.setReconstructorBoundaries(chainBoundary::fixed,chainBoundary::free);
 
     Real timeStep = S.getTimeStep();
@@ -1385,6 +1472,10 @@ Real fullSemiCanonicalOpenMove::openCloseRatioCoefficient(int N, int M){
     {
         l = std::floor(uniformRealNumber(randG) * (_maxLength   ) ) + 1;
     }
+
+
+   
+
 
     int M = confs.nBeads();
 
@@ -1528,6 +1619,18 @@ Real fullSemiCanonicalOpenMove::openCloseRatioCoefficient(int N, int M){
 
     }
 
+   
+    ok=true;
+    {
+        int _n=nParticlesOnClose(  confs, getSetA() );
+
+        if ( (_n < minN[getSetA()] ) or (_n > maxN[getSetA()]  ) )
+        {
+            ok=false;
+        }
+
+    }
+
     return accept;
  }
 
@@ -1563,9 +1666,12 @@ Real fullSemiCanonicalCloseMove::openCloseRatioCoefficient(int N, int M){
 
     _levy.setReconstructorBoundaries(chainBoundary::fixed,chainBoundary::fixed);
 
+    auto N2P= nParticlesOnClose(confs,getSetA() );
+
     Real timeStep = S.getTimeStep();
 
     const auto & geo = S.getGeometry();
+
 
     int M = confs.nBeads();
 
@@ -1599,6 +1705,12 @@ Real fullSemiCanonicalCloseMove::openCloseRatioCoefficient(int N, int M){
     if (l > _maxLength)
     {
         return false;
+    }
+
+
+    if (not restriction->check(confs))
+    {
+        return  false;
     }
     
 
@@ -1727,6 +1839,7 @@ Real fullSemiCanonicalCloseMove::openCloseRatioCoefficient(int N, int M){
             confs.removeChain(iChainHeadB);
         }
 
+
     }
     else
     {
@@ -1749,6 +1862,21 @@ Real fullSemiCanonicalCloseMove::openCloseRatioCoefficient(int N, int M){
         std::cout << "invalid" << std::endl;
         checkTimePeriodicBoundaryConditions( confs, geo  );
     } */
+
+     std::array<int,2> minN { 32, 31};
+     std::array<int,2> maxN { 33, 32};
+
+     bool ok=true;
+    {
+        //int _n=confs.nParticles( getSetA() );
+        int _n=nParticlesOnClose(  confs, getSetA() );
+
+        if ( (_n < minN[getSetA()] ) or (_n > maxN[getSetA()]  ) )
+        {
+            ok=false;
+        }
+
+    }
 
     return accept;
  }
@@ -2724,8 +2852,6 @@ bool createWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOr
 
     auto [setA, setB ] = sampleSets(randG);
 
-
-
     Real timeStep = S.getTimeStep();
     _levy.setReconstructorBoundaries(pimc::chainBoundary::free,pimc::chainBoundary::free);
 
@@ -2734,6 +2860,11 @@ bool createWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOr
     int NB = confs.nParticles(setB);
 
     const auto & geo = S.getGeometry();
+
+    if (not restriction->check(confs))
+    {
+        return false;
+    }
 
 
    
@@ -2947,6 +3078,7 @@ bool createWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOr
         
     }
 
+    
     return accept;
 };
 
@@ -3763,8 +3895,6 @@ bool closeMove::attemptSemiGrandCanonicalMove(configurations_t & confs , firstOr
 
 };
 
-
-
 bool removeWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG )
 {
 
@@ -3779,9 +3909,10 @@ bool removeWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOr
         return false;
     }
 
+
+
     const auto & headsA = confs.getGroups()[setA].heads;
     const auto & tailsA = confs.getGroups()[setA].tails;
-
 
 
     int iChainHeadA=headsA[std::floor(uniformRealNumber(randG) * headsA.size() )];
@@ -3825,6 +3956,11 @@ bool removeWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOr
     int M = confs.nBeads();
     
     int NA = confs.nParticles(setA );
+
+    if (not restriction->check(confs))
+    {
+        return false;
+    }
 
 
     //int l= std::floor( uniformRealNumber(randG) * (_maxLength -2) ) + 1 ; // distance from itime where the head is formed
@@ -3891,7 +4027,6 @@ bool removeWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOr
 
     std::array<Real,getDimensions()> difference;
     std::array<Real,getDimensions()> delta;
-    
 
     for (int d=0;d<getDimensions();d++)
     {
@@ -3932,7 +4067,6 @@ bool removeWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOr
     {   
         nNewA= NA + 2;    
     }
-
 
     std::array<Real,getDimensions()> x0B;
     for (int d=0;d<getDimensions();d++)
@@ -4144,8 +4278,6 @@ bool advanceHead::attemptMove(configurations_t & confs , firstOrderAction & S,ra
 
     assert(l>0);
 
-
-
     for (int d=0;d<getDimensions();d++)
     {
         data(iChain,d,tHead+ l)=headPosition[d];
@@ -4216,22 +4348,50 @@ bool advanceHead::attemptMove(configurations_t & confs , firstOrderAction & S,ra
     return accept;
 }
 
-
 advanceHeadTail::advanceHeadTail(int maxAdvanceLength_,int setA, int setB) :
-_maxAdvanceLength(maxAdvanceLength_) , _levy((maxAdvanceLength_+2)),gauss(0,1),uniformRealNumber(0,1),twoSetMove::twoSetMove(setA,setB) ,
-enforceMaxParticleNumber(false),_nMax(1e+9)
+_maxAdvanceLength(maxAdvanceLength_) , _levy((maxAdvanceLength_+2)),gauss(0,1),uniformRealNumber(0,1),twoSetMove::twoSetMove(setA,setB)
 {
     setRandomLength();
+    restriction=NULL;
+    
+
 }
+
+advanceHeadTail::advanceHeadTail(const json_t & j) : advanceHeadTail::advanceHeadTail(j["reconstructionMaxLength"].get<int>() ,j["setA"].get<int>(), j["setB"].get<int>() ) {
+
+    if ( j.find("restriction")  != j.end())
+    {
+        json_t jR(j["restriction"]);
+        jR["setA"]=getSetA();
+        restriction=std::make_shared<pimc::advanceRestriction>( jR );
+    }
+
+
+}
+
+
+
+
 
 recedeHeadTail::recedeHeadTail(int maxAdvanceLength_,int setA, int setB) :
-_maxAdvanceLength(maxAdvanceLength_) , _levy((maxAdvanceLength_+2)),gauss(0,1),uniformRealNumber(0,1),twoSetMove::twoSetMove(setA,setB) ,
-enforceMaxParticleNumber(false),_nMax(1e+9)
+_maxAdvanceLength(maxAdvanceLength_) , _levy((maxAdvanceLength_+2)),gauss(0,1),uniformRealNumber(0,1),twoSetMove::twoSetMove(setA,setB)
 {
     setRandomLength();
+    restriction=NULL;
+
 }
 
+recedeHeadTail::recedeHeadTail(const json_t & j) : recedeHeadTail::recedeHeadTail(j["reconstructionMaxLength"].get<int>() ,j["setA"].get<int>(), j["setB"].get<int>() )
+ {
 
+   if ( j.find("restriction")  != j.end())
+    {
+        json_t jR(j["restriction"]);
+        jR["setA"]=getSetA();
+        restriction=std::make_shared<pimc::recedeRestriction>( jR );
+    }
+
+ }
 
 
 int advanceHeadTail::sampleLength(randomGenerator_t & randG) 
@@ -4260,19 +4420,15 @@ int recedeHeadTail::sampleLength(randomGenerator_t & randG)
     }
 }
 
-
 bool recedeHeadTail::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG)
 {
-
 
     if ( not( confs.isOpen(getSetA() ) and confs.isOpen(getSetB() ) ) )
     {
         return false;
     }
 
-
     _levy.setReconstructorBoundaries(chainBoundary::free,chainBoundary::fixed);
-
 
     Real timeStep = S.getTimeStep();
 
@@ -4292,8 +4448,6 @@ bool recedeHeadTail::attemptMove(configurations_t & confs , firstOrderAction & S
 
 
     assert(  tHeadA == tTailB + 1);
-    
-    
 
     int l= sampleLength(randG);
 
@@ -4316,7 +4470,18 @@ bool recedeHeadTail::attemptMove(configurations_t & confs , firstOrderAction & S
             return false;
         }
     }
+    
+    if (restriction != NULL)
+    {
+        restriction->setLength(l);
+        if (not restriction->check(confs)  )
+    {
+        return false;
+    }
 
+    }
+
+  
 
 /*     //**************************** TMP code *************
     {
@@ -4382,16 +4547,13 @@ bool recedeHeadTail::attemptMove(configurations_t & confs , firstOrderAction & S
 
 
     auto deltaMu= confs.getChemicalPotential(getSetA()) - confs.getChemicalPotential( getSetB() );
-
+    
 
     auto propRatio = -deltaS -  deltaMu*l*timeStep;
     bool accept=sampler.acceptLog(propRatio,randG);
 
 
-    if ( enforceMaxParticleNumber)
-    {   
-        throw std::runtime_error("enforceMaxParticle number not implemented for the semi-canonical ensamble");
-    }
+   
 
 
     if ( accept)
@@ -4416,19 +4578,31 @@ bool recedeHeadTail::attemptMove(configurations_t & confs , firstOrderAction & S
         }
 
     }
+
+    std::array<int,2> minN { 32, 31};
+    std::array<int,2> maxN { 33, 32};
+
     
+    bool ok=true;
+    {
+        int _n=nParticlesOnClose(  confs, getSetA() );
+
+
+        if ( (_n < minN[getSetA()] ) or (_n > maxN[getSetA()]  ) )
+        {
+            ok=false;
+        }
+
+    }
+
+
     return accept;
 }
 
-
-
 bool advanceHeadTail::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG)
 {
-
     _levy.setReconstructorBoundaries(chainBoundary::fixed,chainBoundary::free);
     const auto & geo = S.getGeometry();
-
-
   
     Real timeStep = S.getTimeStep();
 
@@ -4479,7 +4653,15 @@ bool advanceHeadTail::attemptMove(configurations_t & confs , firstOrderAction & 
         }
     }
 
-    
+    if (restriction != NULL)
+    {
+        restriction->setLength(l);
+        if (not restriction->check(confs)  )
+    {
+        return false;
+    }
+
+    }
     
 
     Real deltaS=0;
@@ -4553,12 +4735,6 @@ bool advanceHeadTail::attemptMove(configurations_t & confs , firstOrderAction & 
 
 
 
-    if ( enforceMaxParticleNumber)
-    {   
-        throw std::runtime_error("enforceMaxParticle number not implemented for the semi-canonical ensamble");
-    }
-
-
     if ( accept)
     {
         if (tTailB + 1 + l >= M)
@@ -4583,6 +4759,23 @@ bool advanceHeadTail::attemptMove(configurations_t & confs , firstOrderAction & 
         }
         
     }
+    std::array<int,2> minN { 32, 31};
+    std::array<int,2> maxN { 33, 32};
+
+
+    bool ok=true;
+    {
+        int _n=nParticlesOnClose(  confs, getSetA() );
+
+
+        if ( (_n < minN[getSetA()] ) or (_n > maxN[getSetA()]  ) )
+        {
+            ok=false;
+        }
+
+    }
+
+   
 
     return accept;
 }
@@ -5573,6 +5766,8 @@ gauss(0,1)
 {
 
 }
+
+
 
 
 }

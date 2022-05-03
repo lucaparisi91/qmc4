@@ -9,7 +9,7 @@ include_qmc_external_directories(dmc_lib)
 target_include_directories(dmc_lib PUBLIC
                            "${PROJECT_SOURCE_DIR}/dmc"
                            )
-set_target_properties( dmc_lib PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} )
+#set_target_properties( dmc_lib PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} )
 
 
 add_executable(dmc main.cpp)
@@ -17,7 +17,7 @@ target_include_directories(dmc PUBLIC
                            "${PROJECT_SOURCE_DIR}/dmc"
                            )
 target_link_libraries(dmc PUBLIC dmc_lib)
-set_target_properties( dmc PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} )
-set_target_properties( dmc PROPERTIES LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS_ADDITIONAL} )
+#set_target_properties( dmc PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} )
+#set_target_properties( dmc PROPERTIES LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS_ADDITIONAL} )
 link_qmc_external_libraries(dmc)
 include_qmc_external_directories(dmc)

@@ -8,6 +8,9 @@
 namespace pimc
 {
 
+
+
+
 using mask_t = maskTensor;
 using configurations_t = pimcConfigurations;
 class kernel2B
@@ -15,16 +18,13 @@ class kernel2B
     public:
 
     kernel2B(){}
-    
+
     const auto &  geometry () const {return _geometry; } ; 
     const auto &  timeStep () const {return _timeStep; } ;
     void setTimeStep (Real timeStep_)  { _timeStep=timeStep_; } ;
    
+
     void setGeometry ( const geometryPBC_PIMC & new_geometry_) { _geometry=new_geometry_ ;};
-
-
-
-
 
     virtual Real evaluateRectangular(
         const Eigen::Tensor<Real,3> & tn

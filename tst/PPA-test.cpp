@@ -960,7 +960,7 @@ TEST_F( pairProductTest , evaluationTwoComponentGrandCanonical )
 }
 
 
-TEST_F( pairProductTest ,force_caoBerne )
+TEST_F( pairProductTest ,DISABLED_force_caoBerne )
 {   
     int N=2;
     Real beta = 1;

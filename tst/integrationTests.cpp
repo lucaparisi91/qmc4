@@ -672,10 +672,10 @@ void twoBodyTest::accumulate()
 
 TEST_F(twoBodyTest,pbc)
 {
-        GTEST_SKIP();
-
-
     GTEST_SKIP();
+
+
+    
     Real C=1e-2;
     int nBeads=10;
     int N=2;
@@ -775,7 +775,7 @@ TEST_F(twoBodyTest,pbc)
 
 TEST_F(harmonicTrapTest, twoBodyActionKernel2_grandCanonical )
 {
-        GTEST_SKIP();
+    GTEST_SKIP();
 
     Real C=1;
     int nBeads=10;
@@ -871,9 +871,10 @@ TEST_F(harmonicTrapTest, twoBodyActionKernel2_grandCanonical )
 
 }
 
+
 TEST_F( harmonicTrapTest ,mixture_twoBody)
 {
-        GTEST_SKIP();
+    GTEST_SKIP();
 
     Real C=1e-3;
     int nBeads=10;
@@ -1018,7 +1019,6 @@ TEST_F( harmonicTrapTest ,mixture_twoBody)
     tab.push_back(&advanceHeadB,0.05,pimc::sector_t::offDiagonal,"advanceHead");
     tab.push_back(&recedeHeadB,0.05,pimc::sector_t::offDiagonal,"recedeHead");
 
-
     //configurations.setHeadTail(0,9,-1);
 
 
@@ -1043,7 +1043,6 @@ TEST_F( harmonicTrapTest ,mixture_twoBody)
     ratioOut.open("ratio.dat");
 
     magnetizationSquaredOut.open("magnetizationSquared.dat");
-
 
     std::vector<int > particleDistribution;
     int nMax=40;
@@ -1212,7 +1211,7 @@ TEST_F( harmonicTrapTest ,mixture_twoBody)
 
 TEST_F( harmonicTrapTest, caoBernePropagator )
 {
-        GTEST_SKIP();
+    GTEST_SKIP();
 
     Real C=1e-3;
     int nBeads=10;

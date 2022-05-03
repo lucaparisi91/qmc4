@@ -63,13 +63,11 @@ namespace pimc{
             kernel->setGeometry(_geo);
             kernel->setTimeStep(_timeStep);
             
-
             if ( j.find("minimumDistance") != j.end() )
             {
                 Real radius = j["minimumDistance"].get<Real>();
                 S->setMinimumDistance(radius);
             }
-            
 
             return S;
 

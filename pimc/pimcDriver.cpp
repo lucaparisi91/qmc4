@@ -14,10 +14,7 @@
 #include "propagators.h"
 #include <csignal>
 
-
-
 namespace fs = std::filesystem;
-
 
 namespace pimc
 {
@@ -32,16 +29,13 @@ namespace pimc
         }
     }
 
+    Real getTimeStep(json_t & j)
+    {
+        int nBeads= j["nBeads"].get<Real>();
+        Real beta= j["inverseTemperature"].get<Real>();
 
-
-
-Real getTimeStep(json_t & j)
-{
-    int nBeads= j["nBeads"].get<Real>();
-    Real beta= j["inverseTemperature"].get<Real>();
-
-    return beta/nBeads;
-}
+        return beta/nBeads;
+    }
 
 pimcDriver::pimcDriver(const json_t & j_) : j(j_),
 chemicalPotential({}),
@@ -201,8 +195,6 @@ doCheckPoint(false)
     }
 }
 
-
-
 void pimcDriver::run()
 {
     // build action 
@@ -254,22 +246,15 @@ void pimcDriver::run()
     sTwoBodyCreator->setNBeads(nBeads);
     sTwoBodyCreator->setNMaxParticles(nChains);
 
-
-    
-    
-    
-
     sTwoBodyCreator->registerPotential<pimc::gaussianPotential>("gaussian");
     sTwoBodyCreator->registerPotential<pimc::isotropicHarmonicPotential>("harmonic");
 
-
     sTwoBodyCreator->registerGreenFunction<pimc::caoBernePropagator>("caoBerne");
-    sTwoBodyCreator->registerGreenFunction<pimc::testingCaoBernePropagator>("testingCaoBerne");    
+
+    sTwoBodyCreator->registerGreenFunction<pimc::caoBernePropagatorTruncated>("caoBerneTruncated");
 
     sC.addConstructor("twoBody",sTwoBodyCreator);
     sC.addConstructor("nullPotential",sNullC);
-    
-
 
     //sC.registerPotential<isotropicHarmonicPotential>();
     //sC.registerPotential<gaussianPotential>();
@@ -300,74 +285,78 @@ void pimcDriver::run()
         configurations.setChemicalPotential(chemicalPotential);
     }
 
-    std::array<Real,3> lBoxSample;
 
+    std::array<Real,3> lBoxSample;
+    Real minimumDistance=0;
     if (j.find("randomInitialCondition") != j.end() )
     {
-        for(int d=0;d<getDimensions();d++)
+        auto jI = j["randomInitialCondition"];
+        if ( jI.find("lBox") != jI.end() )
         {
-            lBoxSample[d]=j["randomInitialCondition"]["lBox"][d].get<Real>();
+            for(int d=0;d<getDimensions();d++)
+            {
+                lBoxSample[d]=j["randomInitialCondition"]["lBox"][d].get<Real>();
+            }
         }
-    }
-    else
-    {
-        for(int d=0;d<getDimensions();d++)
+        else
         {
-            lBoxSample[d]=geo.getLBox(d);
+            for(int d=0;d<getDimensions();d++)
+            {
+                lBoxSample[d]=geo.getLBox(d);
+            }
         }
+
+        if ( jI.find("minimumDistance") != jI.end() )
+        {
+            minimumDistance=jI["minimumDistance"].get<Real>();
+        }
+
+        
+        
     }
+
+    std::cout << "Minimum distance" << minimumDistance <<std::endl;
 
     // sets a random initial condition
     std::cout << "Generating initial configurations" << std::endl;
-    {
-    std::uniform_real_distribution<double> uniformDistribution(0.0,1.0);
 
-        auto & data=configurations.dataTensor();
-        for (int t=0;t<data.dimensions()[2];t++)
-            for (int i=0;i<data.dimensions()[0];i++)
-                for  (int d=0;d<DIMENSIONS;d++)
-                {
-                    data(i,d,t)=(uniformDistribution(randG)-0.5 )*lBoxSample[d];
-                }
-        configurations.fillHeads();
-    }
-    int iAttemptInitialCondition=0;
-    
-    while (not S.checkConstraints(configurations) )
-    {
-        configurations.setRandom( { lBoxSample[0] ,lBoxSample[1],lBoxSample[2] } , randG );
-        iAttemptInitialCondition++;
 
-        if (iAttemptInitialCondition > 100000)
-        {
-            throw std::runtime_error("Max iteration reached in generating the initial condition");
-        }
-    }
-
+    generateRandomMinimumDistance(  configurations, minimumDistance,randG,geo);
     configurations.fillHeads();
+   
+
+    if (not S.checkConstraints(configurations) )
+    {
+        throw std::runtime_error("Initial condition does not satisfy action requirements");
+
+    }
 
     if (loadCheckPoint )
     {
         configurations=pimc::pimcConfigurations::loadHDF5(checkPointFile);
     }
 
-
-
+    
     std::vector<std::shared_ptr<observable> > observables;
     
     pimcObservablesFactory obFactory(nBeads, nMaxParticles);
 
-    obFactory.registerObservable<virialEnergyEstimator>("virialEnergy");
-    obFactory.registerObservable<thermodynamicEnergyEstimator>("thermalEnergy");
-    obFactory.registerObservable<particleNumberEstimator>("nParticles");
-    obFactory.registerObservable<magnetizationSquaredEstimator>("magnetizationSquared");
-    obFactory.registerObservable<magnetizationEstimator>("magnetization");
+    obFactory.registerEstimator<virialEnergyEstimator>("virialEnergy");
+    obFactory.registerEstimator<thermodynamicEnergyEstimator>("thermalEnergy");
+    obFactory.registerEstimator<particleNumberEstimator>("nParticles");
+    obFactory.registerEstimator<magnetizationSquaredEstimator>("magnetizationSquared");
+    obFactory.registerEstimator<magnetizationEstimator>("magnetization");
+    obFactory.registerEstimator<thermodynamicEnergyEstimatorMagnetization>("thermodynamicEnergyMagnetization");
+    obFactory.registerEstimator<virialEnergyEstimatorMagnetization>("virialEnergyMagnetization");
+    
+    obFactory.registerEstimator<pairCorrelation>("pairCorrelation");
+    obFactory.registerEstimator<angleEstimator>("angleEstimator");
 
-    obFactory.registerObservable<pairCorrelation>("pairCorrelation");
-    obFactory.registerObservable< particleNumberSquaredEstimator>("nParticlesSquared");
+    obFactory.registerEstimator< particleNumberSquaredEstimator>("nParticlesSquared");
 
-            
+    obFactory.registerObservable<magnetizationDistribution>("magnetizationDistribution");
 
+    
     if (j.find("observables") == j.end())
     {
         throw invalidInput("No abservables have been defined");
@@ -378,11 +367,8 @@ void pimcDriver::run()
     
     }
     
-    auto eO=obFactory.getEnergyObservable();
-    auto & eEst=*(eO->getEstimator());
-
-    std::cout << "Energy initial: " << eEst(configurations,S) << std::endl;
-
+    
+    
 
 
    /*  pimc::levyMove freeMoves(5);
@@ -425,7 +411,6 @@ void pimcDriver::run()
    
 
 
-    pimc::thermodynamicEnergyEstimator energyEstimator;
     Real e=0;
     Real e2=0;
 
@@ -458,7 +443,7 @@ void pimcDriver::run()
         std::cout << "-----Set: " << i << ", closed sector------"<<std::endl;
 
         std::cout << reportMoves(tab.getClosedSectorTable(i)) ;
-
+        
     }
 
     // start the simulation
@@ -469,7 +454,6 @@ void pimcDriver::run()
     int n=0;
 
     pimc::openRatio  openRatioOb( configurations.getGroups().size() ) ;
-
 
     for (int i=0;(i< nBlocks) & (!pimc_main_is_interrupted); i++)
     {
@@ -486,11 +470,12 @@ void pimcDriver::run()
                 {success+=1;}
             }
             
+
             openRatioOb.accumulate(configurations);
 
             if (!configurations.isOpen() )
             {
-                
+
                 for (auto & O : observables)
                 {
                     O->accumulate(configurations,S);
@@ -504,18 +489,20 @@ void pimcDriver::run()
             }
             
         }
-
+        
+        restrictToBox( configurations, geo);
+        
         std::cout << "Acceptance ratio: " << success*1./n << std::endl;
 
         //std::cout << e << std::endl;
-        if (eO != nullptr )
+   /*      if (eO != nullptr )
         {
             if (eO->weight() != 0 )
             {
                 std::cout << "Energy: " << eO->average() << std::endl;
             }
         }
-
+ */
         if (nClosed == stepsPerBlock)
         {
             for (auto & O : observables)

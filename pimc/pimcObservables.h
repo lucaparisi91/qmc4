@@ -8,10 +8,12 @@
 #include "accumulators.h"
 #include "nConnectedChains.h"
 
+
 namespace pimc
 {
 
 class scalarObservable;
+class vectorObservable;
 
 class scalarEstimator
 {
@@ -22,6 +24,19 @@ class scalarEstimator
 
 
 };
+
+class vectorEstimator
+{
+    public:
+    using observable_t = vectorObservable;
+    using accumulator_t = vectorAccumulator<Real>;
+
+    virtual void operator()(configurations_t & configurations, firstOrderAction & S,  accumulator_t & histAcc) = 0;
+    
+};
+
+
+
 
 class histogramObservable;
 
@@ -150,7 +165,7 @@ public:
         return acc.weight();
     }
 
-
+    
     virtual void out(size_t iteration) 
     {
         auto av = acc.average();
@@ -159,7 +174,7 @@ public:
         {
             for(int i=0;i<acc.size();i++ )
             {
-                f << iteration << delim <<  acc.x(i) << delim << av(i)/( acc.x(i)*acc.x(i) ) <<  std::endl;
+                f << iteration << delim <<  acc.x(i) << delim << av(i) <<  std::endl;
             }
             
         }
@@ -194,9 +209,76 @@ public:
 };
 
 
+
+
+class vectorObservable : public observable
+{
+public:
+
+    using estimator_t = vectorEstimator;
+
+    vectorObservable(std::shared_ptr<vectorEstimator> ob_ , std::string label_ , size_t size ) : label(label_),filename(label_ + ".dat"),delim(" "){
+        ob=ob_;
+        f.open(filename,std::fstream::app);
+        acc.resize(size,0);
+    }
+
+    vectorObservable(std::shared_ptr<vectorEstimator> ob_ , const json_t & j) : vectorObservable( ob_, j["label"].get<std::string>(),j["size"].get<size_t>() ) {}
+
+    virtual void accumulate(configurations_t & configurations, firstOrderAction & S)
+    {
+        (*ob)(configurations,S,acc);
+    }
+    
+    virtual void out(size_t iteration) 
+    {
+        auto av = acc.average();
+
+        for(int i=0;i<acc.size();i++ )
+        {
+                if ( acc.weights()(i) != 0 )
+                {
+                    f << iteration << delim << i  << delim << av(i) <<  std::endl;
+                }
+        }
+
+    }
+
+
+    virtual void clear()
+    {
+        acc.clear();
+    }
+
+    ~vectorObservable()
+    {
+        f.close();
+    }
+
+    auto average() const
+    {
+        return acc.average();
+    }
+
+   
+    private:
+
+    vectorAccumulator<Real> acc;
+    std::ofstream f;
+    std::string filename;
+    std::string label;
+    std::string delim;
+    std::shared_ptr<vectorEstimator> ob;
+    
+};
+
+
+
+
+
 class thermodynamicEnergyEstimator : public scalarEstimator 
 {
-    
+
     public:
     
     thermodynamicEnergyEstimator(){}
@@ -206,6 +288,29 @@ class thermodynamicEnergyEstimator : public scalarEstimator
 
     virtual Real operator()(configurations_t & configurations, firstOrderAction & S);
 };
+
+class thermodynamicEnergyEstimatorMagnetization : public vectorEstimator 
+{
+    public:
+
+    using accumulator_t = vectorAccumulator<Real>;
+
+    thermodynamicEnergyEstimatorMagnetization(){
+        setA=0;
+        setB=1;
+    }
+
+    thermodynamicEnergyEstimatorMagnetization(const json_t & j) : energyEst(j)   {setA=0;setB=1;}
+
+    virtual void operator()(configurations_t & configurations, firstOrderAction & S, accumulator_t & acc);
+
+    private:
+    int setA;
+    int setB;
+    thermodynamicEnergyEstimator energyEst;
+};
+
+
 
 
 
@@ -453,6 +558,62 @@ class pairCorrelation : public histogramEstimator
 };
 
 
+class angleEstimator : public histogramEstimator
+{
+    public:
+
+    angleEstimator(int setA,int setB);
+
+    angleEstimator(const json_t & j) : angleEstimator(j["setA"
+    ].get<int>() , j["setB"].get<int>()  ) {}
+
+
+
+
+    void operator()(configurations_t & configurations, firstOrderAction & S,accumulator_t & acc);
+
+    private:
+    
+    int setA;
+    int setB;
+    std::vector<double> buffer;
+
+};
+
+
+
+class magnetizationDistribution : public observable
+{
+    public:
+
+    magnetizationDistribution( const json_t & j);
+    
+    virtual void accumulate(configurations_t & configurations, firstOrderAction & S) override;
+
+    virtual void out(size_t t) override;
+
+    void clear() override;
+
+    ~magnetizationDistribution();
+
+    private:
+    
+    std::vector<Real> _Ms;
+    size_t n;
+    int _mMin;
+    int _mMax;
+    int setA;
+    int setB;
+    std::ofstream f;
+    std::string _label;
+    bool recordAbsoluteValue;
+    
+
+};
+
+
+
+
 class openRatio 
 {
     public:
@@ -478,6 +639,24 @@ class openRatio
     std::ofstream f;
 
 };
+
+class virialEnergyEstimatorMagnetization : public vectorEstimator 
+{
+    public:
+
+    using accumulator_t = vectorAccumulator<Real>;
+
+
+    virialEnergyEstimatorMagnetization(const json_t & j) : energyEst(j)   {setA=0;setB=1;}
+
+    virtual void operator()(configurations_t & configurations, firstOrderAction & S, accumulator_t & acc);
+
+    private:
+    int setA;
+    int setB;
+    virialEnergyEstimator energyEst;
+};
+
 
 
 

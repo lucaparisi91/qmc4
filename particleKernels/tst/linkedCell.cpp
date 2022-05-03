@@ -12,15 +12,11 @@
 
 
 
-
-
-
-
-
 using namespace particleKernels;
 
 TEST(linkedCell,lattice)
 {
+
 
     Real cut_off=1;
     constexpr int D = 3;

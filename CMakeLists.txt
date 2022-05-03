@@ -4,11 +4,9 @@ cmake_minimum_required(VERSION 3.10)
 project(qmc VERSION 3.0)
 
 set(DIMENSIONS "3" CACHE STRING "Number of dimensions")
-set(HDF5_ROOT "" CACHE STRING "Location of the hdf5 library")
 set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Compilation mode")
 
 set_property(CACHE CMAKE_BUILD_TYPE  PROPERTY STRINGS Release Debug)
-mark_as_advanced( HDF5_DIR)
 mark_as_advanced( CMAKE_INSTALL_PREFIX)
 
 

@@ -7,7 +7,7 @@ namespace pimc
 {
 
 template<class T>
-std::shared_ptr<observable> __createObservable(const json_t & j)
+std::shared_ptr<observable> __createObservableFromEstimator(const json_t & j)
  {
     auto estimator=std::make_shared<T>(j);
 
@@ -16,6 +16,17 @@ std::shared_ptr<observable> __createObservable(const json_t & j)
     return ob;
 
  }
+
+
+template<class T>
+std::shared_ptr<observable> __createObservable(const json_t & j)
+ {
+    auto ob=std::make_shared<T>(j);
+
+    return ob;
+
+ }
+
 
 class pimcObservablesFactory
 {
@@ -31,10 +42,17 @@ class pimcObservablesFactory
 
 
     template<class T>
+    void registerEstimator(const std::string & key)
+    {
+        creatorMap[key]= &__createObservableFromEstimator<T> ; 
+    }
+
+    template<class T>
     void registerObservable(const std::string & key)
     {
         creatorMap[key]= &__createObservable<T> ; 
     }
+    
 
     auto getEnergyObservable(){return eO;}
     private:

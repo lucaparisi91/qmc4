@@ -1,7 +1,12 @@
 
+#ifndef PARTICLE_CONTAINER_H
+#define PARTICLE_CONTAINER_H
+
+
 #include "../traits.h"
 #include <unsupported/Eigen/CXX11/Tensor>
 #include "../toolsPimc.h"
+
 
 namespace pimc
 {
@@ -68,6 +73,7 @@ class cell
 
     const auto & getCellIndex() const {return _index;}
 
+    const auto & getParticleIndices() const {return _particleIndex;};
 
     
     private:
@@ -129,31 +135,39 @@ class simpleCellNeighbourList
 
         cellIndexPerParticle[iParticle]=I;
         subIndexPerParticle[iParticle]=cells[I]->push(iParticle);
+        isParticleRemoved[iParticle]=false;
+
 
         nParticles+=1;
 
     }
 
 
-
     void remove(  int iParticle)
     {
-        auto I=cellIndexPerParticle[iParticle];
-        auto II=subIndexPerParticle[iParticle];
-        cells[I]->swap( II, cells[I]->size()-1 );
+        if (not isParticleRemoved[iParticle] )
+        {
+            auto I=cellIndexPerParticle[iParticle];
+            auto II=subIndexPerParticle[iParticle];
+            cells[I]->swap( II, cells[I]->size()-1 );
+        
 
         subIndexPerParticle[ cells[I]->indices()[II] ]=II;
         cells[I]->pop();
-
+        isParticleRemoved[iParticle]=true;
         nParticles-=1;
+        }
 
     }
 
     const auto & getParticleCell( int iParticle) const { auto I=cellIndexPerParticle[iParticle] ; return *cells[I];}
 
+    bool isRemoved( int iParticle) const
+    {
+        return isParticleRemoved[iParticle];
 
-
-
+    }
+    
     void update(  size_t iParticle, Real x, Real y, Real z)
     {
         remove(iParticle);
@@ -204,13 +218,15 @@ class simpleCellNeighbourList
     // per particle data
     std::vector< size_t > cellIndexPerParticle;
     std::vector< size_t > subIndexPerParticle;
-    
-
+    std::vector< bool > isParticleRemoved;
     
     int nParticles;
-   
+
 };
 
+class maskTensor;
+
+using mask_t=maskTensor;
 
 class linkedCellParticles
 {
@@ -220,6 +236,12 @@ class linkedCellParticles
     linkedCellParticles( std::array<size_t,getDimensions()> nCells, std::array<Real,getDimensions() > lBox  );
     void setCapacity(size_t N, size_t M);
     void add( const Eigen::Tensor<Real,3> & data, const range_t &  timeRange,const  range_t & particleRange);
+    void add( const Eigen::Tensor<Real,3> & data,const mask_t & mask, const range_t &  timeRange,const  range_t & particleRange);
+    
+
+    void update( const Eigen::Tensor<Real,3> & data, const range_t &  timeRange,const  range_t & particleRange);
+     void update( const Eigen::Tensor<Real,3> & data, const mask_t & mask, const range_t &  timeRange,const  range_t & particleRange);
+
     void remove(  const range_t &  timeRange,const  range_t & particleRange);
 
 
@@ -232,8 +254,8 @@ class linkedCellParticles
 
     const auto cellLength( int d) const {return _lBox[d]/_nCells[d];}
 
-
     private:
+
 
     std::vector< std::shared_ptr<linkedCell_t> > particles;
     std::array<size_t,getDimensions()> _nCells;
@@ -241,4 +263,8 @@ class linkedCellParticles
 
 };
 
+
 }
+
+
+#endif
