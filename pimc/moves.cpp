@@ -8,7 +8,7 @@ namespace pimc
     std::array<int,2> timeSliceGenerator::operator()(randomGenerator_t & randG, int nBeads , int maxBeadLength)
     {
         int t0=std::floor( uniformRealNumber(randG)*nBeads );
-        int length = uniformRealNumber(randG)*maxBeadLength;
+        int length = uniformRealNumber(randG)*(maxBeadLength) ;
 
         int t1 = t0 + length;
 
@@ -103,6 +103,7 @@ bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,rand
 
                 //std::cout << data(iChainNext,d,timeRanges[1][1]) - data(iChain,d,timeRange[1] )<<std::endl;
             }// ensures to reconstruct along a continuos path
+
      }
 
     //bool accepted = S.checkConstraints(confs,timeRange1,{iChain,iChain});
@@ -110,8 +111,18 @@ bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,rand
 
     //if (accepted)
     //{
+        confs.update( timeRange1, {iChain,iChain});
+
+        if(iChainNext != -1)
+        {
+            confs.update( timeRange2, {iChainNext,iChainNext});
+        } 
+
         auto  sNew= S.evaluate(confs,timeRange1, iChain) ;
+        
         sNew+=S.evaluate(confs,timeRange2, iChainNext) ;
+
+
         const auto actionDifference = sNew - sOld;
 
         bool accepted = sampler.acceptLog(-actionDifference,randG);
@@ -121,15 +132,26 @@ bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,rand
     if (! accepted)
     {
         // copy back old beads
-
         confs.copyDataFromBuffer(buffer,{timeRange1[0] , timeRange1[1]+ 1},iChain);
-
         if (iChainNext!=-1)
          {
             confs.copyDataFromBuffer(buffer,timeRange2,iChainNext, timeRange1[1]  - timeRange1[0] + 2);
-         }
+        }
 
     }
+
+
+    confs.update( {timeRange1}, {iChain,iChain});     
+    //std::cout << iChain <<  " " << accepted << " { " << timeRange1[0] << ", " << timeRange1[1] << "}" <<std::endl;
+
+
+         if(iChainNext != -1)
+        {
+            confs.update( timeRange2, {iChainNext,iChainNext});
+
+        
+        }
+
     return accepted;
 }
 
@@ -5244,7 +5266,6 @@ _maxReconstructedLength(maxAdvanceLength_+2),buffer((maxAdvanceLength_+2)*2,getD
     
 }
 
-
 bool moveHead::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG)
 {
     Real timeStep = S.getTimeStep();
@@ -5277,7 +5298,7 @@ bool moveHead::attemptMove(configurations_t & confs , firstOrderAction & S,rando
     auto & sPot = S.getPotentialAction();
 
     deltaS-=sPot.evaluate(confs,timeRange,iChain);
-
+    
     confs.copyDataToBuffer(buffer,{t0,iHead},iChain,0);
 
     // generates the head
@@ -5303,10 +5324,9 @@ bool moveHead::attemptMove(configurations_t & confs , firstOrderAction & S,rando
     
     // perform levy reconstruction on l beads
     _levy.apply(confs,{t0,iHead},iChain,S,randG);
-
+    confs.update( timeRange, {iChain,iChain} );
 
     bool accept =sPot.checkConstraints(confs,timeRange,iChain);
-
 
     if (accept)
     {
@@ -5320,7 +5340,6 @@ bool moveHead::attemptMove(configurations_t & confs , firstOrderAction & S,rando
 
     }
 
-    
     if ( accept)
     {
         
@@ -5328,6 +5347,8 @@ bool moveHead::attemptMove(configurations_t & confs , firstOrderAction & S,rando
     else
     {
         confs.copyDataFromBuffer(buffer,{t0,iHead},iChain,0);
+        confs.update( timeRange, {iChain,iChain} );
+
     }
 
     return accept;

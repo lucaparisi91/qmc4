@@ -19,12 +19,12 @@ namespace pimc
 class timeSliceGenerator
 {
     public:
-    timeSliceGenerator(){}
+    timeSliceGenerator() : uniformRealNumber(0,1){}
 
     std::array<int, 2> operator()(randomGenerator_t & randG, int nBeads, int maxBeadLength);
 
     private:
-    std::uniform_real_distribution<float> uniformRealNumber;
+    std::uniform_real_distribution<double> uniformRealNumber;
 }; 
 
 class move 

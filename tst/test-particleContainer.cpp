@@ -14,7 +14,6 @@
 
 namespace fs = std::filesystem;
 
-
 TEST( cell , basic)
 {
     int N=10;
@@ -319,7 +318,6 @@ TEST( particleDistances , basic)
 
     //std::cout  << "...distancesBuffer.." << std::endl;
 
-
     for (int t=0;t<nBeads;t++)
     {
         auto n1=distanceBuffer.getNDistances()[t];
@@ -357,11 +355,6 @@ TEST( gridded_evaluation, caoBerne )
 
 
 
-
-
-
-
-
 class caoBerneGridded : public ::testing::Test
 {
 protected:
@@ -388,6 +381,10 @@ protected:
     {
         beta=beta_;
     }
+    auto getNBeads() const {return nBeads; }
+
+
+
 
 
     void SetNCells( std::array<size_t,getDimensions()> nCells_)
@@ -447,7 +444,7 @@ protected:
     }
 
 
-    auto createConfigurations()
+    auto createConfigurations( randomGenerator_t & randG)
     {
         pimc::pimcConfigurations confs(nBeads,getDimensions(),{{0,N-1,N+1,1.0} });
 
@@ -455,6 +452,8 @@ protected:
 
         generateRandomMinimumDistance(  confs, scatteringLength,randG, createGeometry());
 
+
+        confs.fillHeads();
 
         auto lnk = createLinkedCellParticles();
         lnk->add(confs.dataTensor(),confs.getTags(),{0,nBeads-1},{0,N-1});
@@ -464,8 +463,6 @@ protected:
         confs.setAccelerationStructure(acc);
 
 
-
-        
         return confs;
     }
 
@@ -478,10 +475,13 @@ protected:
 
         meshKernel->setGeometry( createGeometry());
 
-        auto S = std::make_shared<pimc::actionTwoBodyMesh>();
-        S->setKernel(meshKernel);
+        auto SG = std::make_shared<pimc::actionTwoBodyMesh>();
+        SG->setKernel(meshKernel);
+        SG->setTimeStep(getTimeStep() );
+        SG->setGeometry( createGeometry() );
 
-        return S;
+        return SG;
+
     }
 
 
@@ -527,8 +527,36 @@ protected:
 
         auto sG = sTwoBodyCreator->create( j);
 
+        
         return sG;
     }
+
+    auto createAction( std::string kind)
+    {
+        std::shared_ptr<pimc::action> SG;
+        if (kind== "exact" )
+        {
+            SG = createPotentialAction(); 
+        }
+        else if (kind == "gridded")
+        {
+            SG = createGriddedPotentialAction();
+        }
+
+
+        std::shared_ptr<pimc::action> sT= std::make_shared<pimc::kineticAction>(getTimeStep(), N , getNBeads()  ,  createGeometry() );
+
+        auto S = std::make_shared<pimc::firstOrderAction> (sT,  SG);
+
+        return S;
+    }
+
+
+
+
+
+
+
 /* 
 
 
@@ -807,7 +835,11 @@ TEST_F( caoBerneGridded , grid_allocation)
     SetBox({L,L,L});
     SetNCells( {6 ,6 ,6 } );
     SetScatteringLength(0.01);
-    auto configurations = createConfigurations();
+
+    randomGenerator_t randG(567);
+
+    auto configurations = createConfigurations( randG );
+
     configurations.fillHeads();
     auto link = createLinkedCellParticles();
 
@@ -863,17 +895,27 @@ TEST_F( caoBerneGridded , evaluation)
     SetBox({L,L,L});
     SetNCells( {6 ,6 ,6 } );
     SetScatteringLength(0.01);
+    randomGenerator_t randG(567);
+    
 
-    auto configurations = createConfigurations();
+    auto configurations = createConfigurations(randG);
     configurations.fillHeads();
+
+
 
     auto SC = createPotentialAction();
     auto SG = createGriddedPotentialAction();
+
+
     int iParticle=10;
 
     auto sEv= SC->evaluate(configurations,{0,nBeads-1}, iParticle);
 
     auto sEvG= SG->evaluate(configurations, {0,nBeads-1}, iParticle);
+
+
+
+
 
     for(int t=0;t<nBeads;t++)
     {
@@ -887,6 +929,56 @@ TEST_F( caoBerneGridded , evaluation)
 
     ASSERT_NEAR(sEv,sEvG,TOL);
 
+    sEv= SC->evaluate(configurations);
+    sEvG= SG->evaluate(configurations);
+
+    ASSERT_NEAR(sEv,sEvG,TOL);
+
+    sEv= SC->evaluateTimeDerivative(configurations);
+    sEvG= SG->evaluateTimeDerivative(configurations);
+
+
+
+    ASSERT_NEAR(sEv,sEvG,TOL);
+
+    Eigen::Tensor<Real,3> force( N , getDimensions() ,nBeads + 1);
+    force.setConstant(0);
+    Eigen::Tensor<Real,3> force2( N , getDimensions() ,nBeads + 1);
+    force.setConstant(0);
+    force2.setConstant(0);
+
+    SC->addGradient(configurations,force);
+    SG->addGradient(configurations,force2);
+
+    for(int t=0;t<=nBeads;t++)
+    {
+        for(int i=0;i<N;i++)
+            {
+                for(int d=0;d<getDimensions();d++)
+                {
+                    ASSERT_NEAR( force(i,d,t),force2(i,d,t),TOL);
+                }
+            }
+    }
+
+
+    auto S1 = createAction("exact");
+    auto S2= createAction("gridded");
+
+    pimc::thermodynamicEnergyEstimator energyEstimator;
+    pimc::virialEnergyEstimator virialEnergy(N, getNBeads());
+
+
+    Real e1=energyEstimator(configurations,*S1);
+    Real e2=energyEstimator(configurations,*S2);
+
+    ASSERT_NEAR(e1,e2,TOL);
+    
+    Real eV1=virialEnergy(configurations,*S1);
+    Real eV2=virialEnergy(configurations,*S2);
+
+    ASSERT_NEAR(eV1,eV2,TOL);
+
 
     configurations.setHeadTail( iParticle, 8 , -1 );
 
@@ -895,16 +987,20 @@ TEST_F( caoBerneGridded , evaluation)
     sEvG= SG->evaluate(configurations, {0,nBeads-1}, iParticle);
 
     ASSERT_NEAR( sEv,sEvG,TOL);
-    
+
+    sEv= SC->evaluate(configurations);
+    sEvG= SC->evaluate(configurations);
+
+    ASSERT_NEAR(sEv,sEvG,TOL);
 
 };
-
 
 
 TEST_F( caoBerneGridded , update)
 {
     int N=500,nBeads=10; 
     Real L = 1;
+
 
     SetN(N);
     SetNBeads(nBeads);
@@ -914,11 +1010,13 @@ TEST_F( caoBerneGridded , update)
 
     SetScatteringLength(0.01);
 
-    auto configurations = createConfigurations();
+    randomGenerator_t randG(567);
+    auto configurations = createConfigurations(randG);
     configurations.fillHeads();
 
     auto SC = createPotentialAction();
     auto SG = createGriddedPotentialAction();
+
     int iParticle=10;
 
     auto sEv= SC->evaluate(configurations,{0,nBeads-1}, iParticle);
@@ -933,7 +1031,6 @@ TEST_F( caoBerneGridded , update)
     int t0=0;
     int t1=nBeads - 1;
     std::normal_distribution<Real> gauss(0,0.2);
-    std::default_random_engine randG(567);
 
     for (int t=t0;t<=t1;t++)
     {
@@ -955,4 +1052,58 @@ TEST_F( caoBerneGridded , update)
 };
 
 
+TEST_F( caoBerneGridded , moves)
+{
+    int N=20,nBeads=20; 
+    Real L = 4.940316131974357;
+    
+    SetN(N);
+    SetNBeads(nBeads);
+    SetBeta(2);
+    SetBox({L,L,L});
+    SetNCells( {3 ,3 ,3  } );
+    Real a=0.0844782175465501;
+    SetScatteringLength(a);
+    randomGenerator_t randG1(567);
+    randomGenerator_t randG2(567);
 
+    auto configurations1 = createConfigurations(randG1);
+    auto configurations2 = createConfigurations(randG2);
+
+    auto SC = createAction("exact");
+    auto SG = createAction("gridded");
+    int l =0.6*getNBeads();
+
+    pimc::levyMove levy1(l,0);
+    pimc::levyMove levy2(l,0);
+    
+
+    pimc::thermodynamicEnergyEstimator energyEstimator;
+    pimc::virialEnergyEstimator virialEnergy(N, getNBeads());
+
+    int nTrials=1000;
+    Real sum1=0,e1=0,eV1=0;
+    Real sum2=0,e2=0,eV2=0 ;
+    for(int iTrial=0;iTrial < nTrials ; iTrial ++ )
+    {
+        levy1.attemptMove(configurations1,*SC,randG1);
+        sum1= SC->getPotentialAction().evaluate(configurations1);
+        e1=energyEstimator(configurations1,*SC);
+        eV1=virialEnergy(configurations1,*SC);
+
+        levy2.attemptMove(configurations2,*SG,randG2);
+        configurations2.update({0,nBeads-1},{0,N-1});
+        sum2= SG->getPotentialAction().evaluate(configurations2);
+        e2=energyEstimator(configurations2,*SG);
+        eV2=virialEnergy(configurations2,*SG);
+
+        ASSERT_NEAR( sum1,sum2,TOL);
+
+        ASSERT_NEAR( e1,e2,TOL);
+        ASSERT_NEAR( eV1,eV2,TOL); 
+        
+    }
+
+
+
+}

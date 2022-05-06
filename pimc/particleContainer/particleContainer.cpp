@@ -68,15 +68,12 @@ nParticles(0)
         _lBoxInverse[d]=1/_lBox[d];
     }
 
-
     cells.resize(nCellsTotal);
-
 
     for ( size_t i=0;i<nCellsTotal;i++)
     {
         cells[i]=(new cell{});
     }
-
 
     for (int i=0;i<_nCells[0];i++)
         for (int j=0;j<_nCells[1];j++)
@@ -228,7 +225,7 @@ void linkedCellParticles::remove(  const range_t &  timeRange,const  range_t & p
     {
         for(int i=particleRange[0];i<=particleRange[1];i++)
         {
-            
+
             particles[t]->remove(i);
         }
     }

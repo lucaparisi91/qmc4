@@ -11,10 +11,13 @@
 #include "actionsConstructor.h"
 #include "actionOneBodyConstructor.h"
 #include "actionTwoBodyConstructor.h"
+#include "actionTwoBodyMeshConstructor.h"
+
 #include "propagators.h"
 #include <csignal>
 
 namespace fs = std::filesystem;
+
 
 namespace pimc
 {
@@ -129,6 +132,7 @@ doCheckPoint(false)
          
     }
 
+    
     // ------------------ build moves ------------------------------
 
     pimc::moveConstructor pimcMoveConstructor(nMaxParticles,nBeads);
@@ -239,6 +243,7 @@ void pimcDriver::run()
     actionsConstructor sC;
     sC.addConstructor("oneBody",sOneBodyC);
 
+    
     auto sTwoBodyCreator = std::make_shared< actionTwoBodyConstructor >() ;
 
     sTwoBodyCreator->setTimeStep(timeStep);
@@ -256,10 +261,19 @@ void pimcDriver::run()
     sC.addConstructor("twoBody",sTwoBodyCreator);
     sC.addConstructor("nullPotential",sNullC);
 
+
+    auto sM = std::make_shared<pimc::actionTwoBodyMeshConstructor>();
+
+
+    sM->setGeometry(geo);
+    sM->setTimeStep(timeStep);
+    sM->setNMaxParticles(nChains);
+    sM->setNBeads(nBeads);
+    sC.addConstructor("twoBodyMesh",sM);
+
     //sC.registerPotential<isotropicHarmonicPotential>();
     //sC.registerPotential<gaussianPotential>();
     
-
     std::shared_ptr<action> sV=
     std::make_shared<sumAction>(sC.createActions(j["action"])); 
 
@@ -277,7 +291,9 @@ void pimcDriver::run()
         nStart+=nMaxParticles[i];     
     }
 
+
     pimc::pimcConfigurations configurations(nBeads, getDimensions() , groups );
+
 
 
     if (currentEnsamble == ensamble_t::grandCanonical)
@@ -323,6 +339,7 @@ void pimcDriver::run()
 
     generateRandomMinimumDistance(  configurations, minimumDistance,randG,geo);
     configurations.fillHeads();
+
    
 
     if (not S.checkConstraints(configurations) )
@@ -334,6 +351,24 @@ void pimcDriver::run()
     if (loadCheckPoint )
     {
         configurations=pimc::pimcConfigurations::loadHDF5(checkPointFile);
+    }
+
+
+
+     if ( j.find("nCells") != j.end() )
+    {
+        
+        auto nCells = j["nCells"].get<std::array<size_t,getDimensions()> >();
+
+        auto lnk = std::make_shared<pimc::linkedCellParticles> ( nCells , std::array<Real,3>{ geo.getLBox(0), geo.getLBox(1),geo.getLBox(2)});    
+        lnk->setCapacity( nChains,nBeads);
+        const auto & group=configurations.getGroups()[0];
+        lnk->add(configurations.dataTensor(),configurations.getTags(),{0,nBeads-1},{group.iStart,group.iEnd});
+
+        auto acc = std::make_shared<pimc::linkedCellAccelerationStructure>(lnk);
+
+        configurations.setAccelerationStructure(acc);
+
     }
 
     
@@ -446,6 +481,11 @@ void pimcDriver::run()
         
     }
 
+
+
+
+
+
     // start the simulation
     std::cout << "Start." << std::endl << std::flush;
 
@@ -465,7 +505,7 @@ void pimcDriver::run()
             for (int j=0;(j<correlationSteps) & (!pimc_main_is_interrupted) ;j++)
             {
                 bool accepted=tab.attemptMove(configurations, S, randG);
-
+                
                 if (accepted)
                 {success+=1;}
             }

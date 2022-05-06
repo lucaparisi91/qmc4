@@ -1988,6 +1988,7 @@ void generateRandomMinimumDistance( pimcConfigurations & configurations, Real a,
 
 void linkedCellAccelerationStructure::update( const pimcConfigurations & confs,const range_t & range, const range_t & particleRange)
 {
+    
        if (confs.getEnsamble() == ensamble_t::canonical)
         {
             _acc->update(confs.dataTensor(),range,particleRange);

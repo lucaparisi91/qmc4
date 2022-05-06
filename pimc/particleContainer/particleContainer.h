@@ -51,10 +51,8 @@ class cell
 
     void swap( size_t ii , size_t jj  )
     {
-        for(int d=0;d<getDimensions();d++)
-        {
-            std::swap(_particleIndex[ii],_particleIndex[jj]);
-        }
+       
+        std::swap(_particleIndex[ii],_particleIndex[jj]);
     }
 
     void pop( ) { _nParticles-=1; }
@@ -145,17 +143,23 @@ class simpleCellNeighbourList
 
     void remove(  int iParticle)
     {
+
         if (not isParticleRemoved[iParticle] )
         {
+            
             auto I=cellIndexPerParticle[iParticle];
             auto II=subIndexPerParticle[iParticle];
-            cells[I]->swap( II, cells[I]->size()-1 );
-        
+            
+            
 
-        subIndexPerParticle[ cells[I]->indices()[II] ]=II;
-        cells[I]->pop();
-        isParticleRemoved[iParticle]=true;
-        nParticles-=1;
+            cells[I]->swap( II, cells[I]->size()-1 );
+
+            
+            subIndexPerParticle[ cells[I]->indices()[II] ]=II;
+            
+            cells[I]->pop();
+            isParticleRemoved[iParticle]=true;
+            nParticles-=1;
         }
 
     }
@@ -165,9 +169,9 @@ class simpleCellNeighbourList
     bool isRemoved( int iParticle) const
     {
         return isParticleRemoved[iParticle];
-
     }
-    
+
+
     void update(  size_t iParticle, Real x, Real y, Real z)
     {
         remove(iParticle);
@@ -237,7 +241,8 @@ class linkedCellParticles
     void setCapacity(size_t N, size_t M);
     void add( const Eigen::Tensor<Real,3> & data, const range_t &  timeRange,const  range_t & particleRange);
     void add( const Eigen::Tensor<Real,3> & data,const mask_t & mask, const range_t &  timeRange,const  range_t & particleRange);
-    
+
+
 
     void update( const Eigen::Tensor<Real,3> & data, const range_t &  timeRange,const  range_t & particleRange);
      void update( const Eigen::Tensor<Real,3> & data, const mask_t & mask, const range_t &  timeRange,const  range_t & particleRange);
