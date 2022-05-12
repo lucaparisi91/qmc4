@@ -346,7 +346,7 @@ int pimcConfigurations::pushChain( int iGroup)
 
 void pimcConfigurations::removeChain( int iChain)
 {
-        assert(iChain != -1 );
+    assert(iChain != -1 );
 
     auto & group=getModifiableGroupByChain(iChain);
 
@@ -358,14 +358,18 @@ void pimcConfigurations::removeChain( int iChain)
         throw invalidState("Cannot remove chain with no head or tail");
     }
 
-        swap(iChain,group.iEnd);
+    swap(iChain,group.iEnd);
     
-    
+    getAccelerationStructure().remove(*this,{0,nBeads() - 1},{ group.iEnd,group.iEnd } );
 
     deleteTailFromList(group.iEnd);
     deleteHeadFromList(group.iEnd);
 
+
+
     group.iEnd-=1;
+
+
     
 }
 
@@ -930,6 +934,10 @@ void pimcConfigurations::swap(int particleA, int particleB)
     {
         swapTags(particleA,particleB);
     }
+
+    getAccelerationStructure().update(*this,{0,nBeads() - 1},{ particleA, particleA } );
+    getAccelerationStructure().update(*this,{0,nBeads() - 1},{ particleB, particleB } );
+
 
 
 }
@@ -2003,6 +2011,28 @@ void linkedCellAccelerationStructure::update( const pimcConfigurations & confs,c
 }
 
 
+void linkedCellAccelerationStructure::add( const pimcConfigurations & confs,const range_t & range, const range_t & particleRange)
+{
+    
+       if (confs.getEnsamble() == ensamble_t::canonical)
+        {
+            _acc->add(confs.dataTensor(),range,particleRange);
+        }
+        else
+        {            
+            _acc->add(confs.dataTensor(),confs.getTags(),range,particleRange);
+
+
+        }
+    
+}
+
+void linkedCellAccelerationStructure::remove( const pimcConfigurations & confs,const range_t & range, const range_t & particleRange)
+{
+    
+    _acc->remove(range,particleRange);
+
+}
 
 
 

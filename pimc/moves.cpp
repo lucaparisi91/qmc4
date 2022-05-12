@@ -137,11 +137,8 @@ bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,rand
          {
             confs.copyDataFromBuffer(buffer,timeRange2,iChainNext, timeRange1[1]  - timeRange1[0] + 2);
         }
-
     }
-
-
-    confs.update( {timeRange1}, {iChain,iChain});     
+    confs.update( timeRange1, {iChain,iChain});     
     //std::cout << iChain <<  " " << accepted << " { " << timeRange1[0] << ", " << timeRange1[1] << "}" <<std::endl;
 
 
@@ -500,9 +497,7 @@ bool swapMove::attemptGrandCanonicalMove(configurations_t & confs, firstOrderAct
         if (iNewChainHead == -1)
         {
             return false;
-        }
-
-       
+        }       
        
     }
     else
@@ -537,9 +532,7 @@ bool swapMove::attemptGrandCanonicalMove(configurations_t & confs, firstOrderAct
             return false;
         }
    
-    }
-
-   
+    }   
 
     // metropolic test based on ratio of forward and backward move
     Real weightBackwardMove= 0;
@@ -604,11 +597,16 @@ bool swapMove::attemptGrandCanonicalMove(configurations_t & confs, firstOrderAct
     bool accept= Spot.checkConstraints(confs,{tHead,std::min(tHead + l ,M) -1},iChainHead);
     accept= accept and Spot.checkConstraints(confs,{0,tHead + l - M  - 1},iPartner);
 
+
+    confs.update({tHead,std::min(tHead + l ,M) -1},{iChainHead,iChainHead});
+    confs.update({0,tHead + l - M  - 1},{iPartner,iPartner});
+    confs.update({tHead, M  - 1},{iNewChainHead,iNewChainHead});
+
+
     if (accept)
     {
         deltaS+=Spot.evaluate(confs,{tHead,std::min(tHead + l ,M) -1},iChainHead);
         deltaS+=Spot.evaluate(confs,{0,tHead + l - M  - 1},iPartner);
-
         accept = metropolisSampler.acceptLog(-deltaS,randG);
     }
 
@@ -619,6 +617,7 @@ bool swapMove::attemptGrandCanonicalMove(configurations_t & confs, firstOrderAct
         {
             confs.join(iChainHead,iPartner );
             confs.translateData({tJoin + 1 , M}, {iPartner,iPartner},delta);
+            confs.update({tJoin + 1 , M-1}, {iPartner,iPartner} );
         }
         else
         {
@@ -626,6 +625,10 @@ bool swapMove::attemptGrandCanonicalMove(configurations_t & confs, firstOrderAct
             confs.translateData({tJoin + 1 , M}, {iChainHead,iChainHead},delta);
             confs.setHead(iChainHead,M);
             confs.join(iChainHead,iPartnerNext);
+
+            confs.update({tJoin + 1 , M-1}, {iChainHead,iChainHead} );
+            confs.update({tJoin + 1 , M-1}, {iChainHead,iChainHead} );
+
         }
         assert( confs.getGroups()[getSet()].heads[0] == iNewChainHead);
         assert( confs.getGroups()[getSet()].heads.size() == 1);
@@ -636,7 +639,8 @@ bool swapMove::attemptGrandCanonicalMove(configurations_t & confs, firstOrderAct
     {
         confs.copyDataFromBuffer(buffer,{0,tHead + l - M  },iPartner);
         confs.setHead( iChainHead , tHead );
-        confs.setHead( iNewChainHead , M );
+        confs.setHead( iNewChainHead , M - 1 );
+
 
         if (tHead + l >= M)
         {
@@ -646,6 +650,11 @@ bool swapMove::attemptGrandCanonicalMove(configurations_t & confs, firstOrderAct
         {
             confs.join(iNewChainHead,iPartnerNext);
         }
+
+
+        confs.update({tHead,std::min(tHead + l ,M) -1},{iChainHead,iChainHead});
+        confs.update({0,tHead + l - M  - 1},{iPartner,iPartner});
+        confs.update({tHead, M  - 1},{iNewChainHead,iNewChainHead});
 
         #ifndef NDEBUG
         TESTCHAIN(confs,iChainHead,tHead,tTail);
@@ -931,16 +940,12 @@ twoSetMove(setA,setB)
 
 bool semiOpenMove::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG)
 {
-
     _levy.setReconstructorBoundaries(chainBoundary::fixed,chainBoundary::free);
 
     if (confs.isOpen( getSetA()    ) or confs.isOpen( getSetB()    )     )
     {
         return false;
     }
-
-
-
 
     Real timeStep = S.getTimeStep();
 
@@ -967,7 +972,6 @@ bool semiOpenMove::attemptMove(configurations_t & confs , firstOrderAction & S,r
 
     int l = _maxLength;
 
-
     if (setLengthCutRandom)
     {
         l = std::floor(uniformRealNumber(randG) * (_maxLength   ) ) + 1;
@@ -993,7 +997,7 @@ bool semiOpenMove::attemptMove(configurations_t & confs , firstOrderAction & S,r
     auto & sPot = S.getPotentialAction();
 
     deltaS-=sPot.evaluate(confs,timeRange,iChain);
-
+    
     // comput deltaS on the next chain ( if tTail overflows to the next chain)
 
     int t1_2=M;
@@ -1063,12 +1067,12 @@ bool semiOpenMove::attemptMove(configurations_t & confs , firstOrderAction & S,r
 
     }
 
-    
+
+    confs.update( timeRange , {iChain,iChain} );
 
     if (tHead - l < 0)
     {
-       
-
+        confs.update( timeRange2 , {iChainPrev,iChainPrev} );
         deltaS+=sPot.evaluate(confs,timeRange2,iChainPrev);
     }
 
@@ -1093,21 +1097,29 @@ bool semiOpenMove::attemptMove(configurations_t & confs , firstOrderAction & S,r
         confs.join(iChainPrev,iChainHead);
         confs.setTail(iChain,tHead-1);
 
+
         confs.copyData({0,tHead}  , iChain, iChainHead  );
 
         for(int d=0;d<getDimensions();d++)
         {
             data(iChain,d,tHead)=headPosition[d];
         }
+
+        confs.update( {0,tHead} ,{ iChainHead,iChainHead} );
+        confs.update( {0,tHead} ,{iChain,iChain } );
+
     }
     else
     {
+
         confs.copyDataFromBuffer(buffer,{timeRange[0], timeRange[1]+1 },iChain,0);
         if (tHead - l < 0)
         {
             confs.copyDataFromBuffer( buffer,{timeRange2[0], timeRange2[1]+1 },iChainPrev, timeRange[1]-timeRange[0] + 2);
         }
-        
+
+        confs.update( timeRange ,{ iChain,iChain} );
+        confs.update( timeRange2 ,{ iChainPrev,iChainPrev} );
     }
 
     return accept;
@@ -1324,8 +1336,11 @@ bool semiCloseMove::attemptMove(configurations_t & confs , firstOrderAction & S,
 
     if (tHead - l < 0)
     {
+        confs.update(timeRange2,{iChainPrev,iChainPrev});
+
         deltaS+=sPot.evaluate(confs,timeRange2,iChainPrev);
     }
+    confs.update(timeRange,{iChainHead,iChainHead});
 
     deltaS+=sPot.evaluate(confs,timeRange,iChainHead);
     
@@ -1341,7 +1356,10 @@ bool semiCloseMove::attemptMove(configurations_t & confs , firstOrderAction & S,
         confs.setTail(iChainTail,-1);
         confs.join(iChainPrev,iChainTail);
         confs.translateData({0,tHead},{iChainTail,iChainTail},windingTailHead);
-        confs.removeChain(iChainHead);
+        confs.update({0,tHead},{iChainTail , iChainTail});
+        
+        confs.removeChain(iChainHead);        
+
     }
     else
     {
@@ -1352,6 +1370,10 @@ bool semiCloseMove::attemptMove(configurations_t & confs , firstOrderAction & S,
             confs.copyDataFromBuffer(buffer,{timeRange2[0], timeRange2[1]+1 },iChainPrev, timeRange[1]-timeRange[0] + 2);
             
         }
+
+        confs.update(timeRange,{iChainHead , iChainHead});
+        confs.update(timeRange2,{iChainPrev , iChainPrev});
+
     }
 
     return accept;
@@ -1963,8 +1985,16 @@ bool translateMove::attemptMove(configurations_t & confs , firstOrderAction & S,
 
         iSeq++; 
     }
-    
+
+
     bool accept=true;
+    for (auto iCurrentChain : chainsInThePolimer)
+    {
+        confs.update( timeRange , {iCurrentChain,iCurrentChain} );
+    }
+
+
+    
     for (auto iCurrentChain : chainsInThePolimer)
      {
         accept=  S.checkConstraints(confs,timeRange,{iCurrentChain,iCurrentChain});
@@ -1998,6 +2028,12 @@ bool translateMove::attemptMove(configurations_t & confs , firstOrderAction & S,
           confs.copyDataFromBuffer(buffer,{0,confs.nBeads()},iCurrentChain,iSeq*(confs.nBeads()+1));
           iSeq++;
         }
+
+        for (auto iCurrentChain : chainsInThePolimer)
+        {
+            confs.update( timeRange , {iCurrentChain,iCurrentChain} );
+        }
+
     }
 
     return accept;
@@ -5467,6 +5503,10 @@ bool moveTail::attemptMove(configurations_t & confs , firstOrderAction & S,rando
     bool accept = sPot.checkConstraints(confs,timeRange,iChain);
     accept=accept and sPot.checkConstraints(confs,timeRange2,iChain2);
 
+    confs.update( timeRange, {iChain,iChain} );
+    confs.update( timeRange2, {iChain2,iChain2} );
+
+
     if (accept)
     {
         // evaluates the action
@@ -5493,7 +5533,12 @@ bool moveTail::attemptMove(configurations_t & confs , firstOrderAction & S,rando
             confs.copyDataFromBuffer(buffer,{timeRange2[0], timeRange2[1] + 1 },iChain2, len1    );
         }
 
+        confs.update( timeRange, {iChain,iChain} );
+        confs.update( timeRange2, {iChain2,iChain2} );
+
     }
+
+   
 
     return accept;
 

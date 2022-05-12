@@ -25,6 +25,10 @@ struct accelerationStructure
     virtual const linkedCellParticles & getLinkedCellList() const { throw std::runtime_error("No linked Cell List has been defined") ; }
 
 
+    virtual void add(const pimcConfigurations & confs,const range_t & range, const range_t & particleRange ) {};
+    virtual void remove(const pimcConfigurations & confs,const range_t & range, const range_t & particleRange ) {};
+    
+
     private:
 
 
@@ -37,6 +41,9 @@ struct linkedCellAccelerationStructure : public accelerationStructure
     linkedCellAccelerationStructure(    std::shared_ptr<linkedCellParticles>  acc ) : _acc(acc) {} ;
 
     virtual void update(const pimcConfigurations & confs,const range_t & range, const range_t & particleRange ) override;
+    virtual void add(const pimcConfigurations & confs,const range_t & range, const range_t & particleRange ) override;
+    virtual void remove(const pimcConfigurations & confs,const range_t & range, const range_t & particleRange ) override;
+
 
     virtual const linkedCellParticles & getLinkedCellList() const override {
         return *_acc;
