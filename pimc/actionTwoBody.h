@@ -54,7 +54,6 @@ struct twoBodyEvaluationPolicy
     void setSets(const std::array<int,2> & sets){
         _setA=sets[0];
         _setB=sets[0];
-
         
     }
     private:

@@ -91,13 +91,14 @@ namespace pimc
         Real evaluateTimeDerivative(const Eigen::Tensor<Real,getDimensions()> & tn, const linkedCellParticles & particles,const std::array<int,2> & timeRange, const range_t & particleRange )
         {
             
-            disBuffer.buildDistanceList(tn,particles,_geo,{timeRange[0],timeRange[1] },particleRange);
+           disBuffer.buildDistanceList(tn,particles,_geo,{timeRange[0],timeRange[1] },particleRange);
 
             const auto & buffer = disBuffer.getBufferDistances();
             const auto & bufferOff =  disBuffer.getBufferDistancesOffset() ;
             const auto & nDistances = disBuffer.getNDistances();
 
             Real sum=0;
+
             for (int t=timeRange[0];t<=timeRange[1];t++)
             {
                 for(int k=0;k<nDistances[t];k++)

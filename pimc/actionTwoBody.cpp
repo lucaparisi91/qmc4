@@ -262,9 +262,9 @@ Real actionTwoBody::evaluateTimeDerivative(const configurations_t & configuratio
         {
              auto range=intersectRanges(particleRange, groupA.range());
 
+            
             sum+=evaluationPolicy->evaluateTimeDerivativeTriangular(configurations , timeRange, range , groupA.range() );
-            sum+=evaluationPolicy->evaluateTimeDerivativeRectangular(configurations , timeRange, {range[1]+1,groupA.range()[1]} , range );
-
+            sum+=evaluationPolicy->evaluateTimeDerivativeRectangular(configurations , timeRange, {range[1]+1,groupA.range()[1]} , range );                
         }
         else
         {

@@ -7,11 +7,13 @@
 #include "pairProductMeshKernel.h"
 #include "pimcConfigurations.h"
 
+
 namespace pimc
 {
     struct actionTwoBodyMesh : public action
     {
         public:
+
         using geometry_t = geometryPBC_PIMC;
 
         actionTwoBodyMesh() {};

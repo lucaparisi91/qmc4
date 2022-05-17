@@ -44,6 +44,7 @@ auto wrap( int index, int N)
     return index;
 };
 
+
 auto nDisplacement( int index , int N )
 {
     if (index<0) return +1;

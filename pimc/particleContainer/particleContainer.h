@@ -192,6 +192,16 @@ class simpleCellNeighbourList
 
     const auto & getNCells() const {return _nCells;}
 
+    const auto getParticleSubIndex(int i) const {return subIndexPerParticle[ i] ;}
+
+    const auto &  getLBox() const  {return _lBox;}
+    const auto &  getLeft() const  {return _left;}
+    const auto &  getRight() const  {return _right;}
+
+    const auto &  getCellLength() const  {return _delta;}
+
+
+
     private:
  
     inline int index(int iX, int iY, int iZ) const {return  _nCells[0]*( iZ* _nCells[1] + iY )  + iX  ;} // transform a 3d index in a 1d intex
@@ -204,6 +214,7 @@ class simpleCellNeighbourList
     inline int index(const std::array<int,3> & im) const {return index(im[0],im[1],im[2]);}
 
 
+    
 
     // subdivision properties
 
@@ -217,7 +228,6 @@ class simpleCellNeighbourList
 
     // cell data
     std::vector< cell* > cells; 
-
 
     // per particle data
     std::vector< size_t > cellIndexPerParticle;

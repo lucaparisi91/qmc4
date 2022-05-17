@@ -2,7 +2,7 @@
 
 namespace pimc
 {
-    
+        
 Real kineticAction::evaluate( const pimcConfigurations_t & configurations , std::array<int,2> timeRange , std::array<int,2> particleRange  )
 {
     const auto & data = configurations.dataTensor();

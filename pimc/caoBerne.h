@@ -284,6 +284,7 @@ namespace pimc
     Real a;
     };
 
+
   class caoBernePropagatorTruncated
     {
         

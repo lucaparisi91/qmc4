@@ -159,7 +159,6 @@ swapMove::swapMove(int maxStepLength_,int maxN,int set) :
     setRandomLength();
 }
 
-
 bool swapMove::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG )
 {
     if ( confs.getEnsamble() == ensamble_t::canonical)
@@ -381,7 +380,7 @@ bool swapMove::attemptTestMove(configurations_t & confs, firstOrderAction & S,ra
         confs.setHead( iChainHead , tHead );
         confs.setHead( iNewChainHead , M );
         confs.join(iNewChainHead,iPartner);
-
+        
      }
 
     return accept; 
@@ -392,29 +391,12 @@ bool swapMove::attemptTestMove(configurations_t & confs, firstOrderAction & S,ra
 bool swapMove::attemptGrandCanonicalMove(configurations_t & confs, firstOrderAction & S,randomGenerator_t & randG)
 {
 
-
-    std::array<int,2> minN { 32, 31};
-    std::array<int,2> maxN { 33, 32};
-
-    bool ok=true;
-    {
-        int _n=nParticlesOnClose(  confs, getSet() );
-
-        if ( ( (_n < minN[getSet()] ) or (_n > maxN[getSet()]  ) )  and confs.getGroups()[0].isOpen() and confs.getGroups()[1].isOpen() )
-        {
-            ok=false;
-        }
-
-    }
-
-
-
     if ( ! confs.isOpen(getSet()) )
     {
         throw invalidState("Swap move can only be done in the G sector.");
     }
 
-     auto & data = confs.dataTensor();
+    auto & data = confs.dataTensor();
     // selects an head at random
 
     const auto & group = confs.getGroups()[getSet()];
@@ -590,13 +572,13 @@ bool swapMove::attemptGrandCanonicalMove(configurations_t & confs, firstOrderAct
     
     _levy.apply(confs,  {tHead,tHead + l },  iChainHead, S ,randG );
     confs.copyData( { M, tHead + l} , iChainHead, 0,iPartner );
-    
+
     confs.setHead( iChainHead , std::min(tHead + l,M) );
     confs.setHead(iNewChainHead,tHead);
 
+
     bool accept= Spot.checkConstraints(confs,{tHead,std::min(tHead + l ,M) -1},iChainHead);
     accept= accept and Spot.checkConstraints(confs,{0,tHead + l - M  - 1},iPartner);
-
 
     confs.update({tHead,std::min(tHead + l ,M) -1},{iChainHead,iChainHead});
     confs.update({0,tHead + l - M  - 1},{iPartner,iPartner});
@@ -610,7 +592,6 @@ bool swapMove::attemptGrandCanonicalMove(configurations_t & confs, firstOrderAct
         accept = metropolisSampler.acceptLog(-deltaS,randG);
     }
 
-    ;
     if (accept) 
     {
         if (tHead + l >=M )
@@ -626,8 +607,7 @@ bool swapMove::attemptGrandCanonicalMove(configurations_t & confs, firstOrderAct
             confs.setHead(iChainHead,M);
             confs.join(iChainHead,iPartnerNext);
 
-            confs.update({tJoin + 1 , M-1}, {iChainHead,iChainHead} );
-            confs.update({tJoin + 1 , M-1}, {iChainHead,iChainHead} );
+            confs.update({tJoin , M-1}, {iChainHead,iChainHead} );
 
         }
         assert( confs.getGroups()[getSet()].heads[0] == iNewChainHead);
@@ -639,8 +619,8 @@ bool swapMove::attemptGrandCanonicalMove(configurations_t & confs, firstOrderAct
     {
         confs.copyDataFromBuffer(buffer,{0,tHead + l - M  },iPartner);
         confs.setHead( iChainHead , tHead );
-        confs.setHead( iNewChainHead , M - 1 );
-
+        confs.setHead( iNewChainHead , M );
+        
 
         if (tHead + l >= M)
         {
@@ -671,17 +651,7 @@ bool swapMove::attemptGrandCanonicalMove(configurations_t & confs, firstOrderAct
    
 
 
-    ok=true;
-    {
-        int _n=nParticlesOnClose(  confs, getSet() );
-
-        if ( (_n < minN[getSet()] ) or (_n > maxN[getSet()]  ) )
-        {
-            ok=false;
-        }
-
-    }
-
+    
 
     return accept;
 }
@@ -934,26 +904,26 @@ startingBead(-1),
 lengthCut(-1),
 startingChain(-1),
 setStartingChainRandom(true),
-twoSetMove(setA,setB)
+_setB(setB),
+singleSetMove(setA)
 {}
-
 
 bool semiOpenMove::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG)
 {
     _levy.setReconstructorBoundaries(chainBoundary::fixed,chainBoundary::free);
 
-    if (confs.isOpen( getSetA()    ) or confs.isOpen( getSetB()    )     )
+    if (confs.isOpen( getSet()    ) or ( ( getSetB() != -1 ) and  ( confs.isOpen( getSetB() ) )     ) )
     {
         return false;
     }
 
     Real timeStep = S.getTimeStep();
 
-    int N = confs.nParticles(getSetA());
+    int N = confs.nParticles(getSet());
 
     const auto & geo = S.getGeometry();
 
-    if ( confs.isOpen(getSetA()) )
+    if ( confs.isOpen(getSet()) )
     {
         throw invalidState("The configuration is already open.");
     }
@@ -962,7 +932,7 @@ bool semiOpenMove::attemptMove(configurations_t & confs , firstOrderAction & S,r
 
     if (setStartingChainRandom)
     {
-        iChain = confsSampler.sampleChain(confs,getSetA(),randG);
+        iChain = confsSampler.sampleChain(confs,getSet(),randG);
     }
 
     if (iChain < 0)
@@ -1082,21 +1052,17 @@ bool semiOpenMove::attemptMove(configurations_t & confs , firstOrderAction & S,r
     
     auto propRatio = -deltaS - freeParticleLogProbability(difference,S.getTimeStep()*l,mass)  + log( openCloseRatioCoefficient(N,M) );
 
-
-
     bool accept = sampler.acceptLog(propRatio,randG);
 
 
-
-    if ( accept)
+    if ( accept )
     {
-        int iChainHead=confs.pushChain(getSetA() );
-        
+        int iChainHead=confs.pushChain(getSet() );
+
         confs.setHeadTail(iChainHead,tHead,-1);
 
         confs.join(iChainPrev,iChainHead);
         confs.setTail(iChain,tHead-1);
-
 
         confs.copyData({0,tHead}  , iChain, iChainHead  );
 
@@ -1204,34 +1170,35 @@ startingBead(-1),
 length(-1),
 startingChain(-1),
 setStartingChainRandom(true),
-twoSetMove(setA,setB)
-{}
+singleSetMove(setA),
+_setB(setB)
+{
+
+}
+
 
 bool semiCloseMove::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG)
 {
 
     _levy.setReconstructorBoundaries(chainBoundary::fixed,chainBoundary::fixed);
-
+    
 
     Real timeStep = S.getTimeStep();
 
-    int NA = confs.nParticles(getSetA());
+
+    int NA = confs.nParticles( getSet() );
 
 
     const auto & geo = S.getGeometry();
 
-    if ( not confs.isOpen(getSetA()) )
-    {
-        throw invalidState("The configuration is already closed.");
-    }
 
-    if ( confs.isOpen(getSetB()) )
+
+    if (    (not confs.isOpen( getSet()    ) ) or ( ( getSetB() != -1 ) and  ( confs.isOpen( getSetB() ) )     ) )
     {
         return false;
     }
 
-
-    const auto & group =confs.getGroups()[ getSetA() ];
+    const auto & group =confs.getGroups()[ getSet() ];
     auto iChainHead=group.heads[0];
     auto iChainTail=group.tails[0];
 
@@ -4411,7 +4378,6 @@ _maxAdvanceLength(maxAdvanceLength_) , _levy((maxAdvanceLength_+2)),gauss(0,1),u
 {
     setRandomLength();
     restriction=NULL;
-    
 
 }
 

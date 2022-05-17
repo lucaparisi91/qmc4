@@ -1956,7 +1956,7 @@ void generateRandomMinimumDistance( pimcConfigurations & configurations, Real a,
     for(int iGroup=0;iGroup<groups.size();iGroup++)
         for (int t=0;t<=configurations.nBeads();t++)
             {
-                for (int i=groups[iGroup].iStart;i<=groups[iGroup].iEnd;i++)
+                for (int i=groups[iGroup].iStart;i<=groups[iGroup].iEndExtended;i++)
                 {
                     bool accepted=true;
                     do 
@@ -1996,14 +1996,16 @@ void generateRandomMinimumDistance( pimcConfigurations & configurations, Real a,
 
 void linkedCellAccelerationStructure::update( const pimcConfigurations & confs,const range_t & range, const range_t & particleRange)
 {
-    
-       if (confs.getEnsamble() == ensamble_t::canonical)
+    const auto & group = confs.getGroups()[0];
+    range_t particleRange2{ std::max(group.iStart,particleRange[0]),std::min( group.iEnd,particleRange[1] ) } ;
+
+    if (confs.getEnsamble() == ensamble_t::canonical)
         {
-            _acc->update(confs.dataTensor(),range,particleRange);
+            _acc->update(confs.dataTensor(),range,particleRange2);
         }
         else
-        {            
-            _acc->update(confs.dataTensor(),confs.getTags(),range,particleRange);
+        {    
+            _acc->update(confs.dataTensor(),confs.getTags(),range,particleRange2);
 
 
         }

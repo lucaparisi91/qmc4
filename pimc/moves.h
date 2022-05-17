@@ -61,11 +61,10 @@ class twoSetMove : public move
 {
     public:
     twoSetMove(int setA, int setB) : move({setA }),_setB(setB){}
-    twoSetMove(const json_t & j) : twoSetMove::twoSetMove(j["setA"].get<int>() ,j["setB"].get<int>() ){}
-    
+    twoSetMove(const json_t & j) : twoSetMove::twoSetMove(j["setA"].get<int>() ,j["setB"].get<int>() ){}    
+
 
     virtual bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG)=0;
-
 
     int getSetA() const  {return getSets()[0];}
 
@@ -76,11 +75,9 @@ class twoSetMove : public move
 
     private:
     configurationsSampler _chainSampler;
-
     int _setB;
+
 };
-
-
 
 
 
@@ -255,7 +252,7 @@ class openMove : public singleSetMove
     int startingChain;
 };
 
-class semiOpenMove : public twoSetMove
+class semiOpenMove : public singleSetMove
 {
     public:
     // splits a chain in two morms with one overlapping bead
@@ -268,10 +265,10 @@ class semiOpenMove : public twoSetMove
 
     void setStartingChain(int m){setStartingChainRandom=false; startingChain=m;assert(m>=0);};
 
-
     bool attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG);
+    auto getSetB() const  {return _setB;}
+    void  setSetB( int setB) { _setB=setB;}
 
-    
     private:
 
     Real openCloseRatioCoefficient(int N,int M);
@@ -286,6 +283,7 @@ class semiOpenMove : public twoSetMove
     levyReconstructor _levy;
     metropolis sampler;
     int length;
+    int _setB;
 
     Eigen::Tensor<Real,2> buffer;
 
@@ -510,10 +508,10 @@ class removeWormSemiCanonicalMove : public twoSetMove
 };
 
 
-class semiCloseMove : public twoSetMove
+class semiCloseMove : public singleSetMove
 {
     public:
-    // splits a chain in two morms with one overlapping bead
+    // splits a chain in two worms with one overlapping bead
     semiCloseMove(Real C , int setA , int setB, int maxLength_=1 ) ;
 
     semiCloseMove(const json_t & j) : semiCloseMove(j["C"].get<Real>() ,j["setA"].get<int>() ,j["setB"].get<int>(),j["reconstructionMaxLength"].get<int>() ) {}
@@ -527,6 +525,9 @@ class semiCloseMove : public twoSetMove
 
     void setStartingChain(int m){setStartingChainRandom=false; startingChain=m;assert(m>=0);};
     
+    auto getSetB() const {return _setB;}
+    void setSetB( int set_) {_setB=set_;}
+
     
     private:
 
@@ -551,7 +552,7 @@ class semiCloseMove : public twoSetMove
     bool setLengthRandom;
     bool setStartingChainRandom;
     int _maxLength;
-
+    int _setB;
 };
 
 
@@ -898,7 +899,6 @@ class deleteWorm : public singleSetMove
 
 };
 
-
 class closeMove : public singleSetMove
 {
     public:
@@ -912,8 +912,8 @@ class closeMove : public singleSetMove
     bool attemptGrandCanonicalMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG);
 
     bool attemptSemiGrandCanonicalMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG);
-    
 
+    
 
 
     closeMove(const json_t & j) : closeMove(j["C"].get<Real>() , j["set"].get<int>(),j["reconstructionMaxLength"].get<int>()   ) {}

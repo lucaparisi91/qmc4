@@ -12,6 +12,7 @@
 #include "testConfigurations.h"
 #include "../pimc/actionTwoBodyMesh.h"
 
+
 namespace fs = std::filesystem;
 
 TEST( cell , basic)
@@ -97,6 +98,7 @@ TEST( simpleCellNeighbourList , basic)
     pimc::cell cell{};
     cell.setCapacity( N );
     
+
     std::array<Real,getDimensions() > lBox { 1 , 1 , 1};
 
     Eigen::Tensor<Real , 2 > positions( N, getDimensions() );
@@ -141,13 +143,9 @@ TEST( simpleCellNeighbourList , basic)
 
     ASSERT_EQ(updatedCell.indices()[0],0);
 
-
-
-    
-
-
     linkedCells.remove(0);
     ASSERT_EQ(updatedCell.size(),0);
+
 
     const auto & neighbours=updatedCell.neighbours();
 
@@ -384,9 +382,6 @@ protected:
     auto getNBeads() const {return nBeads; }
 
 
-
-
-
     void SetNCells( std::array<size_t,getDimensions()> nCells_)
     {
         nCells=nCells_;
@@ -413,14 +408,12 @@ protected:
         nBeads=M;
     }
 
-
     void SetNBurnsIn( int M)
     {
         nBurnsIn=M;
     }
 
-   
-    
+
 
     auto getTimeStep()
     {
@@ -434,15 +427,12 @@ protected:
     }
 
 
-    
-
     auto createLinkedCellParticles()
     {
         auto linkedCellList=std::make_shared<pimc::linkedCellParticles> ( nCells, lBox);    
-        linkedCellList->setCapacity(N,nBeads);
+        linkedCellList->setCapacity(N+2,nBeads);
         return linkedCellList;
     }
-
 
     auto createConfigurations( randomGenerator_t & randG)
     {
@@ -1052,7 +1042,83 @@ TEST_F( caoBerneGridded , update)
 };
 
 
-TEST_F( caoBerneGridded , moves)
+bool testUpdated( const pimc::configurations_t & confs)
+{
+    const auto & acc = confs.getAccelerationStructure().getLinkedCellList();
+
+    const auto & data = confs.dataTensor();
+    const auto & mask = confs.getTags();
+    auto M = confs.nBeads();
+
+    auto & group=confs.getGroups()[0];
+    
+    
+        for(int t=0;t<=M;t++ )
+        {
+            auto & lnk = acc[t];
+            const auto & L = lnk.getLBox();
+
+            for(int i=group.iStart;i<=group.iEnd;i++)
+            {
+
+                if ( mask(i,t) != 0 )
+                {
+                    if (lnk.isRemoved(i) )
+                    {
+                        return false;
+                    }
+
+                    const auto & cell = lnk.getParticleCell(i);
+                    int ii=lnk.getParticleSubIndex(i);
+
+                    if ( cell.indices()[ii] != i)
+                        {
+                            return false;
+                        }
+                    
+                    std::array<int,getDimensions()> index;
+                    for (int d=0;d<getDimensions();d++)
+                    {
+                        auto x=pimc::pbc( data(i,d,t),L[0], 1./L[0]);
+                        auto i = std::floor( (x - lnk.getLeft()[d] )/lnk.getCellLength()[d] );
+
+                        if ( cell.getCellIndex()[d] != i )
+                        {
+                            return false;
+                        }
+                    }
+
+                }
+                else
+                {
+                    if ( not lnk.isRemoved(i) )
+                    {
+                        return false;
+                    }
+
+                }
+            }
+    
+
+        for(int i=group.iEnd+1;i<=group.iEndExtended;i++)
+        {
+            if (not lnk.isRemoved(i) )
+            {
+                return false;
+            }
+        }
+
+
+        }
+
+    return true;
+
+}
+
+
+
+
+TEST_F( caoBerneGridded , levy_translate)
 {
     int N=20,nBeads=20; 
     Real L = 4.940316131974357;
@@ -1077,6 +1143,35 @@ TEST_F( caoBerneGridded , moves)
     pimc::levyMove levy1(l,0);
     pimc::levyMove levy2(l,0);
     
+    pimc::translateMove translate1( L*0.1, (N+2)*nBeads , 0 );
+    pimc::translateMove translate2( L*0.1, (N+2)*nBeads , 0 );
+
+    pimc::tableMoves tab1,tab2;
+    tab1.push_back( &levy1,0.9,pimc::sector_t::diagonal);
+    tab2.push_back( &levy2,0.9,pimc::sector_t::diagonal);
+
+    //tab1.push_back( &translate1,0.1,pimc::sector_t::diagonal);
+    //tab2.push_back( &translate2,0.1,pimc::sector_t::diagonal);
+
+    tab1.push_back( &levy1,0.9,pimc::sector_t::offDiagonal);
+    tab2.push_back( &levy2,0.9,pimc::sector_t::offDiagonal);
+
+    
+    //tab1.push_back( &translate1,0.1,pimc::sector_t::offDiagonal);
+    //tab2.push_back( &translate2,0.1,pimc::sector_t::offDiagonal);
+
+    /* configurations1.setHeadTail(0,nBeads,-1);
+    configurations1.setHeadTail(1,8,-1);
+    configurations1.join(0,1);
+
+    configurations2.setHeadTail(0,nBeads,-1);
+    configurations2.setHeadTail(1,8,-1);
+    configurations2.join(0,1); */
+
+
+    configurations1.update({0,nBeads-1},{0,N-1});
+    configurations2.update({0,nBeads-1},{0,N-1});
+
 
     pimc::thermodynamicEnergyEstimator energyEstimator;
     pimc::virialEnergyEstimator virialEnergy(N, getNBeads());
@@ -1086,24 +1181,210 @@ TEST_F( caoBerneGridded , moves)
     Real sum2=0,e2=0,eV2=0 ;
     for(int iTrial=0;iTrial < nTrials ; iTrial ++ )
     {
+
         levy1.attemptMove(configurations1,*SC,randG1);
         sum1= SC->getPotentialAction().evaluate(configurations1);
-        e1=energyEstimator(configurations1,*SC);
-        eV1=virialEnergy(configurations1,*SC);
+
+        if ( not configurations1.isOpen(0) )
+        {
+            e1=energyEstimator(configurations1,*SC);
+            eV1=virialEnergy(configurations1,*SC);
+        }
+        
 
         levy2.attemptMove(configurations2,*SG,randG2);
-        configurations2.update({0,nBeads-1},{0,N-1});
+        //configurations2.update({0,nBeads-1},{0,N-1});
         sum2= SG->getPotentialAction().evaluate(configurations2);
-        e2=energyEstimator(configurations2,*SG);
-        eV2=virialEnergy(configurations2,*SG);
 
         ASSERT_NEAR( sum1,sum2,TOL);
 
-        ASSERT_NEAR( e1,e2,TOL);
-        ASSERT_NEAR( eV1,eV2,TOL); 
+        if ( not configurations2.isOpen(0) )
+        {
+            e2=energyEstimator(configurations2,*SG);
+            eV2=virialEnergy(configurations2,*SG);
+            ASSERT_NEAR( eV1,eV2,TOL); 
+            ASSERT_NEAR( e1,e2,TOL);
+        }
         
     }
 
 
 
+
+
 }
+
+
+TEST_F( caoBerneGridded , updates)
+{
+    int N=20,nBeads=20; 
+    Real L = 4.940316131974357;
+    
+    SetN(N);
+    SetNBeads(nBeads);
+    SetBeta(2);
+    SetBox({L,L,L});
+    SetNCells( {3 ,3 ,3  } );
+    Real a=0.0844782175465501;
+    SetScatteringLength(a);
+    randomGenerator_t randG(567);
+
+    auto configurations = createConfigurations(randG);
+
+    ASSERT_TRUE( testUpdated(configurations) );
+
+    configurations.setHeadTail(0,18,2);
+    configurations.update( {0,nBeads-1} , {0,0}  );
+
+
+    ASSERT_TRUE( testUpdated(configurations) );
+
+    auto iChain = configurations.pushChain( 0 );
+    configurations.setHeadTail(0,nBeads,2);
+    configurations.join(0,iChain);
+    configurations.setHeadTail(0,8,-1);
+
+    std::uniform_real_distribution uniform(-L/2,L/2);
+    auto & data = configurations.dataTensor();
+
+
+    for(int t=0;t<nBeads;t++)
+    {
+        for(int d=0;d<getDimensions();d++)
+        {
+            data(iChain,d,t)=uniform(randG);
+        }
+
+    }
+    configurations.fillHeads();
+
+    configurations.update({0,nBeads-1},{0,0});
+    configurations.update({0,nBeads-1} , {iChain,iChain});
+
+    ASSERT_TRUE( testUpdated(configurations) );
+
+    configurations.setHeadTail(12,-1,nBeads);
+    configurations.update({0,nBeads-1},{12,12});
+    configurations.removeChain(12);
+
+    ASSERT_TRUE( testUpdated(configurations) );
+    
+}
+
+
+
+
+
+
+TEST_F( caoBerneGridded , moves)
+{
+    int N=100,nBeads=20; 
+    Real L = 8.44782175465501;
+
+    SetN(N);
+    SetNBeads(nBeads);
+    SetBeta(2);
+    SetBox({L,L,L});
+    SetNCells( {3 ,3 ,3  } );
+    Real a=0.0844782175465501;
+    SetScatteringLength(a);
+    randomGenerator_t randG(567);
+    
+    auto configurations = createConfigurations(randG);
+    
+    auto SC = createAction("exact");
+    auto SG = createAction("gridded");
+    int l =0.6*getNBeads();
+    int lShort=0.3*getNBeads();
+
+
+    pimc::levyMove levy(l,0);
+    pimc::translateMove translate( L*0.1, (N+2)*nBeads , 0 );
+
+    pimc::moveHead moveHead( lShort, 0);
+    pimc::moveTail moveTail( lShort, 0);
+
+
+    pimc::tableMoves tab;
+    Real C=1e-7;
+
+    pimc::semiOpenMove semiOpen( C , 0 ,-1, lShort ) ;
+    pimc::semiCloseMove semiClose( C , 0 ,-1, lShort ) ;
+    pimc::swapMove swap( l ,configurations.nChains(), 0 );
+    
+
+    tab.push_back( &levy,0.8,pimc::sector_t::diagonal,"levy");
+    tab.push_back( &translate,0.1,pimc::sector_t::diagonal,"translate");
+    tab.push_back( &semiOpen,0.1,pimc::sector_t::diagonal,"semiOpen");
+
+
+    tab.push_back( &levy,0.5,pimc::sector_t::offDiagonal,"levy");
+    tab.push_back( &translate,0.1,pimc::sector_t::offDiagonal,"translate");
+    tab.push_back( &moveHead,0.1,pimc::sector_t::offDiagonal,"moveHead");
+    tab.push_back( &moveTail,0.1,pimc::sector_t::offDiagonal,"moveTail");
+    tab.push_back( &semiClose,0.1,pimc::sector_t::offDiagonal,"semiClose");
+    tab.push_back( &swap,0.1,pimc::sector_t::offDiagonal,"swap");
+
+    //configurations.setHeadTail(0,nBeads,-1);
+    //configurations.setHeadTail(1,8,-1);
+    //configurations.join(0,1);
+
+
+    configurations.update({0,nBeads-1},{0,N-1});
+
+    configurations.fillHeads();
+
+
+
+    pimc::thermodynamicEnergyEstimator energyEstimator;
+    pimc::virialEnergyEstimator virialEnergy(configurations.nChains(), getNBeads());
+
+    int nBlocks=100;
+    int nTrials=100;
+    for(int iBlock=0;iBlock<nBlocks;iBlock++)
+    {
+        for(int iTrial=0;iTrial < nTrials ; iTrial ++ )
+        {
+            auto acc = tab.attemptMove(configurations,*SG,randG);            
+            //configurations.update( {0,nBeads-1} , {0,configurations.nChains() - 1} );
+
+             auto sum1= SC->getPotentialAction().evaluate(configurations);
+            auto sum2= SG->getPotentialAction().evaluate(configurations);
+            ASSERT_NEAR( sum1,sum2,TOL);
+            
+            if (not configurations.isOpen(0) )
+            {
+
+                Real eV1=virialEnergy(configurations,*SC);
+                Real eV2=virialEnergy(configurations,*SG);
+
+                Real e1=energyEstimator(configurations,*SC);
+                Real e2=energyEstimator(configurations,*SG);
+                
+                auto dTau1=SC->getPotentialAction().evaluateTimeDerivative(configurations);
+                auto dTau2=SG->getPotentialAction().evaluateTimeDerivative(configurations);
+            
+                ASSERT_TRUE( testUpdated( configurations) );
+
+                ASSERT_NEAR(eV1,eV2,TOL);
+                ASSERT_NEAR(e1,e2,TOL);
+                ASSERT_NEAR(dTau1,dTau2,TOL);
+
+            }
+           
+
+
+
+            
+        }
+
+         tab >> std::cout; 
+
+    }
+
+
+
+}
+
+
+
