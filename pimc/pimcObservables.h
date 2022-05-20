@@ -7,7 +7,7 @@
 #include "action.h"
 #include "accumulators.h"
 #include "nConnectedChains.h"
-
+#include<filesystem>
 
 namespace pimc
 {
@@ -64,21 +64,33 @@ public:
 
 };
 
+namespace fs = std::filesystem;
 
 class scalarObservable : public observable
 {
 public:
     using estimator_t = scalarEstimator;
-    
+
     scalarObservable(std::shared_ptr<scalarEstimator> ob_ , std::string label_,bool append=true) : label(label_),filename(label_ + ".dat"),delim(" "){
         ob=ob_;
         if (append)
         {
-            f.open(filename,std::fstream::app);
+            if (fs::exists(fs::path(filename)))
+            {
+                f.open(filename,std::fstream::app);
+            }
+            else
+            {
+                f.open(filename);
+                f << "iteration" << delim << label<<std::endl;
+
+            }
+
+
         }
         else
         {
-            f.open(filename);
+            
         }
     }
 

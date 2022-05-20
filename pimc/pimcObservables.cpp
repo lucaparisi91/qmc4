@@ -644,6 +644,20 @@ n(0) , filename("ratio.dat")
     nOpen.resize(  1<< nSets , 0 );
     assert(nSets>=1);
     f.open(filename);
+    f << "iteration"<< "\t";
+
+    if (nSets==1)
+    {
+        f << "cRatio" << "\t" << "oRatio" << std::endl;
+    }
+    else if (nSets==2) 
+    {
+        f << "ccRatio" << "\t" << "ocRatio" << "\t" << "coRatio" << "\t" << "ooRatio" << std::endl;
+    }
+    else{
+        throw std::runtime_error("nSets should be 1 or 2");
+    }
+    
 }
 
 openRatio::~openRatio()
