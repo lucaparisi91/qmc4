@@ -272,7 +272,20 @@ public:
     
 };
 
+class superfluidFractionEstimator : public scalarEstimator 
+{
+    public:
 
+    superfluidFractionEstimator(int set) : _set(set) {}
+
+    superfluidFractionEstimator(const json_t & j) : superfluidFractionEstimator(j["set"].get<int>() ) {}
+
+    virtual Real operator()(configurations_t & configurations, firstOrderAction & S);
+
+    private:
+
+    int _set;
+};
 
 
 
@@ -606,13 +619,9 @@ class magnetizationDistribution : public observable
     int setB;
     std::ofstream f;
     std::string _label;
-    bool recordAbsoluteValue;
+    bool recordAbsoluteValue;  
     
-
 };
-
-
-
 
 class openRatio 
 {

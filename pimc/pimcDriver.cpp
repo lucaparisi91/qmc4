@@ -143,7 +143,7 @@ doCheckPoint(false)
     pimcMoveConstructor.registerMove<pimc::moveHead>("moveHead");
     pimcMoveConstructor.registerMove<pimc::moveTail>("moveTail");
     pimcMoveConstructor.registerMove<pimc::swapMove>("swap");
-
+    
 
 
     if (currentEnsamble == ensamble_t::grandCanonical )
@@ -153,8 +153,7 @@ doCheckPoint(false)
         pimcMoveConstructor.registerMove<pimc::createWorm>("createWorm");
         pimcMoveConstructor.registerMove<pimc::deleteWorm>("deleteWorm");
 
-        if ( nParticles.size() > 1 )
-        {
+       
             pimcMoveConstructor.registerMove<pimc::semiOpenMove>("semiOpen");
             pimcMoveConstructor.registerMove<pimc::semiCloseMove>("semiClose");
             pimcMoveConstructor.registerMove<pimc::fullSemiCanonicalCloseMove>("fullClose");
@@ -165,7 +164,7 @@ doCheckPoint(false)
             pimcMoveConstructor.registerMove<pimc::removeWormSemiCanonicalMove>("deleteTwoWorms");
             
 
-        }
+        
     }
 
 
@@ -383,7 +382,9 @@ void pimcDriver::run()
     obFactory.registerEstimator<magnetizationEstimator>("magnetization");
     obFactory.registerEstimator<thermodynamicEnergyEstimatorMagnetization>("thermodynamicEnergyMagnetization");
     obFactory.registerEstimator<virialEnergyEstimatorMagnetization>("virialEnergyMagnetization");
-    
+    obFactory.registerEstimator<superfluidFractionEstimator>("superfluidFractionEstimator");
+
+
     obFactory.registerEstimator<pairCorrelation>("pairCorrelation");
     obFactory.registerEstimator<angleEstimator>("angleEstimator");
 

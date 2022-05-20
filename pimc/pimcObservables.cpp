@@ -735,4 +735,47 @@ void virialEnergyEstimatorMagnetization::operator()(configurations_t & configura
 }
 
 
+Real superfluidFractionEstimator::operator()(configurations_t & configurations, firstOrderAction & S)
+  {
+    const auto & group = configurations.getGroups()[0];
+    Real rho=0;
+    const auto & data = configurations.dataTensor();
+    auto nBeads = configurations.nBeads();
+    auto NA = group.iEnd - group.iStart + 1;
+    auto beta= S.getTimeStep() * nBeads;
+
+    for(int t=0;t<nBeads;t++)
+        for(int i=group.iStart;i<=group.iEnd;i++)
+        {
+            auto iNext=configurations.getChain(i).next;
+            for(int d=0;d<getDimensions();d++)
+            {
+                Real diff=0;
+                diff+=data(i,d,t) - data(i,d,nBeads - 1);
+
+                diff+= data(iNext,d,0) - data(iNext,d,t);
+                rho+=diff;
+            }
+        }
+
+    rho=rho*rho/(getDimensions()*beta*NA); 
+
+    return rho;
+  
+    
+  
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
 };

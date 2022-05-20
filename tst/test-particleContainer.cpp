@@ -1115,9 +1115,6 @@ bool testUpdated( const pimc::configurations_t & confs)
 
 }
 
-
-
-
 TEST_F( caoBerneGridded , levy_translate)
 {
     int N=20,nBeads=20; 

@@ -3,6 +3,7 @@
 #include "qmcExceptions.h"
 #include "toolsPimcTest.h"
 
+
 namespace pimc
 {      
     std::array<int,2> timeSliceGenerator::operator()(randomGenerator_t & randG, int nBeads , int maxBeadLength)
@@ -620,7 +621,7 @@ bool swapMove::attemptGrandCanonicalMove(configurations_t & confs, firstOrderAct
         confs.copyDataFromBuffer(buffer,{0,tHead + l - M  },iPartner);
         confs.setHead( iChainHead , tHead );
         confs.setHead( iNewChainHead , M );
-        
+
 
         if (tHead + l >= M)
         {
