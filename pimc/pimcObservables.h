@@ -229,9 +229,19 @@ public:
 
     using estimator_t = vectorEstimator;
 
-    vectorObservable(std::shared_ptr<vectorEstimator> ob_ , std::string label_ , size_t size ) : label(label_),filename(label_ + ".dat"),delim(" "){
+    vectorObservable(std::shared_ptr<vectorEstimator> ob_ , std::string label_ , size_t size ) : label(label_),filename(label_ + ".dat"),delim("\t"){
         ob=ob_;
-        f.open(filename,std::fstream::app);
+
+        if (fs::exists(fs::path(filename)))
+            {
+                f.open(filename,std::fstream::app);
+            }
+            else
+            {
+                f.open(filename);
+                f << "time" << delim << "x" << delim << label << std::endl;
+            }
+        
         acc.resize(size,0);
     }
 

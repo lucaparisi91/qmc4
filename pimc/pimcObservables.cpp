@@ -665,6 +665,7 @@ openRatio::~openRatio()
     f.close();
 }
 
+
 magnetizationDistribution::magnetizationDistribution( const json_t & j)
 {
     _mMin=j["min"].get<int>();
@@ -674,7 +675,18 @@ magnetizationDistribution::magnetizationDistribution( const json_t & j)
 
     _Ms.resize( _mMax - _mMin + 1,0);
     _label=j["label"].get<std::string>();
-    f.open(_label + ".dat",std::ios_base::app);
+    std::string filename = _label + ".dat";
+
+    if (fs::exists(fs::path(filename)))
+            {
+                f.open(filename,std::fstream::app);
+            }
+            else
+            {
+                f.open(filename);
+                f << "time" << "\t" << "M" << "\t" << "P" << std::endl;
+            }
+    
     n=0;
 
     if (_mMin < 0 )
