@@ -5269,6 +5269,7 @@ _maxReconstructedLength(maxAdvanceLength_+2),buffer((maxAdvanceLength_+2)*2,getD
     
 }
 
+
 bool moveHead::attemptMove(configurations_t & confs , firstOrderAction & S,randomGenerator_t & randG)
 {
     Real timeStep = S.getTimeStep();

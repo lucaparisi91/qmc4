@@ -54,16 +54,17 @@ mark_as_advanced(
 endfunction()
 
 
+set(CMAKE_CXX_FLAGS "")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
 add_compile_options(
   -Wfatal-errors
        $<$<CONFIG:RELEASE>:-O3>
-       $<$<CONFIG:DEBUG>:-Og>
+       $<$<CONFIG:DEBUG>:-O0>
        $<$<CONFIG:DEBUG>:-g>
 )
 
-add_link_options(
-       $<$<CONFIG:DEBUG>:-g>
-)
 add_compile_definitions(
         $<$<CONFIG:RELEASE>:NDEBUG>
         $<$<CONFIG:RELEASE>:BOOST_DISABLE_ASSERTS>

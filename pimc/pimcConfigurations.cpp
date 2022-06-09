@@ -1958,8 +1958,8 @@ void generateRandomMinimumDistance( pimcConfigurations & configurations, Real a,
             {
                 for (int i=groups[iGroup].iStart;i<=groups[iGroup].iEndExtended;i++)
                 {
-                    bool accepted=true;
-                    do 
+                    bool accepted=false;
+                    while( not accepted)
                     {
                         accepted=true;
                         for  (int d=0;d<DIMENSIONS;d++)
@@ -1968,9 +1968,9 @@ void generateRandomMinimumDistance( pimcConfigurations & configurations, Real a,
                         }
                         std::array<Real,getDimensions()> diff;
 
-                        for(int jGroup=0;jGroup<=iGroup;jGroup++)                                        
-                            for( int j=groups[jGroup].iStart;j<=groups[jGroup].iEnd and 
-                            (not (j>=i and jGroup==iGroup) );j++)
+                        for(int jGroup=0;jGroup<groups.size();jGroup++)                                        
+                            for( int j=groups[jGroup].iStart;j<=groups[jGroup].iEndExtended and 
+                            (not (j==i and jGroup==iGroup) );j++)
                             {
 
                                 Real r2=0;
@@ -1978,20 +1978,115 @@ void generateRandomMinimumDistance( pimcConfigurations & configurations, Real a,
                                 {
                                     diff[d]=geo.difference( data(i,d,t) - data(j,d,t),d);
                                     r2+=diff[d]*diff[d];
+
                                 }
                                 if (r2 <= a*a)
                                 {
                                     accepted=false;
-                                    break;
+                                    
                                 }
 
+
+                                // check the distance computed from previous slice
+
+                                 if (t > 0)
+                                {
+                                    std::array<Real,DIMENSIONS> delta,deltaNext;
+                                    Real r2=0;
+                                    for(int d=0;d<DIMENSIONS;d++)
+                                    {
+                                        delta[d]=geo.difference( data(i,d,t-1) - data(j,d,t-1),d);
+                                        deltaNext[d] = ( data(i,d,t) - data(i,d,t-1) ) + ( -  data(j,d,t) + data(j,d,t-1) ) + delta[d];
+
+
+                                        r2+=deltaNext[d]*deltaNext[d];
+
+                                    }
+                                    if (r2 <= a*a)
+                                    {
+                                        //accepted=false;
+                                        
+
+                                    }
+
+                                }
                             }
-                    }
-                    while ( ! accepted);
+                    }                
+                    
                 }
             }
 
 }
+
+bool checkMinimumDistance( pimcConfigurations & configurations, Real a,randomGenerator_t & randG,const geometry_t & geo)
+{
+    const auto & groups = configurations.getGroups();
+    std::array<Real,3> lBox { geo.getLBox(0),geo.getLBox(1),geo.getLBox(2) };
+
+    auto & data=configurations.dataTensor();
+    std::uniform_real_distribution<Real> uniformDistribution;
+
+    bool accepted=true;
+
+
+    for(int iGroup=0;iGroup<groups.size();iGroup++)
+        for (int t=0;t<=configurations.nBeads();t++)
+            {
+                for (int i=groups[iGroup].iStart;i<=groups[iGroup].iEndExtended;i++)
+                {
+                   
+                        for(int jGroup=0;jGroup<groups.size();jGroup++)                                        
+                            for( int j=groups[jGroup].iStart;j<=groups[jGroup].iEndExtended and 
+                            (not (j==i and jGroup==iGroup) );j++)
+                            {
+                                Real r2=0;
+                                std::array<Real,DIMENSIONS> diff;
+                                
+                                for(int d=0;d<DIMENSIONS;d++)
+                                {
+                                    diff[d]=geo.difference( data(i,d,t) - data(j,d,t),d);
+                                    r2+=diff[d]*diff[d];
+
+                                }
+                                if (r2 <= a*a)
+                                {
+                                    accepted=false;
+                                    
+                                }
+
+
+                                // check the distance computed from previous slice
+
+                                if (t > 0)
+                                {
+                                    std::array<Real,DIMENSIONS> delta,deltaNext;
+                                    Real r2=0;
+                                    for(int d=0;d<DIMENSIONS;d++)
+                                    {
+                                        delta[d]=geo.difference( data(i,d,t-1) - data(j,d,t-1),d);
+                                        deltaNext[d] = ( data(i,d,t) - data(i,d,t-1) ) + ( -  data(j,d,t) + data(j,d,t-1) ) + delta[d]; 
+
+                                        r2+=deltaNext[d]*deltaNext[d];
+
+                                    }
+                                    if (r2 <= a*a)
+                                    {
+                                        accepted=false;
+                                        
+                                    }
+
+                                }
+
+
+                            }
+                    
+                }
+            }
+    return accepted;
+
+}
+
+
 
 
 void linkedCellAccelerationStructure::update( const pimcConfigurations & confs,const range_t & range, const range_t & particleRange)

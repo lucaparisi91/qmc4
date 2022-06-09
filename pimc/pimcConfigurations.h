@@ -10,6 +10,8 @@
 #include "toolsPimc.h"
 #include <list>
 
+
+
 namespace pimc
 {
 
@@ -543,7 +545,6 @@ struct particleRestriction : public configurationsRestriction
     
 };
 
-
 struct wormsOpenRestriction : public particleRestriction
 {
 
@@ -693,6 +694,8 @@ struct recedeRestriction : public particleRestriction
 
 int nParticlesAfterHeadShift(const pimcConfigurations & configurations, int set, int headShift);
 void generateRandomMinimumDistance( pimcConfigurations & configurations, Real a,randomGenerator_t & randG,const geometry_t & geo);
+bool checkMinimumDistance( pimcConfigurations & configurations, Real a,randomGenerator_t & randG,const geometry_t & geo);
+
 
 };
 

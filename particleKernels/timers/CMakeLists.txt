@@ -15,5 +15,5 @@ target_include_directories(timers PUBLIC
 			   )
 
 target_link_libraries(timers PUBLIC particleKernels_lib )		
-set_target_properties( timers PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_ADDITIONAL} )
-set_target_properties( timers PROPERTIES LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS_ADDITIONAL} )
+#set_target_properties( timers PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_ADDITIONAL} )
+#set_target_properties( timers PROPERTIES LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS_ADDITIONAL} )

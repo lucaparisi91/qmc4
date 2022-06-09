@@ -263,13 +263,12 @@ void pimcDriver::run()
 
     auto sM = std::make_shared<pimc::actionTwoBodyMeshConstructor>();
 
-
     sM->setGeometry(geo);
     sM->setTimeStep(timeStep);
     sM->setNMaxParticles(nChains);
     sM->setNBeads(nBeads);
     sC.addConstructor("twoBodyMesh",sM);
-
+    
     //sC.registerPotential<isotropicHarmonicPotential>();
     //sC.registerPotential<gaussianPotential>();
     
@@ -335,16 +334,26 @@ void pimcDriver::run()
     // sets a random initial condition
     std::cout << "Generating initial configurations" << std::endl;
 
+    bool check=false;
 
-    generateRandomMinimumDistance(  configurations, minimumDistance,randG,geo);
-    configurations.fillHeads();
+    while( not check)
+    {
+        generateRandomMinimumDistance(  configurations, minimumDistance,randG,geo);
+        configurations.fillHeads();
+
+        check = checkMinimumDistance(  configurations, minimumDistance,randG,geo);
+    }
+    
+    if ( not check )
+    {
+        throw std::runtime_error("Initial condition does not satisfy minimum distance constraint");
+    }
 
    
 
     if (not S.checkConstraints(configurations) )
     {
         throw std::runtime_error("Initial condition does not satisfy action requirements");
-
     }
 
     if (loadCheckPoint )

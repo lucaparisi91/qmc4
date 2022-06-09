@@ -220,9 +220,6 @@ public:
     
 };
 
-
-
-
 class vectorObservable : public observable
 {
 public:

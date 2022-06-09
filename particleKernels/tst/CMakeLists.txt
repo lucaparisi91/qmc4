@@ -28,6 +28,5 @@ endif()
 target_link_libraries(tst PRIVATE gtest)
 target_link_libraries(tst PUBLIC particleKernels_lib)
 
-
-set_target_properties( particleKernels_lib PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_ADDITIONAL} )
-set_target_properties( particleKernels_lib PROPERTIES LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS_ADDITIONAL} )
+#set_target_properties( particleKernels_lib PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS_ADDITIONAL} )
+#set_target_properties( particleKernels_lib PROPERTIES LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS_ADDITIONAL} )
