@@ -550,22 +550,25 @@ struct wormsOpenRestriction : public particleRestriction
 
     wormsOpenRestriction( const json_t & j ) : particleRestriction::particleRestriction(j)
     {
-        auto setToOpen=j["setA"].get<int>();
-        for(int i=0;i<_nMin.size();i++)
+       setToOpen=j["setA"].get<int>();
+       iSetToOpen=-1;
+       
+        for (int i=0;i<_sets.size();i++)
         {
-            if (_sets[i] != setToOpen)
+            if (_sets[i]==setToOpen)
             {
-                _nMax[i]-=1;
+                iSetToOpen=i;
             }
         }
 
     }
 
 
-    virtual bool check( const pimcConfigurations & confs) {return true;}
-
+    virtual bool check( const pimcConfigurations & confs);
 
     private:
+    int setToOpen;
+    int iSetToOpen;
 
 };
 

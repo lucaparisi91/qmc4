@@ -818,6 +818,7 @@ void pimcConfigurations::copyDataToBuffer( Eigen::Tensor<Real,2> & buffer, const
         
         }
 
+
 void pimcConfigurations::copyDataFromBuffer( const Eigen::Tensor<Real,2> & buffer, const std::array<int,2> & timeRange, int iParticle ,int timeOffset)
         {
 
@@ -963,7 +964,6 @@ int configurationsSampler::sampleChain(const configurations_t & confs,randomGene
 
     return iChain;
 }
-
 
 int configurationsSampler::sampleChain(const configurations_t & confs, int iGroup,randomGenerator_t & randG)
 {
@@ -1759,11 +1759,12 @@ bool semiCanonicalconfigurationsRestriction::check(const pimcConfigurations & co
 {
     auto nAfter=nParticlesOnFullClose(confs);
     bool pass=true;
-
+    
     for (int i=0;i<2;i++)
     {
         pass=pass and ( nAfter[i] >= _nMin[i] ) and (nAfter[i] <= _nMax[i] );
     }
+
 
     return pass;
 
@@ -1809,6 +1810,21 @@ bool particleRestriction::check(const pimcConfigurations & configurations)
     return pass;
 }
 
+
+bool wormsOpenRestriction::check( const pimcConfigurations & configurations) 
+{
+    auto NB = configurations.nParticles( setToOpen);
+
+    if ( NB>= _nMax[iSetToOpen] )
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+
+}
 
 bool wormsCloseRestriction::check( const pimcConfigurations & configurations) 
 {
@@ -1926,13 +1942,12 @@ bool advanceRestriction::check( const pimcConfigurations & configurations)
 
 bool recedeRestriction::check( const pimcConfigurations & configurations ) 
 {
-
+    
     int setB= (setA + 1)%2;
     int iSetB= (iSetA + 1)%2;
-    
+
     int nAfterA=nParticlesAfterHeadShift(configurations,setA,-_l);
     int nAfterB=nParticlesAfterTailShift(configurations,setB,-_l);
-
 
     if ( ( nAfterB > _nMax[iSetB] ) or ( nAfterA < _nMin[iSetA]-2) )
     {

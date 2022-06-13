@@ -3,28 +3,24 @@
 #include "qmcExceptions.h"
 #include "toolsPimcTest.h"
 
-
 namespace pimc
-{      
+{
+
     std::array<int,2> timeSliceGenerator::operator()(randomGenerator_t & randG, int nBeads , int maxBeadLength)
     {
         int t0=std::floor( uniformRealNumber(randG)*nBeads );
         int length = uniformRealNumber(randG)*(maxBeadLength) ;
-
         int t1 = t0 + length;
-
         return {t0,t1};
     }
-
-
     
-levyMove::levyMove(int maxBeadLength_,int set) : _levy(maxBeadLength_) , uniformRealNumber(0,1),maxBeadLength(maxBeadLength_) , buffer(( maxBeadLength_+1)*2,getDimensions() ) ,singleSetMove::singleSetMove(set)
-{
-    
-}
+    levyMove::levyMove(int maxBeadLength_,int set) : _levy(maxBeadLength_) , uniformRealNumber(0,1),maxBeadLength(maxBeadLength_) , buffer(( maxBeadLength_+1)*2,getDimensions() ) ,singleSetMove::singleSetMove(set)
+    {
+        
+    }
 
-bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,randomGenerator_t & randG)
-{
+    bool levyMove::attemptMove( configurations_t & confs, firstOrderAction & ST,randomGenerator_t & randG)
+    {
 
     int nChains = confs.nChains();
     int nBeads = confs.nBeads();
@@ -173,7 +169,6 @@ bool swapMove::attemptMove(configurations_t & confs , firstOrderAction & S,rando
 
     return false;
 }
-
 
 bool swapMove::attemptCanonicalMove(configurations_t & confs, firstOrderAction & S,randomGenerator_t & randG)
 {
@@ -1722,8 +1717,10 @@ Real fullSemiCanonicalCloseMove::openCloseRatioCoefficient(int N, int M){
 
     if (not restriction->check(confs))
     {
+        //std::cout << confs.nParticles(0) << " "<<  confs.nParticles(1) << std::endl;
         return  false;
     }
+
     
 
 

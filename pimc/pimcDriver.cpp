@@ -228,9 +228,7 @@ void pimcDriver::run()
     sNullC->setGeometry( geo );
 
     auto sOneBodyC = std::make_shared<potentialActionOneBodyConstructor>();
-
-
-
+    
 
     sOneBodyC->setTimeStep(timeStep);
     sOneBodyC->setGeometry( geo );
