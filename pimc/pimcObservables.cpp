@@ -3,6 +3,7 @@
 namespace pimc
 {
 
+
 Real thermodynamicEnergyEstimator::operator()(configurations_t & confs, firstOrderAction & S)
 {
     auto & geo = S.getGeometry();
@@ -265,6 +266,7 @@ Real pairCorrelation::getNormalizationFactor(const configurations_t & configurat
   return _normalizationFactor;
 }
 
+
 void pairCorrelation::operator()(configurations_t & configurations, firstOrderAction & S,  accumulator_t & histAcc)
 {
 
@@ -333,6 +335,47 @@ void angleEstimator::operator()(configurations_t & confs, firstOrderAction & S, 
     {
         throw std::runtime_error("angle estimator not supported for different sets A and B");
     }
+}
+
+
+void oneBodyEstimator::operator()(configurations_t & confs, firstOrderAction & S,  accumulator_t & acc)
+{    
+    const auto & groupA = confs.getGroups()[_set];
+    const auto & geo = S.getGeometry();
+
+    if (confs.isOpen(_set) )
+    {
+    auto iChainHead= groupA.heads[0];
+    auto iChainTail= groupA.tails[0];
+
+    auto tHead=confs.getChain(iChainHead).head;
+    auto tTail=confs.getChain(iChainTail).tail ;
+    const auto & data = confs.dataTensor();
+
+  
+        if (tHead == tTail + 1)
+        {
+            Real r2=0;
+            for (int d=0;d<getDimensions();d++)
+            {
+                auto tmp=geo.difference( data(iChainHead,d,tHead) - data(iChainTail,d,tTail + 1)  ,d );
+                r2+=tmp*tmp;
+            }
+
+            Real r= std::sqrt(r2);
+            if( 
+                    ( r > acc.minx() ) and  
+                        ( r < acc.maxx() )
+                )
+                {
+                    acc.accumulate( 1/(4*M_PI * r2*acc.stepSize()),r);
+                } 
+            acc.weight()+=1;
+        }
+
+    }
+
+
 }
 
 
@@ -757,47 +800,95 @@ void virialEnergyEstimatorMagnetization::operator()(configurations_t & configura
 {
     int M=std::abs(configurations.nParticles(setA) - configurations.nParticles(setB) );
     acc.accumulate( energyEst(configurations,S) , M  );
-    
 }
 
+void superfluidFractionEstimator::operator()(configurations_t & configurations, firstOrderAction & S,accumulator_t & acc)
+    {
+        const auto & geo = S.getGeometry();
 
-Real superfluidFractionEstimator::operator()(configurations_t & configurations, firstOrderAction & S)
-  {
-    const auto & group = configurations.getGroups()[0];
-    Real rho=0;
-    const auto & data = configurations.dataTensor();
-    auto nBeads = configurations.nBeads();
-    auto NA = group.iEnd - group.iStart + 1;
-    auto beta= S.getTimeStep() * nBeads;
+        const auto & groups= configurations.getGroups();
+        const auto & data = configurations.dataTensor();
+        auto nBeads = configurations.nBeads();
 
-    for(int t=0;t<nBeads;t++)
-        for(int i=group.iStart;i<=group.iEnd;i++)
+        std::vector< std::array<Real,DIMENSIONS>  > cm;
+        cm.resize( groups.size() , {0,0,0}  );
+        auto beta= S.getTimeStep() * nBeads;
+
+        for (int iGroup=0;iGroup<groups.size();iGroup++)
         {
-            auto iNext=configurations.getChain(i).next;
-            for(int d=0;d<getDimensions();d++)
-            {
-                Real diff=0;
-                diff+=data(i,d,t) - data(i,d,nBeads - 1);
+            const auto & group = groups[iGroup];
+           
 
-                diff+= data(iNext,d,0) - data(iNext,d,t);
-                rho+=diff;
-            }
+            for(int t=0;t<nBeads;t++)
+                for(int i=group.iStart;i<=group.iEnd;i++)
+                    {
+                        auto iNext=configurations.getChain(i).next;
+                        for(int d=0;d<getDimensions();d++)
+                        {
+                            Real diff=0;
+                            diff+=data(i,d,t) - data(i,d,nBeads);
+                            diff+= data(iNext,d,0) - data(iNext,d,t);
+                            cm[iGroup][d]+=diff;
+                        }
+                    }
         }
 
-    rho=rho*rho/(getDimensions()*beta*NA); 
 
-    return rho;
-  
+        for(int iGroup=0;iGroup < groups.size();iGroup++)
+        {
+
+            Real rho=0;
+            for(int d=0;d<DIMENSIONS;d++)
+            {
+                rho+=std::pow(cm[iGroup][d]/geo.getLBox(d),2);
+            }
+
+            const auto & group = groups[iGroup];
+
+            auto NA = group.iEnd - group.iStart + 1;
+            acc.accumulate(rho/(NA * nBeads * beta * DIMENSIONS),iGroup);
+        }
+
+    }
+
+
+bool observable::isValidSector(const configurations_t & confs)
+{
+    auto nGroups = confs.getGroups().size();
+
+    bool valid=true;
+
+    for(int i=0;i<nGroups;i++)
+    {
+        valid = valid and (not confs.isOpen(i));
+    }
+
+    return valid;
+}
+
+bool oneBodyObservable::isValidSector(const configurations_t & confs)
+{
+    auto nGroups = confs.getGroups().size();
+    bool valid=true;
+
+    for(int i=0;i<nGroups;i++)
+    {
+        if (i== _set)
+        {
+            valid = valid and ( confs.isOpen(i));
+        }
+        else
+        {
+            valid = valid and (not confs.isOpen(i));
+        }
+
+    }
+
+
+
+    return true;
+}
     
-  
-  }
-
-
-
-
-
-
-
 
 
 

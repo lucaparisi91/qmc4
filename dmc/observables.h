@@ -6,17 +6,19 @@
 class productWavefunction;
 class walker;
 
+
 template<class T>
 class observable
 {
 public:
 	observable() {}
-        using accumulator_t = T;
+  
+  using accumulator_t = T;
 	using value_t = typename T::value_t ;
 	using wavefunction_t = productWavefunction;
 	using walker_t = walker;
 
-        virtual void accumulate(walker_t & walker, wavefunction_t & wavefunction,  accumulator_t & acc)=0;
+  virtual void accumulate(walker_t & walker, wavefunction_t & wavefunction,  accumulator_t & acc)=0;
 
 };
       

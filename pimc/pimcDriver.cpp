@@ -389,7 +389,8 @@ void pimcDriver::run()
     obFactory.registerEstimator<magnetizationEstimator>("magnetization");
     obFactory.registerEstimator<thermodynamicEnergyEstimatorMagnetization>("thermodynamicEnergyMagnetization");
     obFactory.registerEstimator<virialEnergyEstimatorMagnetization>("virialEnergyMagnetization");
-    obFactory.registerEstimator<superfluidFractionEstimator>("superfluidFractionEstimator");
+    obFactory.registerEstimator<superfluidFractionEstimator>("superfluidFraction");
+
 
 
     obFactory.registerEstimator<pairCorrelation>("pairCorrelation");
@@ -398,6 +399,12 @@ void pimcDriver::run()
     obFactory.registerEstimator< particleNumberSquaredEstimator>("nParticlesSquared");
 
     obFactory.registerObservable<magnetizationDistribution>("magnetizationDistribution");
+    obFactory.registerObservable<oneBodyObservable>("oneBody");
+
+
+
+
+    
 
     
     if (j.find("observables") == j.end())
@@ -407,11 +414,8 @@ void pimcDriver::run()
     else
     {
        observables=obFactory.createObservables(j["observables"]) ;
-    
     }
-    
-    
-    
+
 
 
    /*  pimc::levyMove freeMoves(5);
@@ -524,17 +528,24 @@ void pimcDriver::run()
             if (!configurations.isOpen() )
             {
 
-                for (auto & O : observables)
-                {
-                    O->accumulate(configurations,S);
-                }
-                nClosed+=1;
                 
+                nClosed+=1;
+
             }
             else
             {
+
                nOpen+=1;
             }
+
+            for (auto & O : observables)
+                {
+                    if ( O->isValidSector( configurations) )
+                    {
+                        O->accumulate(configurations,S);
+                    }
+                }
+        
             
         }
         

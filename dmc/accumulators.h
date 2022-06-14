@@ -5,6 +5,7 @@
 #include "ptools.h"
 #include <iostream>
 
+
 template<class T>
 class accumulator
 {
@@ -111,7 +112,6 @@ public:
   }
 
 
-  
   histogramAccumulator(size_t size,real_t min_, real_t max_) : _weight(0) {resize(size,min_,max_);}
   
   void accumulate(value_t a,value_t x) {int i=int((x-_minx)*deltaxInverse); _sums[i]+=a;}

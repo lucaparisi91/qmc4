@@ -755,7 +755,6 @@ std::string reportMoves(const sectorTableMoves & tab)
 }
 
 
-
 int sectorTableMoves::sample(randomGenerator_t & randG)
 {
     int iMove = sampler.sample(randG);

@@ -1,13 +1,13 @@
 #ifndef PIMC_OBSERVABLES_H
 #define PIMC_OBSERVABLES_H
 
-
 #include "tools.h"
 #include "pimcConfigurations.h"
 #include "action.h"
 #include "accumulators.h"
 #include "nConnectedChains.h"
 #include<filesystem>
+
 
 namespace pimc
 {
@@ -32,11 +32,8 @@ class vectorEstimator
     using accumulator_t = vectorAccumulator<Real>;
 
     virtual void operator()(configurations_t & configurations, firstOrderAction & S,  accumulator_t & histAcc) = 0;
-    
+
 };
-
-
-
 
 class histogramObservable;
 
@@ -49,7 +46,6 @@ class histogramEstimator
 
     virtual void operator()(configurations_t & configurations, firstOrderAction & S,  accumulator_t & histAcc) = 0;
 
-
 };
 
 class observable
@@ -61,6 +57,9 @@ public:
     virtual void out(size_t iteration)=0;
 
     virtual void clear()=0;
+
+    virtual bool isValidSector(const configurations_t & confs);      
+
 
 };
 
@@ -136,6 +135,8 @@ public:
     {
         return acc.getWeight();
     }
+
+
 
     auto getEstimator() { return ob;}
 
@@ -220,6 +221,7 @@ public:
     
 };
 
+
 class vectorObservable : public observable
 {
 public:
@@ -291,21 +293,6 @@ public:
     
 };
 
-class superfluidFractionEstimator : public scalarEstimator 
-{
-    public:
-
-    superfluidFractionEstimator(int set) : _set(set) {}
-
-    superfluidFractionEstimator(const json_t & j) : superfluidFractionEstimator(j["set"].get<int>() ) {}
-
-    virtual Real operator()(configurations_t & configurations, firstOrderAction & S);
-
-    private:
-
-    int _set;
-};
-
 
 
 class thermodynamicEnergyEstimator : public scalarEstimator 
@@ -343,8 +330,21 @@ class thermodynamicEnergyEstimatorMagnetization : public vectorEstimator
 };
 
 
+class superfluidFractionEstimator : public vectorEstimator
+{
+    public:
 
+    using accumulator_t = vectorAccumulator<Real>;
 
+    superfluidFractionEstimator(){};
+
+    superfluidFractionEstimator(const json_t & j) {};
+
+    virtual void operator()(configurations_t & configurations, firstOrderAction & S, accumulator_t & acc);
+
+    private:
+
+};
 
 class particleNumberEstimator : public scalarEstimator 
 {
@@ -538,8 +538,6 @@ class nConnectedChainsEstimator : public scalarEstimator
     int _set;
 };
 
-
-
 class virialEnergyEstimator : public scalarEstimator
 {
     public:
@@ -557,8 +555,6 @@ class virialEnergyEstimator : public scalarEstimator
     Eigen::Tensor<Real,3> buffer;
     Eigen::Tensor<Real,3> rC;
 };
-
-
 
 class pairCorrelation : public histogramEstimator
 {
@@ -588,6 +584,56 @@ class pairCorrelation : public histogramEstimator
     std::vector<double> buffer;
 
 };
+
+
+
+
+
+class oneBodyEstimator : public histogramEstimator
+{
+    public:
+
+    oneBodyEstimator(int set) : _set(set) {};
+
+    oneBodyEstimator(const json_t & j) : oneBodyEstimator( j["set"].get<int>()  ) {}
+
+    void operator()(configurations_t & configurations, firstOrderAction & S,accumulator_t & acc);
+
+    private:
+
+    int _set;
+    
+};
+
+class oneBodyObservable : public histogramObservable
+{
+public:
+
+    using estimator_t = histogramEstimator;
+
+    virtual bool isValidSector(const configurations_t & confs) override;
+
+
+    oneBodyObservable(std::shared_ptr<oneBodyEstimator> ob_ , std::string label_,size_t size,Real min,Real max,int set) : histogramObservable(ob_,label_,size,min,max) { _set=set;};
+    
+    oneBodyObservable( const json_t & j) :
+    histogramObservable( std::make_shared<oneBodyEstimator>(j["set"].get<int>()) , j)
+     {
+       _set=j["set"].get<int>(); 
+    };
+
+
+
+
+    
+   
+    private:
+
+    int _set;
+
+
+};
+
 
 
 class angleEstimator : public histogramEstimator
