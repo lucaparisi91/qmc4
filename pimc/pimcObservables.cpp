@@ -810,16 +810,16 @@ void superfluidFractionEstimator::operator()(configurations_t & configurations, 
         const auto & data = configurations.dataTensor();
         auto nBeads = configurations.nBeads();
 
-        std::vector< std::array<Real,DIMENSIONS>  > cm;
-        cm.resize( groups.size() , {0,0,0}  );
         auto beta= S.getTimeStep() * nBeads;
 
-        for (int iGroup=0;iGroup<groups.size();iGroup++)
-        {
-            const auto & group = groups[iGroup];
-           
+        for(int t=0;t<nBeads;t++)
+            {
+            std::vector< std::array<Real,DIMENSIONS>  > cm;
+            cm.resize( groups.size() , {0,0,0}  );
 
-            for(int t=0;t<nBeads;t++)
+            for (int iGroup=0;iGroup<groups.size();iGroup++)
+                {
+                const auto & group = groups[iGroup];
                 for(int i=group.iStart;i<=group.iEnd;i++)
                     {
                         auto iNext=configurations.getChain(i).next;
@@ -831,26 +831,27 @@ void superfluidFractionEstimator::operator()(configurations_t & configurations, 
                             cm[iGroup][d]+=diff;
                         }
                     }
-        }
+                }
 
 
-        for(int iGroup=0;iGroup < groups.size();iGroup++)
-        {
+                for(int iGroup=0;iGroup < groups.size();iGroup++)
+                {
 
-            Real rho=0;
-            for(int d=0;d<DIMENSIONS;d++)
-            {
-                rho+=std::pow(cm[iGroup][d]/geo.getLBox(d),2);
+                    Real rho=0;
+                    for(int d=0;d<DIMENSIONS;d++)
+                    {
+                        rho+=std::pow(cm[iGroup][d],2);
+                    }
+
+
+                    const auto & group = groups[iGroup];
+
+                    auto NA = group.iEnd - group.iStart + 1;
+                    acc.accumulate(rho/( NA * beta * DIMENSIONS),iGroup);
+                }
+
             }
-
-            const auto & group = groups[iGroup];
-
-            auto NA = group.iEnd - group.iStart + 1;
-            acc.accumulate(rho/(NA * nBeads * beta * DIMENSIONS),iGroup);
-        }
-
     }
-
 
 bool observable::isValidSector(const configurations_t & confs)
 {
@@ -886,7 +887,7 @@ bool oneBodyObservable::isValidSector(const configurations_t & confs)
 
 
 
-    return true;
+    return valid;
 }
     
 

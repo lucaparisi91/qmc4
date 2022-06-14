@@ -521,20 +521,16 @@ void pimcDriver::run()
                 if (accepted)
                 {success+=1;}
             }
-            
 
+            
             openRatioOb.accumulate(configurations);
 
             if (!configurations.isOpen() )
-            {
-
-                
+            {   
                 nClosed+=1;
-
             }
             else
             {
-
                nOpen+=1;
             }
 
@@ -542,7 +538,7 @@ void pimcDriver::run()
                 {
                     if ( O->isValidSector( configurations) )
                     {
-                        O->accumulate(configurations,S);
+                        O->accumulate(configurations,S );
                     }
                 }
         

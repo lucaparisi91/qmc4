@@ -160,7 +160,18 @@ public:
 
     histogramObservable(std::shared_ptr<histogramEstimator> ob_ , std::string label_,size_t size,Real min,Real max) : label(label_),filename(label_ + ".dat"),delim(" "){
         ob=ob_;
-        f.open(filename,std::fstream::app);
+
+        if (fs::exists(fs::path(filename)))
+        {
+            f.open(filename,std::fstream::app);
+        }
+        else
+        {
+            f.open(filename);
+            f << "iteration" << delim << "x" << delim <<  label<<std::endl;
+
+        }
+        
         acc.resize(size,min,max);
 
     }
@@ -238,7 +249,7 @@ public:
             else
             {
                 f.open(filename);
-                f << "time" << delim << "x" << delim << label << std::endl;
+                f << "iteration" << delim << "x" << delim << label << std::endl;
             }
         
         acc.resize(size,0);
