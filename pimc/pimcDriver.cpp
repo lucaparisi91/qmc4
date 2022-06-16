@@ -522,11 +522,16 @@ void pimcDriver::run()
                 {success+=1;}
             }
 
-            
+
             openRatioOb.accumulate(configurations);
 
             if (!configurations.isOpen() )
             {   
+                    
+                if  ( (configurations.nParticles(0 ) + configurations.nParticles(1 ) ) != 64 )
+                {
+                    throw( std::runtime_error("N wrong")  );
+                }
                 nClosed+=1;
             }
             else

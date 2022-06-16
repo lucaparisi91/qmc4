@@ -1813,8 +1813,7 @@ bool particleRestriction::check(const pimcConfigurations & configurations)
 
 bool wormsOpenRestriction::check( const pimcConfigurations & configurations) 
 {
-    auto NB = configurations.nParticles( setToOpen);
-
+ /*    auto NB = configurations.nParticles( setToOpen);
     if ( NB>= _nMax[iSetToOpen] )
     {
         return false;
@@ -1823,6 +1822,9 @@ bool wormsOpenRestriction::check( const pimcConfigurations & configurations)
     {
         return true;
     }
+ */
+
+    return true;
 
 }
 
@@ -1942,7 +1944,7 @@ bool advanceRestriction::check( const pimcConfigurations & configurations)
 
 bool recedeRestriction::check( const pimcConfigurations & configurations ) 
 {
-    
+
     int setB= (setA + 1)%2;
     int iSetB= (iSetA + 1)%2;
 
@@ -1978,7 +1980,7 @@ void generateRandomMinimumDistance( pimcConfigurations & configurations, Real a,
                     {
                         accepted=true;
                         for  (int d=0;d<DIMENSIONS;d++)
-                        {
+                    {
                             data(i,d,t)=(uniformDistribution(randG)-0.5 )*lBox[d];
                         }
                         std::array<Real,getDimensions()> diff;

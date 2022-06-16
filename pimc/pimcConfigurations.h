@@ -687,7 +687,7 @@ struct recedeRestriction : public particleRestriction
     int setA;
     int iSetA;
     int _l;
-
+    
 };
 
 

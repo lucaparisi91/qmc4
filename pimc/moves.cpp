@@ -1435,10 +1435,8 @@ Real fullSemiCanonicalOpenMove::openCloseRatioCoefficient(int N, int M){
         return false;
     }
 
-    
-
-     std::array<int,2> minN { 32, 31};
-     std::array<int,2> maxN { 33, 32};
+    std::array<int,2> minN { 32, 31};
+    std::array<int,2> maxN { 33, 32};
     bool ok=true;
     {
         int _n=nParticlesOnClose(  confs, getSetA() );
@@ -2876,7 +2874,7 @@ bool createWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOr
 
     Real timeStep = S.getTimeStep();
     _levy.setReconstructorBoundaries(pimc::chainBoundary::free,pimc::chainBoundary::free);
-
+    
 
     int NA = confs.nParticles(setA);
     int NB = confs.nParticles(setB);
@@ -3930,6 +3928,8 @@ bool removeWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOr
     {
         return false;
     }
+
+
 
 
 
