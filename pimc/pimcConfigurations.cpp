@@ -168,6 +168,7 @@ void pimcConfigurations::setTail( int iChain, int newTail )
 
 };
 
+
 pimcConfigurations::pimcConfigurations(
     size_t timeSlices, int dimensions, const std::vector<particleGroup> &  particleGroups_) :
     particleGroups(particleGroups_),

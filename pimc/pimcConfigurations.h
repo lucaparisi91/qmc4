@@ -10,13 +10,14 @@
 #include "toolsPimc.h"
 #include <list>
 
-
-
 namespace pimc
 {
 
+    
+
 class linkedCellParticles;
 class pimcConfigurations;
+
 
 struct accelerationStructure
 {

@@ -15,9 +15,10 @@
 
 #include "propagators.h"
 #include <csignal>
+#include <fstream>
+
 
 namespace fs = std::filesystem;
-
 
 namespace pimc
 {
@@ -46,6 +47,7 @@ currentEnsamble(ensamble_t::canonical),
 saveConfigurations(false),
 doCheckPoint(false)
 {
+
     
     std::vector<Real> lBox;
     lBox=j["lBox"].get<std::vector<Real> >();
@@ -143,8 +145,6 @@ doCheckPoint(false)
     pimcMoveConstructor.registerMove<pimc::moveHead>("moveHead");
     pimcMoveConstructor.registerMove<pimc::moveTail>("moveTail");
     pimcMoveConstructor.registerMove<pimc::swapMove>("swap");
-    
-
 
     if (currentEnsamble == ensamble_t::grandCanonical )
     {
@@ -197,6 +197,8 @@ doCheckPoint(false)
        
     }
 }
+
+
 
 void pimcDriver::run()
 {
@@ -400,12 +402,6 @@ void pimcDriver::run()
 
     obFactory.registerObservable<magnetizationDistribution>("magnetizationDistribution");
     obFactory.registerObservable<oneBodyObservable>("oneBody");
-
-
-
-
-    
-
     
     if (j.find("observables") == j.end())
     {
@@ -464,11 +460,12 @@ void pimcDriver::run()
     std::ofstream f;
 
     std::ofstream ratioOut;
-    
+
     ratioOut.open("nOpenClosed.dat");
     
     if ( ! fs::exists("configurations") ) 
     { 
+        
         fs::create_directory("configurations"); // create src folder
     }
 
@@ -494,12 +491,23 @@ void pimcDriver::run()
     }
 
 
-
-
-
+    json_t checkpoint;
+    if (fs::exists(fs::path("checkpoint.json")))
+    {
+        std::ifstream  checkPointLog;
+        checkPointLog.open("checkpoint.json");
+        checkPointLog >> checkpoint;
+        checkPointLog.close();
+}
+    else
+    {
+        checkpoint["lastBlock"]=-1;
+    }
 
     // start the simulation
     std::cout << "Start." << std::endl << std::flush;
+
+
 
     int nClosed=0;
     int nOpen=0;
@@ -507,7 +515,8 @@ void pimcDriver::run()
 
     pimc::openRatio  openRatioOb( configurations.getGroups().size() ) ;
 
-    for (int i=0;(i< nBlocks) & (!pimc_main_is_interrupted); i++)
+    auto iStartBlock = checkpoint["lastBlock"].get<int>() + 1;
+    for (int i=iStartBlock;(i< nBlocks) & (!pimc_main_is_interrupted); i++)
     {
         Real eStep=0;
         
@@ -589,11 +598,19 @@ void pimcDriver::run()
             configurations.saveHDF5("configurations/sample"+std::to_string(i+1) + ".hdf5" );
         }
         
+
+
         if (doCheckPoint)
         {
+            checkpoint["lastBlock"]=i;
+            std::ofstream  checkPointLog;
+            checkPointLog.open("checkpoint.json");
+            checkPointLog << checkpoint.dump(4);
+            checkPointLog.close();
             if (!configurations.isOpen() )
             {
                 configurations.saveHDF5(checkPointFile);
+                
             }
         }
 
