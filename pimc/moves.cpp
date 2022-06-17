@@ -3,6 +3,7 @@
 #include "qmcExceptions.h"
 #include "toolsPimcTest.h"
 
+
 namespace pimc
 {
 
@@ -2874,7 +2875,7 @@ bool createWormSemiCanonicalMove::attemptMove(configurations_t & confs , firstOr
 
     Real timeStep = S.getTimeStep();
     _levy.setReconstructorBoundaries(pimc::chainBoundary::free,pimc::chainBoundary::free);
-    
+
 
     int NA = confs.nParticles(setA);
     int NB = confs.nParticles(setB);

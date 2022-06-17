@@ -464,7 +464,7 @@ void pimcDriver::run()
     std::ofstream f;
 
     std::ofstream ratioOut;
-    
+
     ratioOut.open("nOpenClosed.dat");
     
     if ( ! fs::exists("configurations") ) 
@@ -522,18 +522,23 @@ void pimcDriver::run()
                 {success+=1;}
             }
 
-            
+
             openRatioOb.accumulate(configurations);
 
             if (!configurations.isOpen() )
             {   
+
+                if  ( (configurations.nParticles(0 ) + configurations.nParticles(1 ) ) != 64 )
+                {
+                    throw( std::runtime_error("N wrong")  );
+                }
                 nClosed+=1;
             }
             else
             {
                nOpen+=1;
             }
-
+            
             for (auto & O : observables)
                 {
                     if ( O->isValidSector( configurations) )

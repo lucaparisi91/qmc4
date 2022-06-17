@@ -274,7 +274,6 @@ int pimcConfigurations::nParticles() const
     return nTot;
 }
 
-
 int pimcConfigurations::nParticles( int i) const
 {
     assert(i < particleGroups.size());
