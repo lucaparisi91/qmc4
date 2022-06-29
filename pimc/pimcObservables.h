@@ -8,7 +8,6 @@
 #include "nConnectedChains.h"
 #include<filesystem>
 
-
 namespace pimc
 {
 

@@ -803,7 +803,6 @@ void thermodynamicEnergyEstimatorMagnetization::operator()(configurations_t & co
 
 }
 
-
 void virialEnergyEstimatorMagnetization::operator()(configurations_t & configurations, firstOrderAction & S, accumulator_t & acc)
 {
     int M=std::abs(configurations.nParticles(setA) - configurations.nParticles(setB) );
@@ -824,7 +823,7 @@ void superfluidFractionEstimator::operator()(configurations_t & configurations, 
             {
             std::vector< std::array<Real,DIMENSIONS>  > cm;
             cm.resize( groups.size() , {0,0,0}  );
-
+            
             for (int iGroup=0;iGroup<groups.size();iGroup++)
                 {
                 const auto & group = groups[iGroup];
@@ -840,22 +839,27 @@ void superfluidFractionEstimator::operator()(configurations_t & configurations, 
                         }
                     }
                 }
-
-
+                int k=0;
                 for(int iGroup=0;iGroup < groups.size();iGroup++)
                 {
-
-                    Real rho=0;
-                    for(int d=0;d<DIMENSIONS;d++)
+                    for(int jGroup=0;jGroup<=iGroup; jGroup++)
                     {
-                        rho+=std::pow(cm[iGroup][d],2);
+
+                        Real rho=0;
+                        for(int d=0;d<DIMENSIONS;d++)
+                        {
+                            rho+=cm[iGroup][d] * cm[jGroup][d];
+                        }
+
+                        const auto & groupA = groups[iGroup];
+                        const auto & groupB = groups[jGroup];
+
+                        auto NA = groupA.iEnd - groupA.iStart + 1;
+                        auto NB = groupB.iEnd - groupB.iStart + 1;
+
+                        acc.accumulate(rho/( sqrt(NA*NB) * beta * DIMENSIONS), k );
+                        k++;
                     }
-
-
-                    const auto & group = groups[iGroup];
-
-                    auto NA = group.iEnd - group.iStart + 1;
-                    acc.accumulate(rho/( NA * beta * DIMENSIONS),iGroup);
                 }
 
             }
