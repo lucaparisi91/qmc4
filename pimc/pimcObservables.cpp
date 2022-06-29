@@ -3,7 +3,6 @@
 namespace pimc
 {
 
-
 Real thermodynamicEnergyEstimator::operator()(configurations_t & confs, firstOrderAction & S)
 {
     auto & geo = S.getGeometry();

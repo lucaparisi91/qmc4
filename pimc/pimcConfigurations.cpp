@@ -1825,7 +1825,6 @@ bool wormsOpenRestriction::check( const pimcConfigurations & configurations)
  */
 
     return true;
-
 }
 
 bool wormsCloseRestriction::check( const pimcConfigurations & configurations) 
