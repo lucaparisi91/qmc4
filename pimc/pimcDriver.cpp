@@ -504,6 +504,7 @@ void pimcDriver::run()
         checkpoint["lastBlock"]=-1;
     }
 
+    
     // start the simulation
     std::cout << "Start." << std::endl << std::flush;
 
@@ -515,12 +516,24 @@ void pimcDriver::run()
 
     pimc::openRatio  openRatioOb( configurations.getGroups().size() ) ;
 
+
+    auto start = MPI_Wtime();
+    auto maxTime= 60 * 60 * 24 * 365;
+
+
+    if ( j.find("maxTime") != j.end() )
+    {
+        maxTime=j["maxTime"].get<int>();
+    }
+
+
+
     auto iStartBlock = checkpoint["lastBlock"].get<int>() + 1;
-    for (int i=iStartBlock;(i< nBlocks) & (!pimc_main_is_interrupted); i++)
+    for (int i=iStartBlock;(i< nBlocks) & (!pimc_main_is_interrupted) &  ( (MPI_Wtime() - start ) < maxTime); i++)
     {
         Real eStep=0;
         
-        while ( (nClosed < stepsPerBlock) and (!pimc_main_is_interrupted) and ( n < stepsPerBlock) )
+        while ( (nClosed < stepsPerBlock) and (!pimc_main_is_interrupted) and ( n < stepsPerBlock)  )
         {
             n++;
             for (int j=0;(j<correlationSteps) & (!pimc_main_is_interrupted) ;j++)
@@ -619,7 +632,9 @@ void pimcDriver::run()
 
 
     f.close();
-    
+
+    std::cout << "Time: " << (MPI_Wtime() - start )*1./(60) << " mn" << std::endl;
+
     std::cout << "END." << std::endl;
 
 }
